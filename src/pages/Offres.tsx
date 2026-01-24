@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Header } from "@/components/layout";
-import { Card, CardContent, Button, Badge, Input, Select } from "@/components/ui";
+import { Card, CardContent, Button, Badge, Input, Select, Tooltip } from "@/components/ui";
 import { offresService, favoritesService } from "@/services";
 import type { Offre, OffresFilters, TypeOffre } from "@/types";
 import {
@@ -255,29 +255,31 @@ export function Offres() {
                 const isFavorite = favorites.has(offre.id);
 
                 return (
-                  <Card key={offre.id} className="group hover:shadow-md transition-shadow">
+                  <Card key={offre.id} className="group hover:shadow-md transition-all card-3d shine-effect">
                     <CardContent className="p-6">
                       <div className="flex items-start justify-between mb-3">
                         <Badge className={typeOffreColors[offre.typeOffre]}>
                           <Icon className="h-3 w-3 mr-1" />
                           {typeOffreLabels[offre.typeOffre]}
                         </Badge>
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            toggleFavorite(offre.id);
-                          }}
-                          className="p-1 rounded-full hover:bg-gray-100 transition-colors"
-                        >
-                          <Heart
-                            className={cn(
-                              "h-5 w-5 transition-colors",
-                              isFavorite
-                                ? "fill-red-500 text-red-500"
-                                : "text-gray-400 group-hover:text-gray-600"
-                            )}
-                          />
-                        </button>
+                        <Tooltip content={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"} position="left">
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              toggleFavorite(offre.id);
+                            }}
+                            className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+                          >
+                            <Heart
+                              className={cn(
+                                "h-5 w-5 transition-colors",
+                                isFavorite
+                                  ? "fill-red-500 text-red-500"
+                                  : "text-gray-400 group-hover:text-gray-600"
+                              )}
+                            />
+                          </button>
+                        </Tooltip>
                       </div>
 
                       <Link to={`/offres/${offre.id}`}>

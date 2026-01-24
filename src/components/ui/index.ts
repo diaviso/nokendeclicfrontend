@@ -7,3 +7,4 @@ export { Textarea } from "./textarea";
 export { Select } from "./select";
 export { Modal, ConfirmModal, AlertModal } from "./Modal";
 export { LoadingOverlay, AILoadingOverlay, UploadLoadingOverlay } from "./LoadingOverlay";
+export { Tooltip, FeatureTip } from "./Tooltip";

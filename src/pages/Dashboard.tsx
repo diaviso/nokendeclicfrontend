@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Header } from "@/components/layout";
-import { Card, CardContent, CardHeader, CardTitle, Button, Badge } from "@/components/ui";
+import { Card, CardContent, CardHeader, CardTitle, Button, Badge, Tooltip } from "@/components/ui";
 import { useAuth } from "@/contexts/AuthContext";
 import { cvService, dashboardService } from "@/services";
 import type { Offre, CV } from "@/types";
@@ -15,6 +15,7 @@ import {
   MapPin,
   Building2,
   Heart,
+  HelpCircle,
 } from "lucide-react";
 import { formatRelativeDate, truncate } from "@/lib/utils";
 
@@ -78,76 +79,101 @@ export function Dashboard() {
 
       <div className="p-6 space-y-6">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Offres disponibles</p>
-                  <p className="text-2xl font-bold">{stats.totalOffres}</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 stagger-children perspective-container">
+          <Tooltip content="Nombre total d'offres d'emploi, formations et bourses disponibles sur la plateforme" position="bottom">
+            <Card className="card-3d cursor-help w-full">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground flex items-center gap-1">
+                      Offres disponibles
+                      <HelpCircle className="h-3 w-3 opacity-50" />
+                    </p>
+                    <p className="text-2xl font-bold">{stats.totalOffres}</p>
+                  </div>
+                  <div className="h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center animate-float">
+                    <Briefcase className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                  </div>
                 </div>
-                <div className="h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                  <Briefcase className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </Tooltip>
 
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Mes favoris</p>
-                  <p className="text-2xl font-bold">{stats.totalFavorites}</p>
+          <Tooltip content="Offres que vous avez sauvegardées pour les consulter plus tard" position="bottom">
+            <Card className="card-3d cursor-help w-full">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground flex items-center gap-1">
+                      Mes favoris
+                      <HelpCircle className="h-3 w-3 opacity-50" />
+                    </p>
+                    <p className="text-2xl font-bold">{stats.totalFavorites}</p>
+                  </div>
+                  <div className="h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                    <Heart className="h-6 w-6 text-red-600 dark:text-red-400" />
+                  </div>
                 </div>
-                <div className="h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-                  <Heart className="h-6 w-6 text-red-600 dark:text-red-400" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </Tooltip>
 
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Mes retours</p>
-                  <p className="text-2xl font-bold">{stats.totalRetours}</p>
+          <Tooltip content="Vos candidatures et retours d'expérience partagés avec la communauté" position="bottom">
+            <Card className="card-3d cursor-help w-full">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground flex items-center gap-1">
+                      Mes retours
+                      <HelpCircle className="h-3 w-3 opacity-50" />
+                    </p>
+                    <p className="text-2xl font-bold">{stats.totalRetours}</p>
+                  </div>
+                  <div className="h-12 w-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                    <MessageSquare className="h-6 w-6 text-green-600 dark:text-green-400" />
+                  </div>
                 </div>
-                <div className="h-12 w-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                  <MessageSquare className="h-6 w-6 text-green-600 dark:text-green-400" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </Tooltip>
 
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Mon CV</p>
-                  <p className="text-2xl font-bold">{cv ? "Complet" : "À créer"}</p>
+          <Tooltip content="Votre CV en ligne permet aux recruteurs de mieux vous connaître" position="bottom">
+            <Card className="card-3d cursor-help w-full">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground flex items-center gap-1">
+                      Mon CV
+                      <HelpCircle className="h-3 w-3 opacity-50" />
+                    </p>
+                    <p className="text-2xl font-bold">{cv ? "Complet" : "À créer"}</p>
+                  </div>
+                  <div className="h-12 w-12 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                    <FileText className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                  </div>
                 </div>
-                <div className="h-12 w-12 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                  <FileText className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </Tooltip>
 
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Profil complété</p>
-                  <p className="text-2xl font-bold">{profileCompletion}%</p>
+          <Tooltip content="Un profil complet augmente vos chances d'être remarqué par les recruteurs" position="bottom">
+            <Card className="card-3d cursor-help w-full">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground flex items-center gap-1">
+                      Profil complété
+                      <HelpCircle className="h-3 w-3 opacity-50" />
+                    </p>
+                    <p className="text-2xl font-bold">{profileCompletion}%</p>
+                  </div>
+                  <div className="h-12 w-12 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
+                    <TrendingUp className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+                  </div>
                 </div>
-                <div className="h-12 w-12 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
-                  <TrendingUp className="h-6 w-6 text-orange-600 dark:text-orange-400" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </Tooltip>
         </div>
 
         {/* Main Content */}
