@@ -16,6 +16,7 @@ import {
   Briefcase,
   GraduationCap,
   Award,
+  HandHeart,
 } from "lucide-react";
 import { formatRelativeDate, truncate, cn } from "@/lib/utils";
 
@@ -23,18 +24,21 @@ const typeOffreLabels: Record<string, string> = {
   EMPLOI: "Emploi",
   FORMATION: "Formation",
   BOURSE: "Bourse",
+  VOLONTARIAT: "Volontariat",
 };
 
 const typeOffreColors: Record<string, string> = {
   EMPLOI: "bg-blue-100 text-blue-800",
   FORMATION: "bg-green-100 text-green-800",
   BOURSE: "bg-purple-100 text-purple-800",
+  VOLONTARIAT: "bg-orange-100 text-orange-800",
 };
 
 const typeOffreIcons: Record<string, React.ElementType> = {
   EMPLOI: Briefcase,
   FORMATION: GraduationCap,
   BOURSE: Award,
+  VOLONTARIAT: HandHeart,
 };
 
 export function Offres() {
@@ -164,7 +168,7 @@ export function Offres() {
             >
               Tout
             </Button>
-            {(["EMPLOI", "FORMATION", "BOURSE"] as TypeOffre[]).map((type) => {
+            {(["EMPLOI", "FORMATION", "BOURSE", "VOLONTARIAT"] as TypeOffre[]).map((type) => {
               const Icon = typeOffreIcons[type];
               return (
                 <Button

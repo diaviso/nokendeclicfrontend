@@ -23,12 +23,14 @@ const typeOffreLabels: Record<string, string> = {
   EMPLOI: "Emploi",
   FORMATION: "Formation",
   BOURSE: "Bourse",
+  VOLONTARIAT: "Volontariat",
 };
 
 const typeOffreColors: Record<string, string> = {
   EMPLOI: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
   FORMATION: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
   BOURSE: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400",
+  VOLONTARIAT: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400",
 };
 
 export function Dashboard() {

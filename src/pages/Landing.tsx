@@ -638,6 +638,7 @@ export function Landing() {
                 <li><a href="/offres" className="hover:text-white transition-colors">Offres d'emploi</a></li>
                 <li><a href="/offres?type=FORMATION" className="hover:text-white transition-colors">Formations</a></li>
                 <li><a href="/offres?type=BOURSE" className="hover:text-white transition-colors">Bourses</a></li>
+                <li><a href="/offres?type=VOLONTARIAT" className="hover:text-white transition-colors">Volontariat</a></li>
               </ul>
             </div>
             <div>

@@ -1,6 +1,6 @@
 export type Role = "ADMIN" | "MEMBRE" | "PARTENAIRE";
 export type StatutProfessionnel = "NON_PRECISE" | "EN_RECHERCHE" | "EN_POSTE" | "ETUDIANT" | "FREELANCE" | "CHOMAGE" | "RECONVERSION";
-export type TypeOffre = "EMPLOI" | "FORMATION" | "BOURSE";
+export type TypeOffre = "EMPLOI" | "FORMATION" | "BOURSE" | "VOLONTARIAT";
 export type TypeEmploi = "CDI" | "CDD" | "STAGE" | "ALTERNANCE" | "FREELANCE" | "INTERIM" | "SAISONNIER" | "TEMPS_PARTIEL" | "TEMPS_PLEIN";
 export type Secteur = "INFORMATIQUE" | "FINANCE" | "SANTE" | "EDUCATION" | "COMMERCE" | "INDUSTRIE" | "AGRICULTURE" | "TOURISME" | "TRANSPORT" | "COMMUNICATION" | "ADMINISTRATION" | "ARTISANAT" | "CONSTRUCTION" | "ENERGIE" | "ENVIRONNEMENT" | "JURIDIQUE" | "MARKETING" | "RESSOURCES_HUMAINES" | "RECHERCHE" | "AUTRE";
 export type NiveauExperience = "DEBUTANT" | "JUNIOR" | "CONFIRME" | "SENIOR" | "EXPERT";
@@ -52,6 +52,11 @@ export interface Offre {
   niveauEtude?: string;
   montantBourse?: number;
   estRemboursable?: boolean;
+  typeVolontariat?: string;
+  dureeVolontariat?: number;
+  hebergement?: boolean;
+  indemnite?: number;
+  competencesRequises?: string;
   documentUrl?: string;
   documentName?: string;
   viewCount: number;

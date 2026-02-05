@@ -28,6 +28,7 @@ import {
   Briefcase,
   GraduationCap,
   Award,
+  HandHeart,
   Calendar,
   DollarSign,
   Users,
@@ -43,18 +44,21 @@ const typeOffreLabels: Record<string, string> = {
   EMPLOI: "Emploi",
   FORMATION: "Formation",
   BOURSE: "Bourse",
+  VOLONTARIAT: "Volontariat",
 };
 
 const typeOffreColors: Record<string, string> = {
   EMPLOI: "bg-blue-100 text-blue-800",
   FORMATION: "bg-green-100 text-green-800",
   BOURSE: "bg-purple-100 text-purple-800",
+  VOLONTARIAT: "bg-orange-100 text-orange-800",
 };
 
 const typeOffreIcons: Record<string, React.ElementType> = {
   EMPLOI: Briefcase,
   FORMATION: GraduationCap,
   BOURSE: Award,
+  VOLONTARIAT: HandHeart,
 };
 
 export function OffreDetail() {
@@ -467,6 +471,50 @@ export function OffreDetail() {
                     <div>
                       <p className="text-sm font-medium">Durée de formation</p>
                       <p className="text-sm text-muted-foreground">{offre.dureeFormation} mois</p>
+                    </div>
+                  </div>
+                )}
+
+                {offre.typeVolontariat && (
+                  <div className="flex items-center gap-3">
+                    <HandHeart className="h-5 w-5 text-muted-foreground" />
+                    <div>
+                      <p className="text-sm font-medium">Type de volontariat</p>
+                      <p className="text-sm text-muted-foreground">{offre.typeVolontariat}</p>
+                    </div>
+                  </div>
+                )}
+
+                {offre.dureeVolontariat && (
+                  <div className="flex items-center gap-3">
+                    <Clock className="h-5 w-5 text-muted-foreground" />
+                    <div>
+                      <p className="text-sm font-medium">Durée du volontariat</p>
+                      <p className="text-sm text-muted-foreground">{offre.dureeVolontariat} mois</p>
+                    </div>
+                  </div>
+                )}
+
+                {offre.indemnite && (
+                  <div className="flex items-center gap-3">
+                    <DollarSign className="h-5 w-5 text-muted-foreground" />
+                    <div>
+                      <p className="text-sm font-medium">Indemnité</p>
+                      <p className="text-sm text-muted-foreground">
+                        {offre.indemnite.toLocaleString()} {offre.devise || "FCFA"}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {offre.hebergement !== undefined && offre.hebergement !== null && (
+                  <div className="flex items-center gap-3">
+                    <Building2 className="h-5 w-5 text-muted-foreground" />
+                    <div>
+                      <p className="text-sm font-medium">Hébergement</p>
+                      <p className="text-sm text-muted-foreground">
+                        {offre.hebergement ? "Fourni" : "Non fourni"}
+                      </p>
                     </div>
                   </div>
                 )}

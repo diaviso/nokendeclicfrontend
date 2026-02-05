@@ -9,6 +9,7 @@ import {
   Briefcase,
   GraduationCap,
   Award,
+  HandHeart,
   MapPin,
   Building2,
   Calendar,
@@ -30,6 +31,7 @@ const typeOffreOptions = [
   { value: "EMPLOI", label: "Emploi", icon: Briefcase },
   { value: "FORMATION", label: "Formation", icon: GraduationCap },
   { value: "BOURSE", label: "Bourse", icon: Award },
+  { value: "VOLONTARIAT", label: "Volontariat", icon: HandHeart },
 ];
 
 const typeEmploiOptions = [
@@ -101,6 +103,12 @@ export function AdminOffreForm() {
     niveauEtude: "",
     montantBourse: "",
     estRemboursable: false,
+    // Volontariat specific
+    typeVolontariat: "",
+    dureeVolontariat: "",
+    hebergement: false,
+    indemnite: "",
+    competencesRequises: "",
   });
 
   const [newTag, setNewTag] = useState("");
@@ -132,6 +140,11 @@ export function AdminOffreForm() {
             niveauEtude: offre.niveauEtude || "",
             montantBourse: offre.montantBourse?.toString() || "",
             estRemboursable: offre.estRemboursable || false,
+            typeVolontariat: offre.typeVolontariat || "",
+            dureeVolontariat: offre.dureeVolontariat?.toString() || "",
+            hebergement: offre.hebergement || false,
+            indemnite: offre.indemnite?.toString() || "",
+            competencesRequises: offre.competencesRequises || "",
           });
         } catch (error) {
           console.error("Error fetching offre:", error);
@@ -194,6 +207,12 @@ export function AdminOffreForm() {
         payload.niveauEtude = formData.niveauEtude || undefined;
         if (formData.montantBourse) payload.montantBourse = parseFloat(formData.montantBourse);
         payload.estRemboursable = formData.estRemboursable;
+      } else if (formData.typeOffre === "VOLONTARIAT") {
+        payload.typeVolontariat = formData.typeVolontariat || undefined;
+        if (formData.dureeVolontariat) payload.dureeVolontariat = parseInt(formData.dureeVolontariat);
+        payload.hebergement = formData.hebergement;
+        if (formData.indemnite) payload.indemnite = parseFloat(formData.indemnite);
+        payload.competencesRequises = formData.competencesRequises || undefined;
       }
 
       if (isEditing && id) {
@@ -574,6 +593,83 @@ export function AdminOffreForm() {
                       Bourse remboursable
                     </label>
                   </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Champs spécifiques Volontariat */}
+          {formData.typeOffre === "VOLONTARIAT" && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <HandHeart className="h-5 w-5" />
+                  Détails du volontariat
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium mb-1 block">Type de volontariat</label>
+                    <select
+                      value={formData.typeVolontariat}
+                      onChange={(e) => setFormData((prev) => ({ ...prev, typeVolontariat: e.target.value }))}
+                      className="w-full px-3 py-2 border rounded-md bg-white dark:bg-gray-800 dark:border-gray-700"
+                    >
+                      <option value="">Sélectionner...</option>
+                      <option value="SERVICE_CIVIQUE">Service civique</option>
+                      <option value="VOLONTARIAT_INTERNATIONAL">Volontariat international</option>
+                      <option value="BENEVOLAT">Bénévolat</option>
+                      <option value="MISSION_HUMANITAIRE">Mission humanitaire</option>
+                      <option value="VOLONTARIAT_ASSOCIATIF">Volontariat associatif</option>
+                      <option value="AUTRE">Autre</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium mb-1 block">Durée (en mois)</label>
+                    <Input
+                      value={formData.dureeVolontariat}
+                      onChange={(e) => setFormData((prev) => ({ ...prev, dureeVolontariat: e.target.value }))}
+                      type="number"
+                      placeholder="6"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium mb-1 block">Indemnité mensuelle</label>
+                    <Input
+                      value={formData.indemnite}
+                      onChange={(e) => setFormData((prev) => ({ ...prev, indemnite: e.target.value }))}
+                      type="number"
+                      placeholder="0"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-6">
+                    <input
+                      type="checkbox"
+                      id="hebergement"
+                      checked={formData.hebergement}
+                      onChange={(e) => setFormData((prev) => ({ ...prev, hebergement: e.target.checked }))}
+                      className="rounded"
+                    />
+                    <label htmlFor="hebergement" className="text-sm">
+                      Hébergement fourni
+                    </label>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Compétences requises</label>
+                  <Textarea
+                    value={formData.competencesRequises}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, competencesRequises: e.target.value }))}
+                    placeholder="Décrivez les compétences ou qualités recherchées..."
+                    rows={3}
+                  />
                 </div>
               </CardContent>
             </Card>
