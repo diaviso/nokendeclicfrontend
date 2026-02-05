@@ -11,15 +11,18 @@ import {
   Users,
   MapPin,
   Sparkles,
-  Play,
   Star,
   Zap,
-  Shield,
   Globe,
   Heart,
   Mail,
+  Moon,
+  Sun,
+  HandHeart,
 } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
+import { offresService } from "@/services";
+import type { Offre } from "@/types";
 
 // Animated counter hook
 function useCountUp(end: number, duration: number = 2000, startOnView: boolean = true) {
@@ -115,10 +118,33 @@ const partners = [
   { name: "USAID", color: "from-indigo-400 to-indigo-600" },
 ];
 
+const typeOffreLabels: Record<string, string> = {
+  EMPLOI: "Emploi",
+  FORMATION: "Formation",
+  BOURSE: "Bourse",
+  VOLONTARIAT: "Volontariat",
+};
+
+const typeOffreColors: Record<string, string> = {
+  EMPLOI: "from-blue-500 to-blue-600",
+  FORMATION: "from-emerald-500 to-emerald-600",
+  BOURSE: "from-amber-500 to-amber-600",
+  VOLONTARIAT: "from-orange-500 to-orange-600",
+};
+
+const typeOffreIcons: Record<string, React.ElementType> = {
+  EMPLOI: Briefcase,
+  FORMATION: GraduationCap,
+  BOURSE: Award,
+  VOLONTARIAT: HandHeart,
+};
+
 export function Landing() {
   const navigate = useNavigate();
   const { isAuthenticated, loginWithGoogle } = useAuth();
   const [activeTestimonial, setActiveTestimonial] = useState(0);
+  const [latestOffres, setLatestOffres] = useState<Offre[]>([]);
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   // Animated counters
   const membersCounter = useCountUp(1000, 2500);
@@ -139,6 +165,36 @@ export function Landing() {
     }, 5000);
     return () => clearInterval(interval);
   }, []);
+
+  // Fetch latest offers
+  useEffect(() => {
+    const fetchLatestOffres = async () => {
+      try {
+        const response = await offresService.getAll({ limit: 3 });
+        setLatestOffres(response.data || []);
+      } catch (error) {
+        console.error("Error fetching latest offers:", error);
+      }
+    };
+    fetchLatestOffres();
+  }, []);
+
+  // Handle theme toggle
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDarkMode]);
+
+  const handleOffreClick = (offreId: number) => {
+    if (isAuthenticated) {
+      navigate(`/offres/${offreId}`);
+    } else {
+      navigate('/login');
+    }
+  };
 
   const handleAuth = () => {
     navigate("/login");
@@ -173,13 +229,20 @@ export function Landing() {
               </div>
             </div>
             <div className="flex items-center gap-2 md:gap-4">
-              <Button variant="ghost" onClick={handleAuth} className="hidden sm:flex">
-                Se connecter
-              </Button>
+              <button
+                onClick={() => setIsDarkMode(!isDarkMode)}
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                aria-label="Toggle theme"
+              >
+                {isDarkMode ? (
+                  <Sun className="h-5 w-5 text-amber-500" />
+                ) : (
+                  <Moon className="h-5 w-5 text-gray-600" />
+                )}
+              </button>
               <Button onClick={handleAuth} className="shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all">
                 <Sparkles className="h-4 w-4 mr-2" />
-                <span className="hidden sm:inline">Commencer</span>
-                <span className="sm:hidden">Rejoindre</span>
+                <span>Se connecter</span>
               </Button>
             </div>
           </div>
@@ -230,26 +293,54 @@ export function Landing() {
                   onClick={handleAuth} 
                   className="group text-base px-8 py-6 shadow-xl shadow-primary/25 hover:shadow-2xl hover:shadow-primary/30 transition-all duration-300 hover:-translate-y-1"
                 >
-                  <span>Créer mon compte gratuit</span>
+                  <span>Créer mon compte</span>
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                </Button>
-                <Button 
-                  size="lg" 
-                  variant="outline" 
-                  className="group text-base px-8 py-6 border-2 hover:bg-gray-50"
-                  onClick={() => navigate("/offres")}
-                >
-                  <Play className="mr-2 h-5 w-5 text-primary" />
-                  <span>Voir les offres</span>
                 </Button>
               </div>
 
+              {/* Latest Offers */}
+              {latestOffres.length > 0 && (
+                <div className="mt-10">
+                  <p className="text-sm font-medium text-gray-500 mb-4">Dernières offres publiées</p>
+                  <div className="space-y-3">
+                    {latestOffres.map((offre) => {
+                      const Icon = typeOffreIcons[offre.typeOffre] || Briefcase;
+                      return (
+                        <div
+                          key={offre.id}
+                          onClick={() => handleOffreClick(offre.id)}
+                          className="group flex items-center gap-4 p-4 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer"
+                        >
+                          <div className={`h-12 w-12 rounded-xl bg-gradient-to-br ${typeOffreColors[offre.typeOffre]} flex items-center justify-center flex-shrink-0`}>
+                            <Icon className="h-6 w-6 text-white" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-semibold text-gray-900 truncate group-hover:text-primary transition-colors">
+                              {offre.titre}
+                            </h4>
+                            <div className="flex items-center gap-2 text-sm text-gray-500">
+                              <span>{typeOffreLabels[offre.typeOffre]}</span>
+                              {offre.localisation && (
+                                <>
+                                  <span>•</span>
+                                  <span className="flex items-center gap-1">
+                                    <MapPin className="h-3 w-3" />
+                                    {offre.localisation}
+                                  </span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                          <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               {/* Trust badges */}
               <div className="mt-12 flex flex-wrap items-center justify-center lg:justify-start gap-6">
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Shield className="h-5 w-5 text-emerald-500" />
-                  <span>100% Gratuit</span>
-                </div>
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <Zap className="h-5 w-5 text-amber-500" />
                   <span>Inscription en 30s</span>
@@ -463,7 +554,7 @@ export function Landing() {
               {
                 step: "01",
                 title: "Créez votre profil",
-                description: "Inscrivez-vous gratuitement et complétez votre CV en quelques minutes",
+                description: "Inscrivez-vous et complétez votre CV en quelques minutes",
                 icon: Users,
                 color: "primary",
               },
@@ -586,7 +677,7 @@ export function Landing() {
               </h2>
               <p className="text-lg md:text-xl text-white/80 mb-10 max-w-2xl mx-auto">
                 Rejoignez plus de 1 000 Casamançais qui construisent leur carrière avec Noken.
-                C'est gratuit et ça le restera toujours.
+                Rejoignez une communauté active et engagée.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button
@@ -595,7 +686,7 @@ export function Landing() {
                   className="bg-white text-primary hover:bg-gray-100 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 px-8 py-6 text-base"
                 >
                   <Mail className="mr-2 h-5 w-5" />
-                  Créer mon compte gratuit
+                  Créer mon compte
                 </Button>
                 <Button
                   size="lg"

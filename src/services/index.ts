@@ -11,3 +11,4 @@ export { default as adminService } from "./adminService";
 export { default as messagingService } from "./messagingService";
 export { default as notificationsService } from "./notificationsService";
 export { default as dashboardService } from "./dashboardService";
+export { default as uploadService } from "./uploadService";

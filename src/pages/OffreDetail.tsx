@@ -37,6 +37,8 @@ import {
   Loader2,
   Trash2,
   CheckCircle,
+  Download,
+  File,
 } from "lucide-react";
 import { formatDate, cn } from "@/lib/utils";
 
@@ -550,6 +552,53 @@ export function OffreDetail() {
                 </Button>
               </CardContent>
             </Card>
+
+            {/* Fichiers joints */}
+            {offre.fichiers && offre.fichiers.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="h-5 w-5" />
+                    Fichiers joints ({offre.fichiers.length})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {offre.fichiers.map((fichier) => {
+                    const isImage = fichier.type.startsWith("image/");
+                    return (
+                      <a
+                        key={fichier.id}
+                        href={fichier.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border hover:bg-gray-100 transition-colors"
+                      >
+                        {isImage ? (
+                          <div className="h-12 w-12 rounded overflow-hidden flex-shrink-0">
+                            <img
+                              src={fichier.url}
+                              alt={fichier.nom}
+                              className="h-full w-full object-cover"
+                            />
+                          </div>
+                        ) : (
+                          <div className="h-12 w-12 rounded bg-red-100 flex items-center justify-center flex-shrink-0">
+                            <File className="h-6 w-6 text-red-500" />
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{fichier.nom}</p>
+                          <p className="text-xs text-gray-500">
+                            {(fichier.taille / 1024).toFixed(1)} KB • {fichier.type.split("/")[1]?.toUpperCase()}
+                          </p>
+                        </div>
+                        <Download className="h-4 w-4 text-gray-400" />
+                      </a>
+                    );
+                  })}
+                </CardContent>
+              </Card>
+            )}
 
             {/* Publisher */}
             <Card>

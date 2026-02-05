@@ -60,6 +60,14 @@ export interface Offre {
   documentUrl?: string;
   documentName?: string;
   viewCount: number;
+  fichiers?: {
+    id: number;
+    nom: string;
+    url: string;
+    type: string;
+    taille: number;
+    createdAt: string;
+  }[];
   auteur: {
     id: number;
     username: string;

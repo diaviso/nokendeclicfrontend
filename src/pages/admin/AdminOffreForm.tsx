@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Header } from "@/components/layout";
 import { Card, CardContent, CardHeader, CardTitle, Button, Input, Textarea, AlertModal } from "@/components/ui";
-import { offresService } from "@/services";
+import { offresService, uploadService } from "@/services";
+import type { OffreFichier } from "@/services/uploadService";
 import {
   Save,
   ArrowLeft,
@@ -18,6 +19,12 @@ import {
   FileText,
   Globe,
   Loader2,
+  Upload,
+  Trash2,
+  File,
+  X,
+  Edit2,
+  Check,
 } from "lucide-react";
 
 type ModalState = {
@@ -112,6 +119,11 @@ export function AdminOffreForm() {
   });
 
   const [newTag, setNewTag] = useState("");
+  const [fichiers, setFichiers] = useState<OffreFichier[]>([]);
+  const [uploadingFiles, setUploadingFiles] = useState(false);
+  const [editingFileId, setEditingFileId] = useState<number | null>(null);
+  const [editingFileName, setEditingFileName] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (isEditing && id) {
@@ -146,6 +158,9 @@ export function AdminOffreForm() {
             indemnite: offre.indemnite?.toString() || "",
             competencesRequises: offre.competencesRequises || "",
           });
+          if (offre.fichiers) {
+            setFichiers(offre.fichiers);
+          }
         } catch (error) {
           console.error("Error fetching offre:", error);
           setModal({
@@ -257,6 +272,86 @@ export function AdminOffreForm() {
   const removeTag = (tag: string) => {
     setFormData((prev) => ({ ...prev, tags: prev.tags.filter((t) => t !== tag) }));
   };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0 || !id) return;
+
+    setUploadingFiles(true);
+    try {
+      const uploadedFiles = await uploadService.uploadMultipleOffreFiles(
+        parseInt(id),
+        Array.from(files)
+      );
+      setFichiers((prev) => [...uploadedFiles, ...prev]);
+      setModal({
+        isOpen: true,
+        type: "success",
+        title: "Fichiers uploadés",
+        message: `${uploadedFiles.length} fichier(s) uploadé(s) avec succès.`,
+      });
+    } catch (error: any) {
+      console.error("Error uploading files:", error);
+      setModal({
+        isOpen: true,
+        type: "error",
+        title: "Erreur d'upload",
+        message: error.response?.data?.message || "Impossible d'uploader les fichiers.",
+      });
+    } finally {
+      setUploadingFiles(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
+  const handleDeleteFile = async (fichierId: number) => {
+    try {
+      await uploadService.deleteFichier(fichierId);
+      setFichiers((prev) => prev.filter((f) => f.id !== fichierId));
+      setModal({
+        isOpen: true,
+        type: "success",
+        title: "Fichier supprimé",
+        message: "Le fichier a été supprimé avec succès.",
+      });
+    } catch (error: any) {
+      console.error("Error deleting file:", error);
+      setModal({
+        isOpen: true,
+        type: "error",
+        title: "Erreur",
+        message: error.response?.data?.message || "Impossible de supprimer le fichier.",
+      });
+    }
+  };
+
+  const handleUpdateFileName = async (fichierId: number) => {
+    if (!editingFileName.trim()) return;
+    try {
+      const updated = await uploadService.updateFichierName(fichierId, editingFileName.trim());
+      setFichiers((prev) => prev.map((f) => (f.id === fichierId ? updated : f)));
+      setEditingFileId(null);
+      setEditingFileName("");
+    } catch (error: any) {
+      console.error("Error updating file name:", error);
+      setModal({
+        isOpen: true,
+        type: "error",
+        title: "Erreur",
+        message: error.response?.data?.message || "Impossible de renommer le fichier.",
+      });
+    }
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  const isImageFile = (type: string) => type.startsWith("image/");
 
   if (loading) {
     return (
@@ -671,6 +766,165 @@ export function AdminOffreForm() {
                     rows={3}
                   />
                 </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Fichiers - Only show when editing */}
+          {isEditing && id && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Upload className="h-5 w-5" />
+                  Fichiers joints
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Upload zone */}
+                <div className="border-2 border-dashed border-gray-200 rounded-lg p-6 text-center hover:border-primary/50 transition-colors">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    accept="image/*,.pdf"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                    id="file-upload"
+                  />
+                  <label
+                    htmlFor="file-upload"
+                    className="cursor-pointer flex flex-col items-center gap-2"
+                  >
+                    <Upload className="h-10 w-10 text-gray-400" />
+                    <span className="text-sm text-gray-600">
+                      {uploadingFiles ? (
+                        <span className="flex items-center gap-2">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Upload en cours...
+                        </span>
+                      ) : (
+                        <>
+                          <span className="text-primary font-medium">Cliquez pour uploader</span>
+                          {" "}ou glissez-déposez
+                        </>
+                      )}
+                    </span>
+                    <span className="text-xs text-gray-400">
+                      Images (JPG, PNG, GIF, WebP) et PDF - Max 10MB
+                    </span>
+                  </label>
+                </div>
+
+                {/* Files list */}
+                {fichiers.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-gray-700">
+                      {fichiers.length} fichier(s) joint(s)
+                    </p>
+                    <div className="grid gap-3">
+                      {fichiers.map((fichier) => (
+                        <div
+                          key={fichier.id}
+                          className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border"
+                        >
+                          {/* Preview or icon */}
+                          {isImageFile(fichier.type) ? (
+                            <div className="h-12 w-12 rounded overflow-hidden flex-shrink-0">
+                              <img
+                                src={fichier.url}
+                                alt={fichier.nom}
+                                className="h-full w-full object-cover"
+                              />
+                            </div>
+                          ) : (
+                            <div className="h-12 w-12 rounded bg-red-100 flex items-center justify-center flex-shrink-0">
+                              <File className="h-6 w-6 text-red-500" />
+                            </div>
+                          )}
+
+                          {/* File info */}
+                          <div className="flex-1 min-w-0">
+                            {editingFileId === fichier.id ? (
+                              <div className="flex items-center gap-2">
+                                <Input
+                                  value={editingFileName}
+                                  onChange={(e) => setEditingFileName(e.target.value)}
+                                  className="h-8 text-sm"
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                      handleUpdateFileName(fichier.id);
+                                    } else if (e.key === "Escape") {
+                                      setEditingFileId(null);
+                                      setEditingFileName("");
+                                    }
+                                  }}
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => handleUpdateFileName(fichier.id)}
+                                  className="p-1 text-green-600 hover:bg-green-100 rounded"
+                                >
+                                  <Check className="h-4 w-4" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingFileId(null);
+                                    setEditingFileName("");
+                                  }}
+                                  className="p-1 text-gray-500 hover:bg-gray-200 rounded"
+                                >
+                                  <X className="h-4 w-4" />
+                                </button>
+                              </div>
+                            ) : (
+                              <>
+                                <p className="text-sm font-medium truncate">{fichier.nom}</p>
+                                <p className="text-xs text-gray-500">
+                                  {formatFileSize(fichier.taille)} • {fichier.type.split("/")[1]?.toUpperCase()}
+                                </p>
+                              </>
+                            )}
+                          </div>
+
+                          {/* Actions */}
+                          {editingFileId !== fichier.id && (
+                            <div className="flex items-center gap-1">
+                              <a
+                                href={fichier.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-2 text-gray-500 hover:text-primary hover:bg-gray-100 rounded"
+                                title="Voir"
+                              >
+                                <Globe className="h-4 w-4" />
+                              </a>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setEditingFileId(fichier.id);
+                                  setEditingFileName(fichier.nom);
+                                }}
+                                className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded"
+                                title="Renommer"
+                              >
+                                <Edit2 className="h-4 w-4" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteFile(fichier.id)}
+                                className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded"
+                                title="Supprimer"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}
