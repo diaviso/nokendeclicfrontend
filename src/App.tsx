@@ -21,6 +21,8 @@ import {
   AdminUsers,
   AdminOffres,
   AdminOffreForm,
+  ForgotPassword,
+  ResetPassword,
 } from "@/pages";
 
 const queryClient = new QueryClient({
@@ -42,6 +44,8 @@ function App() {
             {/* Public routes */}
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
 
             {/* Protected routes with dashboard layout */}

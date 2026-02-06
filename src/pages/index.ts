@@ -10,4 +10,6 @@ export { Retours } from "./Retours";
 export { Profile } from "./Profile";
 export { AuthCallback } from "./AuthCallback";
 export { Messagerie } from "./Messagerie";
+export { ForgotPassword } from "./ForgotPassword";
+export { ResetPassword } from "./ResetPassword";
 export { AdminDashboard, AdminUsers, AdminOffres, AdminOffreForm } from "./admin";
