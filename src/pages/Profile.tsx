@@ -20,7 +20,18 @@ import {
   RefreshCw,
   HelpCircle,
   Loader2,
+  Phone,
+  Calendar,
+  Heart,
+  Users,
 } from "lucide-react";
+
+const sexeOptions = [
+  { value: "NON_PRECISE", label: "Non précisé" },
+  { value: "HOMME", label: "Homme" },
+  { value: "FEMME", label: "Femme" },
+  { value: "AUTRE", label: "Autre" },
+];
 
 const statutOptions = [
   { value: "NON_PRECISE", label: "Non précisé", icon: HelpCircle, color: "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300", borderColor: "border-gray-300" },
@@ -45,6 +56,12 @@ export function Profile() {
     pays: user?.pays || "Sénégal",
     commune: user?.commune || "",
     quartier: user?.quartier || "",
+    sexe: user?.sexe || "NON_PRECISE" as string,
+    dateNaissance: user?.dateNaissance ? user.dateNaissance.split("T")[0] : "",
+    adresse: user?.adresse || "",
+    telephone: user?.telephone || "",
+    handicap: user?.handicap || false,
+    typeHandicap: user?.typeHandicap || "",
   });
 
   const triggerConfetti = () => {
@@ -267,6 +284,122 @@ export function Profile() {
                 />
               </div>
             </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block dark:text-gray-200">Adresse complète</label>
+              <Input
+                value={formData.adresse}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, adresse: e.target.value }))
+                }
+                placeholder="Ex: 123 Rue de la Liberté"
+                className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Additional Personal Info */}
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 dark:text-white">
+              <Users className="h-5 w-5" />
+              Informations complémentaires
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium mb-1 block dark:text-gray-200">
+                  <Users className="h-4 w-4 inline mr-1" />
+                  Sexe
+                </label>
+                <select
+                  value={formData.sexe}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, sexe: e.target.value }))
+                  }
+                  className="w-full h-10 px-3 rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  {sexeOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-1 block dark:text-gray-200">
+                  <Calendar className="h-4 w-4 inline mr-1" />
+                  Date de naissance
+                </label>
+                <Input
+                  type="date"
+                  value={formData.dateNaissance}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, dateNaissance: e.target.value }))
+                  }
+                  className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block dark:text-gray-200">
+                <Phone className="h-4 w-4 inline mr-1" />
+                Téléphone
+              </label>
+              <Input
+                value={formData.telephone}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, telephone: e.target.value }))
+                }
+                placeholder="Ex: +221 77 123 45 67"
+                className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Disability Status */}
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 dark:text-white">
+              <Heart className="h-5 w-5" />
+              Situation de handicap
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Cette information est confidentielle et nous aide à mieux vous accompagner.
+            </p>
+            <div className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                id="handicap"
+                checked={formData.handicap}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, handicap: e.target.checked }))
+                }
+                className="h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary"
+              />
+              <label htmlFor="handicap" className="text-sm font-medium dark:text-gray-200">
+                Je suis en situation de handicap
+              </label>
+            </div>
+            {formData.handicap && (
+              <div>
+                <label className="text-sm font-medium mb-1 block dark:text-gray-200">
+                  Type de handicap (optionnel)
+                </label>
+                <Input
+                  value={formData.typeHandicap}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, typeHandicap: e.target.value }))
+                  }
+                  placeholder="Ex: Handicap moteur, visuel, auditif..."
+                  className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                />
+              </div>
+            )}
           </CardContent>
         </Card>
 

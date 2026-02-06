@@ -39,10 +39,33 @@ interface AdminOffre {
   };
 }
 
+export interface DisaggregationStats {
+  gender: {
+    hommes: number;
+    femmes: number;
+    autres: number;
+    nonPrecise: number;
+    total: number;
+  };
+  handicap: {
+    avec: number;
+    sans: number;
+    total: number;
+  };
+  ageRanges: Record<string, number>;
+  statutProfessionnel: Record<string, number>;
+  geographic: { pays: string; count: number }[];
+}
+
 export const adminService = {
   // Statistics
   async getStatistics(): Promise<Statistics> {
     const { data } = await api.get<Statistics>("/api/admin/statistics");
+    return data;
+  },
+
+  async getDisaggregationStats(): Promise<DisaggregationStats> {
+    const { data } = await api.get<DisaggregationStats>("/api/admin/statistics/disaggregation");
     return data;
   },
 

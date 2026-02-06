@@ -1,5 +1,6 @@
 export type Role = "ADMIN" | "MEMBRE" | "PARTENAIRE";
 export type StatutProfessionnel = "NON_PRECISE" | "EN_RECHERCHE" | "EN_POSTE" | "ETUDIANT" | "FREELANCE" | "CHOMAGE" | "RECONVERSION";
+export type Sexe = "HOMME" | "FEMME" | "AUTRE" | "NON_PRECISE";
 export type TypeOffre = "EMPLOI" | "FORMATION" | "BOURSE" | "VOLONTARIAT";
 export type TypeEmploi = "CDI" | "CDD" | "STAGE" | "ALTERNANCE" | "FREELANCE" | "INTERIM" | "SAISONNIER" | "TEMPS_PARTIEL" | "TEMPS_PLEIN";
 export type Secteur = "INFORMATIQUE" | "FINANCE" | "SANTE" | "EDUCATION" | "COMMERCE" | "INDUSTRIE" | "AGRICULTURE" | "TOURISME" | "TRANSPORT" | "COMMUNICATION" | "ADMINISTRATION" | "ARTISANAT" | "CONSTRUCTION" | "ENERGIE" | "ENVIRONNEMENT" | "JURIDIQUE" | "MARKETING" | "RESSOURCES_HUMAINES" | "RECHERCHE" | "AUTRE";
@@ -18,6 +19,12 @@ export interface User {
   pays?: string;
   commune?: string;
   quartier?: string;
+  sexe?: Sexe;
+  dateNaissance?: string;
+  adresse?: string;
+  telephone?: string;
+  handicap?: boolean;
+  typeHandicap?: string;
   createdAt: string;
   isGoogleLogin: boolean;
 }
