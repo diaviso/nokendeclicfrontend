@@ -239,13 +239,16 @@ export function AdminOffreForm() {
           message: "L'offre a été mise à jour avec succès.",
         });
       } else {
-        await offresService.create(payload);
+        const newOffre = await offresService.create(payload);
         setModal({
           isOpen: true,
           type: "success",
           title: "Offre créée",
-          message: "L'offre a été créée avec succès.",
+          message: "L'offre a été créée avec succès. Vous allez être redirigé vers la page de modification pour ajouter des fichiers.",
         });
+        // Redirect to edit page so user can add files
+        setTimeout(() => navigate(`/admin/offres/${newOffre.id}/edit`), 2000);
+        return;
       }
 
       setTimeout(() => navigate("/admin/offres"), 1500);
@@ -770,27 +773,35 @@ export function AdminOffreForm() {
             </Card>
           )}
 
-          {/* Fichiers - Only show when editing */}
-          {isEditing && id && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Upload className="h-5 w-5" />
-                  Fichiers joints
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Upload zone */}
-                <div className="border-2 border-dashed border-gray-200 rounded-lg p-6 text-center hover:border-primary/50 transition-colors">
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    multiple
-                    accept="image/*,.pdf"
-                    onChange={handleFileUpload}
-                    className="hidden"
-                    id="file-upload"
-                  />
+          {/* Fichiers - Show info when creating, upload zone when editing */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Upload className="h-5 w-5" />
+                Fichiers joints
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {!isEditing ? (
+                <div className="border-2 border-dashed border-gray-200 rounded-lg p-6 text-center bg-gray-50">
+                  <Upload className="h-10 w-10 text-gray-300 mx-auto mb-2" />
+                  <p className="text-sm text-gray-500">
+                    Vous pourrez ajouter des fichiers (images, PDF, documents) après la création de l'offre.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  {/* Upload zone */}
+                  <div className="border-2 border-dashed border-gray-200 rounded-lg p-6 text-center hover:border-primary/50 transition-colors">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      multiple
+                      accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.rar"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                      id="file-upload"
+                    />
                   <label
                     htmlFor="file-upload"
                     className="cursor-pointer flex flex-col items-center gap-2"
@@ -810,7 +821,7 @@ export function AdminOffreForm() {
                       )}
                     </span>
                     <span className="text-xs text-gray-400">
-                      Images (JPG, PNG, GIF, WebP) et PDF - Max 10MB
+                      Images, PDF, Word, Excel, PowerPoint, texte - Max 10MB
                     </span>
                   </label>
                 </div>
@@ -925,9 +936,10 @@ export function AdminOffreForm() {
                     </div>
                   </div>
                 )}
-              </CardContent>
-            </Card>
-          )}
+                </>
+              )}
+            </CardContent>
+          </Card>
 
           {/* Tags */}
           <Card>
