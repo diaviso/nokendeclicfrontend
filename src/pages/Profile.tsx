@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Header } from "@/components/layout";
 import { Card, CardContent, CardHeader, CardTitle, Button, Input } from "@/components/ui";
 import { useAuth } from "@/contexts/AuthContext";
@@ -33,6 +33,32 @@ const sexeOptions = [
   { value: "AUTRE", label: "Autre" },
 ];
 
+const countries = [
+  "Afghanistan", "Afrique du Sud", "Albanie", "Algérie", "Allemagne", "Andorre", "Angola", "Antigua-et-Barbuda",
+  "Arabie Saoudite", "Argentine", "Arménie", "Australie", "Autriche", "Azerbaïdjan", "Bahamas", "Bahreïn",
+  "Bangladesh", "Barbade", "Belgique", "Belize", "Bénin", "Bhoutan", "Biélorussie", "Birmanie", "Bolivie",
+  "Bosnie-Herzégovine", "Botswana", "Brésil", "Brunei", "Bulgarie", "Burkina Faso", "Burundi", "Cambodge",
+  "Cameroun", "Canada", "Cap-Vert", "Centrafrique", "Chili", "Chine", "Chypre", "Colombie", "Comores",
+  "Corée du Nord", "Corée du Sud", "Costa Rica", "Côte d'Ivoire", "Croatie", "Cuba", "Danemark", "Djibouti",
+  "Dominique", "Égypte", "Émirats arabes unis", "Équateur", "Érythrée", "Espagne", "Estonie", "Eswatini",
+  "États-Unis", "Éthiopie", "Fidji", "Finlande", "France", "Gabon", "Gambie", "Géorgie", "Ghana", "Grèce",
+  "Grenade", "Guatemala", "Guinée", "Guinée équatoriale", "Guinée-Bissau", "Guyana", "Haïti", "Honduras",
+  "Hongrie", "Inde", "Indonésie", "Irak", "Iran", "Irlande", "Islande", "Israël", "Italie", "Jamaïque",
+  "Japon", "Jordanie", "Kazakhstan", "Kenya", "Kirghizistan", "Kiribati", "Koweït", "Laos", "Lesotho",
+  "Lettonie", "Liban", "Liberia", "Libye", "Liechtenstein", "Lituanie", "Luxembourg", "Macédoine du Nord",
+  "Madagascar", "Malaisie", "Malawi", "Maldives", "Mali", "Malte", "Maroc", "Maurice", "Mauritanie",
+  "Mexique", "Micronésie", "Moldavie", "Monaco", "Mongolie", "Monténégro", "Mozambique", "Namibie", "Nauru",
+  "Népal", "Nicaragua", "Niger", "Nigeria", "Norvège", "Nouvelle-Zélande", "Oman", "Ouganda", "Ouzbékistan",
+  "Pakistan", "Palaos", "Palestine", "Panama", "Papouasie-Nouvelle-Guinée", "Paraguay", "Pays-Bas", "Pérou",
+  "Philippines", "Pologne", "Portugal", "Qatar", "République démocratique du Congo", "République dominicaine",
+  "République du Congo", "République tchèque", "Roumanie", "Royaume-Uni", "Russie", "Rwanda", "Saint-Kitts-et-Nevis",
+  "Saint-Vincent-et-les-Grenadines", "Sainte-Lucie", "Salomon", "Salvador", "Samoa", "São Tomé-et-Príncipe",
+  "Sénégal", "Serbie", "Seychelles", "Sierra Leone", "Singapour", "Slovaquie", "Slovénie", "Somalie", "Soudan",
+  "Soudan du Sud", "Sri Lanka", "Suède", "Suisse", "Suriname", "Syrie", "Tadjikistan", "Tanzanie", "Tchad",
+  "Thaïlande", "Timor oriental", "Togo", "Tonga", "Trinité-et-Tobago", "Tunisie", "Turkménistan", "Turquie",
+  "Tuvalu", "Ukraine", "Uruguay", "Vanuatu", "Vatican", "Venezuela", "Viêt Nam", "Yémen", "Zambie", "Zimbabwe"
+];
+
 const statutOptions = [
   { value: "NON_PRECISE", label: "Non précisé", icon: HelpCircle, color: "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300", borderColor: "border-gray-300" },
   { value: "EN_RECHERCHE", label: "En recherche", icon: Search, color: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400", borderColor: "border-orange-500" },
@@ -47,7 +73,10 @@ export function Profile() {
   const { user, refreshUser } = useAuth();
   const [saving, setSaving] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [countrySearch, setCountrySearch] = useState("");
+  const [showCountryDropdown, setShowCountryDropdown] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const countryInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
     firstName: user?.firstName || "",
     lastName: user?.lastName || "",
@@ -63,6 +92,27 @@ export function Profile() {
     handicap: user?.handicap || false,
     typeHandicap: user?.typeHandicap || "",
   });
+
+  // Sync form data when user object updates (after refreshUser)
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        firstName: user.firstName || "",
+        lastName: user.lastName || "",
+        username: user.username || "",
+        statutProfessionnel: user.statutProfessionnel || "NON_PRECISE",
+        pays: user.pays || "Sénégal",
+        commune: user.commune || "",
+        quartier: user.quartier || "",
+        sexe: user.sexe || "NON_PRECISE",
+        dateNaissance: user.dateNaissance ? user.dateNaissance.split("T")[0] : "",
+        adresse: user.adresse || "",
+        telephone: user.telephone || "",
+        handicap: user.handicap || false,
+        typeHandicap: user.typeHandicap || "",
+      });
+    }
+  }, [user]);
 
   const triggerConfetti = () => {
     confetti({
@@ -249,16 +299,56 @@ export function Profile() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div>
+            <div className="relative">
               <label className="text-sm font-medium mb-1 block dark:text-gray-200">Pays</label>
               <Input
-                value={formData.pays}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, pays: e.target.value }))
-                }
-                placeholder="Sénégal"
+                ref={countryInputRef}
+                value={showCountryDropdown ? countrySearch : formData.pays}
+                onChange={(e) => {
+                  setCountrySearch(e.target.value);
+                  setShowCountryDropdown(true);
+                }}
+                onFocus={() => {
+                  setCountrySearch(formData.pays);
+                  setShowCountryDropdown(true);
+                }}
+                onBlur={() => {
+                  setTimeout(() => setShowCountryDropdown(false), 200);
+                }}
+                placeholder="Rechercher un pays..."
                 className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               />
+              {showCountryDropdown && (
+                <div className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                  {countries
+                    .filter((country) =>
+                      country.toLowerCase().includes(countrySearch.toLowerCase())
+                    )
+                    .slice(0, 10)
+                    .map((country) => (
+                      <button
+                        key={country}
+                        type="button"
+                        className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-white text-sm"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          setFormData((prev) => ({ ...prev, pays: country }));
+                          setShowCountryDropdown(false);
+                          setCountrySearch("");
+                        }}
+                      >
+                        {country}
+                      </button>
+                    ))}
+                  {countries.filter((country) =>
+                    country.toLowerCase().includes(countrySearch.toLowerCase())
+                  ).length === 0 && (
+                    <div className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                      Aucun pays trouvé
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>

@@ -14,31 +14,29 @@ import {
   Calendar,
   MapPin,
 } from "lucide-react";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from "recharts";
 
-const genderColors: Record<string, string> = {
-  hommes: "bg-blue-500",
-  femmes: "bg-pink-500",
-  autres: "bg-purple-500",
-  nonPrecise: "bg-gray-400",
+const GENDER_COLORS = ["#3B82F6", "#EC4899", "#8B5CF6", "#9CA3AF"];
+const AGE_COLORS = ["#10B981", "#14B8A6", "#06B6D4", "#0EA5E9", "#3B82F6", "#6366F1", "#8B5CF6", "#9CA3AF"];
+const HANDICAP_COLORS = ["#8B5CF6", "#D1D5DB"];
+const OFFER_TYPE_COLORS: Record<string, string> = {
+  EMPLOI: "#3B82F6",
+  FORMATION: "#10B981",
+  BOURSE: "#8B5CF6",
+  VOLONTARIAT: "#F59E0B",
 };
 
-const genderLabels: Record<string, string> = {
-  hommes: "Hommes",
-  femmes: "Femmes",
-  autres: "Autres",
-  nonPrecise: "Non précisé",
-};
-
-const ageColors = [
-  "bg-emerald-500",
-  "bg-teal-500",
-  "bg-cyan-500",
-  "bg-sky-500",
-  "bg-blue-500",
-  "bg-indigo-500",
-  "bg-violet-500",
-  "bg-gray-400",
-];
 
 export function AdminDashboard() {
   const [stats, setStats] = useState<Statistics | null>(null);
@@ -268,46 +266,53 @@ export function AdminDashboard() {
               Données désagrégées des utilisateurs
             </h2>
 
-            <div className="grid lg:grid-cols-3 gap-6">
-              {/* Gender Distribution */}
+            <div className="grid lg:grid-cols-2 gap-6">
+              {/* Gender Distribution - Pie Chart */}
               <Card>
                 <CardHeader>
                   <CardTitle className="text-base">Répartition par sexe</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-3">
-                    {Object.entries(disaggregation.gender)
-                      .filter(([key]) => key !== "total")
-                      .map(([key, value]) => {
-                        const percentage = disaggregation.gender.total > 0
-                          ? Math.round((value / disaggregation.gender.total) * 100)
-                          : 0;
-                        return (
-                          <div key={key}>
-                            <div className="flex justify-between text-sm mb-1">
-                              <span className="font-medium">{genderLabels[key]}</span>
-                              <span className="text-muted-foreground">{value} ({percentage}%)</span>
-                            </div>
-                            <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
-                              <div
-                                className={`h-full ${genderColors[key]} transition-all duration-500`}
-                                style={{ width: `${percentage}%` }}
-                              />
-                            </div>
-                          </div>
-                        );
-                      })}
-                  </div>
-                  <div className="mt-4 pt-4 border-t">
-                    <div className="flex justify-between text-sm font-medium">
-                      <span>Total</span>
-                      <span>{disaggregation.gender.total}</span>
-                    </div>
+                  {(() => {
+                    const genderData = [
+                      { name: "Hommes", value: disaggregation.gender.hommes, color: GENDER_COLORS[0] },
+                      { name: "Femmes", value: disaggregation.gender.femmes, color: GENDER_COLORS[1] },
+                      { name: "Autres", value: disaggregation.gender.autres, color: GENDER_COLORS[2] },
+                      { name: "Non précisé", value: disaggregation.gender.nonPrecise, color: GENDER_COLORS[3] },
+                    ].filter(d => d.value > 0);
+                    
+                    return (
+                      <div className="h-64">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={genderData}
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={50}
+                              outerRadius={80}
+                              paddingAngle={2}
+                              dataKey="value"
+                              label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
+                              labelLine={false}
+                            >
+                              {genderData.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={entry.color} />
+                              ))}
+                            </Pie>
+                            <Tooltip formatter={(value) => [`${value} utilisateurs`, ""]} />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                    );
+                  })()}
+                  <div className="text-center mt-2 text-sm font-medium">
+                    Total: {disaggregation.gender.total} utilisateurs
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Disability Status */}
+              {/* Disability Status - Donut Chart */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-base">
@@ -316,43 +321,83 @@ export function AdminDashboard() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex items-center justify-center gap-8 py-4">
-                    <div className="text-center">
-                      <div className="h-20 w-20 rounded-full bg-purple-100 flex items-center justify-center mx-auto mb-2">
-                        <span className="text-2xl font-bold text-purple-600">
-                          {disaggregation.handicap.avec}
-                        </span>
+                  {(() => {
+                    const handicapData = [
+                      { name: "Avec handicap", value: disaggregation.handicap.avec },
+                      { name: "Sans handicap", value: disaggregation.handicap.sans },
+                    ];
+                    
+                    return (
+                      <div className="h-64">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={handicapData}
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={60}
+                              outerRadius={80}
+                              paddingAngle={2}
+                              dataKey="value"
+                            >
+                              {handicapData.map((_, index) => (
+                                <Cell key={`cell-${index}`} fill={HANDICAP_COLORS[index]} />
+                              ))}
+                            </Pie>
+                            <Tooltip formatter={(value) => [`${value} utilisateurs`, ""]} />
+                            <Legend />
+                          </PieChart>
+                        </ResponsiveContainer>
                       </div>
-                      <p className="text-sm font-medium">Avec handicap</p>
-                      <p className="text-xs text-muted-foreground">
-                        {disaggregation.handicap.total > 0
-                          ? Math.round((disaggregation.handicap.avec / disaggregation.handicap.total) * 100)
-                          : 0}%
-                      </p>
-                    </div>
-                    <div className="text-center">
-                      <div className="h-20 w-20 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-2">
-                        <span className="text-2xl font-bold text-gray-600">
-                          {disaggregation.handicap.sans}
-                        </span>
+                    );
+                  })()}
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="grid lg:grid-cols-2 gap-6 mt-6">
+              {/* Age Distribution - Bar Chart */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Calendar className="h-5 w-5" />
+                    Répartition par tranche d'âge
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {(() => {
+                    const ageData = Object.entries(disaggregation.ageRanges).map(([range, count], index) => ({
+                      name: range,
+                      value: count,
+                      fill: AGE_COLORS[index % AGE_COLORS.length],
+                    }));
+                    
+                    return (
+                      <div className="h-64">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={ageData} layout="vertical">
+                            <XAxis type="number" />
+                            <YAxis dataKey="name" type="category" width={80} tick={{ fontSize: 12 }} />
+                            <Tooltip formatter={(value) => [`${value} utilisateurs`, ""]} />
+                            <Bar dataKey="value" radius={[0, 4, 4, 0]}>
+                              {ageData.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={entry.fill} />
+                              ))}
+                            </Bar>
+                          </BarChart>
+                        </ResponsiveContainer>
                       </div>
-                      <p className="text-sm font-medium">Sans handicap</p>
-                      <p className="text-xs text-muted-foreground">
-                        {disaggregation.handicap.total > 0
-                          ? Math.round((disaggregation.handicap.sans / disaggregation.handicap.total) * 100)
-                          : 0}%
-                      </p>
-                    </div>
-                  </div>
+                    );
+                  })()}
                 </CardContent>
               </Card>
 
-              {/* Geographic Distribution */}
+              {/* Geographic Distribution - Bar Chart */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-base">
                     <MapPin className="h-4 w-4" />
-                    Répartition géographique
+                    Répartition géographique (Top 10)
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -361,51 +406,62 @@ export function AdminDashboard() {
                       Aucune donnée disponible
                     </p>
                   ) : (
-                    <div className="space-y-2">
-                      {disaggregation.geographic.slice(0, 5).map(({ pays, count }) => (
-                        <div key={pays} className="flex justify-between items-center">
-                          <span className="text-sm">{pays}</span>
-                          <span className="text-sm font-medium bg-primary/10 text-primary px-2 py-0.5 rounded">
-                            {count}
-                          </span>
-                        </div>
-                      ))}
+                    <div className="h-64">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={disaggregation.geographic.slice(0, 10)} layout="vertical">
+                          <XAxis type="number" />
+                          <YAxis dataKey="pays" type="category" width={100} tick={{ fontSize: 11 }} />
+                          <Tooltip formatter={(value) => [`${value} utilisateurs`, ""]} />
+                          <Bar dataKey="count" fill="#10B981" radius={[0, 4, 4, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
                     </div>
                   )}
                 </CardContent>
               </Card>
             </div>
 
-            {/* Age Distribution */}
-            <Card className="mt-6">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5" />
-                  Répartition par tranche d'âge
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
-                  {Object.entries(disaggregation.ageRanges).map(([range, count], index) => {
-                    const total = Object.values(disaggregation.ageRanges).reduce((a, b) => a + b, 0);
-                    const percentage = total > 0 ? Math.round((count / total) * 100) : 0;
+            {/* Offers by Type - Colorful Pie Chart */}
+            {stats && Object.keys(stats.offresByType).length > 0 && (
+              <Card className="mt-6">
+                <CardHeader>
+                  <CardTitle>Répartition des offres par type</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {(() => {
+                    const offerData = Object.entries(stats.offresByType).map(([type, count]) => ({
+                      name: type,
+                      value: count,
+                      fill: OFFER_TYPE_COLORS[type] || "#6B7280",
+                    }));
+                    
                     return (
-                      <div key={range} className="text-center">
-                        <div className={`h-24 rounded-lg ${ageColors[index]} flex items-end justify-center pb-2 relative overflow-hidden`}>
-                          <div 
-                            className="absolute bottom-0 left-0 right-0 bg-white/20"
-                            style={{ height: `${100 - percentage}%` }}
-                          />
-                          <span className="text-white font-bold text-xl relative z-10">{count}</span>
-                        </div>
-                        <p className="text-xs font-medium mt-2">{range}</p>
-                        <p className="text-xs text-muted-foreground">{percentage}%</p>
+                      <div className="h-72">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={offerData}
+                              cx="50%"
+                              cy="50%"
+                              outerRadius={100}
+                              paddingAngle={2}
+                              dataKey="value"
+                              label={({ name, value, percent }) => `${name}: ${value} (${((percent || 0) * 100).toFixed(0)}%)`}
+                            >
+                              {offerData.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={entry.fill} />
+                              ))}
+                            </Pie>
+                            <Tooltip formatter={(value) => [`${value} offres`, ""]} />
+                            <Legend />
+                          </PieChart>
+                        </ResponsiveContainer>
                       </div>
                     );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
+                  })()}
+                </CardContent>
+              </Card>
+            )}
           </>
         )}
       </div>
