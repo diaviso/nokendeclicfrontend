@@ -239,11 +239,11 @@ export function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-emerald-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-emerald-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
       {/* Background decorations */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl" />
+        <div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 dark:bg-primary/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-emerald-500/10 dark:bg-emerald-500/5 rounded-full blur-3xl" />
       </div>
 
       <div className="w-full max-w-md relative z-10">
@@ -256,13 +256,13 @@ export function Login() {
             <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center shadow-lg shadow-primary/25">
               <span className="text-white font-bold text-2xl">N</span>
             </div>
-            <span className="font-bold text-2xl bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+            <span className="font-bold text-2xl bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
               Noken
             </span>
           </div>
         </div>
 
-        <Card className="shadow-2xl border-0 bg-white/80 backdrop-blur-xl">
+        <Card className="shadow-2xl border-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl">
           <CardContent className="p-8">
             {/* Mode: Verify */}
             {mode === "verify" && (
@@ -270,12 +270,12 @@ export function Login() {
                 <div className="h-16 w-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-6">
                   <Mail className="h-8 w-8 text-emerald-600" />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
                   Vérifiez votre email
                 </h2>
-                <p className="text-gray-600 mb-8">
+                <p className="text-gray-600 dark:text-gray-400 mb-8">
                   Entrez le code à 6 chiffres envoyé à<br />
-                  <strong className="text-gray-900">{pendingEmail}</strong>
+                  <strong className="text-gray-900 dark:text-white">{pendingEmail}</strong>
                 </p>
 
                 <form onSubmit={handleVerify}>
@@ -291,7 +291,7 @@ export function Login() {
                         onChange={(e) => handleCodeChange(index, e.target.value)}
                         onKeyDown={(e) => handleCodeKeyDown(index, e)}
                         onPaste={handleCodePaste}
-                        className="w-12 h-14 text-center text-2xl font-bold border-2 border-gray-200 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                        className="w-12 h-14 text-center text-2xl font-bold border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       />
                     ))}
                   </div>
@@ -334,16 +334,16 @@ export function Login() {
             {/* Mode: Login */}
             {mode === "login" && (
               <>
-                <h2 className="text-2xl font-bold text-gray-900 text-center mb-2">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white text-center mb-2">
                   Bon retour ! 👋
                 </h2>
-                <p className="text-gray-600 text-center mb-8">
+                <p className="text-gray-600 dark:text-gray-400 text-center mb-8">
                   Connectez-vous pour accéder à votre compte
                 </p>
 
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Email
                     </label>
                     <div className="relative">
@@ -361,7 +361,7 @@ export function Login() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Mot de passe
                     </label>
                     <div className="relative">
@@ -411,10 +411,10 @@ export function Login() {
 
                 <div className="relative my-8">
                   <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-gray-200" />
+                    <div className="w-full border-t border-gray-200 dark:border-gray-600" />
                   </div>
                   <div className="relative flex justify-center text-sm">
-                    <span className="px-4 bg-white text-gray-500">ou</span>
+                    <span className="px-4 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">ou</span>
                   </div>
                 </div>
 
@@ -432,7 +432,7 @@ export function Login() {
                   Continuer avec Google
                 </Button>
 
-                <p className="text-center mt-8 text-gray-600">
+                <p className="text-center mt-8 text-gray-600 dark:text-gray-400">
                   Pas encore de compte ?{" "}
                   <button
                     onClick={() => setMode("register")}
@@ -447,17 +447,17 @@ export function Login() {
             {/* Mode: Register */}
             {mode === "register" && (
               <>
-                <h2 className="text-2xl font-bold text-gray-900 text-center mb-2">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white text-center mb-2">
                   Créer un compte <Sparkles className="inline h-6 w-6 text-amber-500" />
                 </h2>
-                <p className="text-gray-600 text-center mb-8">
+                <p className="text-gray-600 dark:text-gray-400 text-center mb-8">
                   Rejoignez la communauté Noken
                 </p>
 
                 <form onSubmit={handleRegister} className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Prénom
                       </label>
                       <Input
@@ -471,7 +471,7 @@ export function Login() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Nom
                       </label>
                       <Input
@@ -505,7 +505,7 @@ export function Login() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Nom d'utilisateur (optionnel)
                     </label>
                     <div className="relative">
@@ -522,7 +522,7 @@ export function Login() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Mot de passe
                     </label>
                     <div className="relative">
@@ -547,7 +547,7 @@ export function Login() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Confirmer le mot de passe
                     </label>
                     <div className="relative">
@@ -582,10 +582,10 @@ export function Login() {
 
                 <div className="relative my-6">
                   <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-gray-200" />
+                    <div className="w-full border-t border-gray-200 dark:border-gray-600" />
                   </div>
                   <div className="relative flex justify-center text-sm">
-                    <span className="px-4 bg-white text-gray-500">ou</span>
+                    <span className="px-4 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">ou</span>
                   </div>
                 </div>
 
@@ -603,7 +603,7 @@ export function Login() {
                   Continuer avec Google
                 </Button>
 
-                <p className="text-center mt-6 text-gray-600">
+                <p className="text-center mt-6 text-gray-600 dark:text-gray-400">
                   Déjà un compte ?{" "}
                   <button
                     onClick={() => setMode("login")}
@@ -617,7 +617,7 @@ export function Login() {
           </CardContent>
         </Card>
 
-        <p className="text-center mt-6 text-sm text-gray-500">
+        <p className="text-center mt-6 text-sm text-gray-500 dark:text-gray-400">
           En continuant, vous acceptez nos{" "}
           <a href="#" className="text-primary hover:underline">Conditions d'utilisation</a>
           {" "}et notre{" "}

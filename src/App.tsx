@@ -19,6 +19,7 @@ import {
   Messagerie,
   AdminDashboard,
   AdminUsers,
+  AdminUserDetails,
   AdminOffres,
   AdminOffreForm,
   ForgotPassword,
@@ -80,6 +81,14 @@ function App() {
                 element={
                   <ProtectedRoute requiredRole="ADMIN">
                     <AdminUsers />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/users/:id"
+                element={
+                  <ProtectedRoute requiredRole="ADMIN">
+                    <AdminUserDetails />
                   </ProtectedRoute>
                 }
               />

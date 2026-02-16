@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { Header } from "@/components/layout";
 import { Card, CardContent, Button, Input, Badge, AlertModal, ConfirmModal } from "@/components/ui";
 import { adminService } from "@/services";
@@ -14,6 +15,7 @@ import {
   Calendar,
   Briefcase,
   MessageSquare,
+  Eye,
 } from "lucide-react";
 import { formatRelativeDate } from "@/lib/utils";
 
@@ -294,6 +296,15 @@ export function AdminUsers() {
                         </td>
                         <td className="px-4 py-4">
                           <div className="flex items-center justify-end gap-2">
+                            <Link to={`/admin/users/${user.id}`}>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                title="Voir les détails"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </Link>
                             <Button
                               variant="ghost"
                               size="icon"
