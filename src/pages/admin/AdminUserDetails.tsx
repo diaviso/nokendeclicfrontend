@@ -24,6 +24,13 @@ import {
   Building2,
   CheckCircle,
   XCircle,
+  Bot,
+  Send,
+  Inbox,
+  Bell,
+  MessageCircle,
+  Activity,
+  Star,
 } from "lucide-react";
 import { formatRelativeDate } from "@/lib/utils";
 
@@ -51,17 +58,18 @@ interface UserDetails {
   updatedAt?: string;
   cv?: {
     id: number;
-    titre?: string;
+    titreProfessionnel?: string;
     resume?: string;
     competences?: string[];
     experiences?: any[];
     formations?: any[];
-    langues?: any[];
+    langues?: string[];
   };
   retours?: {
     id: number;
-    titre: string;
+    contenu: string;
     datePublication: string;
+    offre?: { titre: string };
   }[];
   offres?: {
     id: number;
@@ -69,10 +77,31 @@ interface UserDetails {
     typeOffre: string;
     datePublication: string;
   }[];
+  favorites?: {
+    id: number;
+    createdAt: string;
+    offre: { id: number; titre: string; typeOffre: string };
+  }[];
   _count?: {
     retours: number;
     offres: number;
     favorites?: number;
+  };
+  aiChatStats?: {
+    totalConversations: number;
+    totalMessages: number;
+    userMessages: number;
+    assistantMessages: number;
+    lastConversationDate: string | null;
+  };
+  messagingStats?: {
+    privateConversations: number;
+    privateMessagesSent: number;
+    privateMessagesReceived: number;
+  };
+  engagementStats?: {
+    alertsCount: number;
+    commentsCount: number;
   };
 }
 
@@ -460,6 +489,92 @@ export function AdminUserDetails() {
           </Card>
         </div>
 
+        {/* AI Chat & Engagement Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <Card className="bg-gradient-to-br from-cyan-50 to-blue-50 dark:from-cyan-900/20 dark:to-blue-900/20 border-cyan-200 dark:border-cyan-800">
+            <CardContent className="p-4 text-center">
+              <Bot className="h-6 w-6 mx-auto mb-2 text-cyan-600 dark:text-cyan-400" />
+              <p className="text-2xl font-bold text-cyan-700 dark:text-cyan-300">{user.aiChatStats?.totalConversations || 0}</p>
+              <p className="text-xs text-cyan-600 dark:text-cyan-400">Conversations IA</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 border-indigo-200 dark:border-indigo-800">
+            <CardContent className="p-4 text-center">
+              <MessageCircle className="h-6 w-6 mx-auto mb-2 text-indigo-600 dark:text-indigo-400" />
+              <p className="text-2xl font-bold text-indigo-700 dark:text-indigo-300">{user.aiChatStats?.totalMessages || 0}</p>
+              <p className="text-xs text-indigo-600 dark:text-indigo-400">Messages IA</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 border-emerald-200 dark:border-emerald-800">
+            <CardContent className="p-4 text-center">
+              <Send className="h-6 w-6 mx-auto mb-2 text-emerald-600 dark:text-emerald-400" />
+              <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">{user.messagingStats?.privateMessagesSent || 0}</p>
+              <p className="text-xs text-emerald-600 dark:text-emerald-400">Messages envoyés</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border-amber-200 dark:border-amber-800">
+            <CardContent className="p-4 text-center">
+              <Inbox className="h-6 w-6 mx-auto mb-2 text-amber-600 dark:text-amber-400" />
+              <p className="text-2xl font-bold text-amber-700 dark:text-amber-300">{user.messagingStats?.privateMessagesReceived || 0}</p>
+              <p className="text-xs text-amber-600 dark:text-amber-400">Messages reçus</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-gradient-to-br from-rose-50 to-pink-50 dark:from-rose-900/20 dark:to-pink-900/20 border-rose-200 dark:border-rose-800">
+            <CardContent className="p-4 text-center">
+              <Bell className="h-6 w-6 mx-auto mb-2 text-rose-600 dark:text-rose-400" />
+              <p className="text-2xl font-bold text-rose-700 dark:text-rose-300">{user.engagementStats?.alertsCount || 0}</p>
+              <p className="text-xs text-rose-600 dark:text-rose-400">Alertes créées</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-gradient-to-br from-violet-50 to-fuchsia-50 dark:from-violet-900/20 dark:to-fuchsia-900/20 border-violet-200 dark:border-violet-800">
+            <CardContent className="p-4 text-center">
+              <Star className="h-6 w-6 mx-auto mb-2 text-violet-600 dark:text-violet-400" />
+              <p className="text-2xl font-bold text-violet-700 dark:text-violet-300">{user.engagementStats?.commentsCount || 0}</p>
+              <p className="text-xs text-violet-600 dark:text-violet-400">Commentaires</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* AI Activity Summary */}
+        {user.aiChatStats && user.aiChatStats.totalConversations > 0 && (
+          <Card className="border-cyan-200 dark:border-cyan-800 bg-gradient-to-r from-cyan-50/50 via-blue-50/50 to-indigo-50/50 dark:from-cyan-900/10 dark:via-blue-900/10 dark:to-indigo-900/10">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-cyan-700 dark:text-cyan-300">
+                <Activity className="h-5 w-5" />
+                Activité avec l'assistant IA
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="p-3 rounded-lg bg-white/60 dark:bg-gray-800/60">
+                  <p className="text-xs text-muted-foreground mb-1">Questions posées</p>
+                  <p className="text-xl font-bold">{user.aiChatStats.userMessages}</p>
+                </div>
+                <div className="p-3 rounded-lg bg-white/60 dark:bg-gray-800/60">
+                  <p className="text-xs text-muted-foreground mb-1">Réponses reçues</p>
+                  <p className="text-xl font-bold">{user.aiChatStats.assistantMessages}</p>
+                </div>
+                <div className="p-3 rounded-lg bg-white/60 dark:bg-gray-800/60">
+                  <p className="text-xs text-muted-foreground mb-1">Moy. messages/conv.</p>
+                  <p className="text-xl font-bold">
+                    {user.aiChatStats.totalConversations > 0 
+                      ? Math.round(user.aiChatStats.totalMessages / user.aiChatStats.totalConversations) 
+                      : 0}
+                  </p>
+                </div>
+                <div className="p-3 rounded-lg bg-white/60 dark:bg-gray-800/60">
+                  <p className="text-xs text-muted-foreground mb-1">Dernière conversation</p>
+                  <p className="text-sm font-medium">
+                    {user.aiChatStats.lastConversationDate 
+                      ? formatRelativeDate(user.aiChatStats.lastConversationDate)
+                      : "Jamais"}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <div className="grid lg:grid-cols-2 gap-6">
           {/* Personal Information */}
           <Card>
@@ -620,10 +735,10 @@ export function AdminUserDetails() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {user.cv.titre && (
+                {user.cv.titreProfessionnel && (
                   <div>
-                    <p className="text-xs text-muted-foreground mb-1">Titre</p>
-                    <p className="font-medium">{user.cv.titre}</p>
+                    <p className="text-xs text-muted-foreground mb-1">Titre professionnel</p>
+                    <p className="font-medium">{user.cv.titreProfessionnel}</p>
                   </div>
                 )}
                 {user.cv.resume && (
@@ -683,7 +798,8 @@ export function AdminUserDetails() {
                       to={`/retours/${retour.id}`}
                       className="block p-3 rounded-lg border hover:border-primary/50 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                     >
-                      <p className="font-medium text-sm">{retour.titre}</p>
+                      <p className="font-medium text-sm">{retour.offre?.titre || "Retour"}</p>
+                      <p className="text-xs text-muted-foreground line-clamp-2">{retour.contenu}</p>
                       <p className="text-xs text-muted-foreground mt-1">
                         {formatRelativeDate(retour.datePublication)}
                       </p>

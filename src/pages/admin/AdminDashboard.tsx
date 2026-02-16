@@ -13,6 +13,10 @@ import {
   Heart,
   Calendar,
   MapPin,
+  Sparkles,
+  Rocket,
+  Target,
+  Zap,
 } from "lucide-react";
 import {
   PieChart,
@@ -97,6 +101,77 @@ export function AdminDashboard() {
       <Header title="Administration" subtitle="Statistiques de la plateforme" />
 
       <div className="p-6 space-y-6">
+        {/* Animated 3D Banner */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 p-1">
+          <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 animate-pulse opacity-75" />
+          <div className="relative rounded-xl bg-gradient-to-br from-slate-900/95 via-purple-900/90 to-slate-900/95 backdrop-blur-xl p-6 md:p-8">
+            {/* Floating particles */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              <div className="absolute top-4 left-[10%] w-2 h-2 bg-yellow-400 rounded-full animate-bounce opacity-80" style={{ animationDelay: '0s', animationDuration: '2s' }} />
+              <div className="absolute top-8 left-[25%] w-3 h-3 bg-pink-400 rounded-full animate-bounce opacity-60" style={{ animationDelay: '0.3s', animationDuration: '2.5s' }} />
+              <div className="absolute top-6 left-[45%] w-2 h-2 bg-cyan-400 rounded-full animate-bounce opacity-70" style={{ animationDelay: '0.6s', animationDuration: '1.8s' }} />
+              <div className="absolute top-10 left-[65%] w-2.5 h-2.5 bg-green-400 rounded-full animate-bounce opacity-75" style={{ animationDelay: '0.9s', animationDuration: '2.2s' }} />
+              <div className="absolute top-4 left-[80%] w-2 h-2 bg-orange-400 rounded-full animate-bounce opacity-65" style={{ animationDelay: '1.2s', animationDuration: '2.8s' }} />
+              <div className="absolute bottom-8 left-[15%] w-1.5 h-1.5 bg-blue-400 rounded-full animate-ping opacity-50" style={{ animationDelay: '0.2s' }} />
+              <div className="absolute bottom-6 left-[55%] w-1.5 h-1.5 bg-purple-400 rounded-full animate-ping opacity-50" style={{ animationDelay: '0.8s' }} />
+              <div className="absolute bottom-10 left-[75%] w-1.5 h-1.5 bg-rose-400 rounded-full animate-ping opacity-50" style={{ animationDelay: '1.4s' }} />
+            </div>
+
+            {/* 3D rotating icons */}
+            <div className="absolute -right-4 top-1/2 -translate-y-1/2 opacity-20 hidden lg:block">
+              <div className="relative w-48 h-48">
+                <div className="absolute inset-0 animate-spin" style={{ animationDuration: '20s' }}>
+                  <Rocket className="absolute top-0 left-1/2 -translate-x-1/2 h-10 w-10 text-cyan-400 transform -rotate-45" />
+                  <Target className="absolute bottom-0 left-1/2 -translate-x-1/2 h-10 w-10 text-pink-400" />
+                  <Zap className="absolute left-0 top-1/2 -translate-y-1/2 h-10 w-10 text-yellow-400" />
+                  <Sparkles className="absolute right-0 top-1/2 -translate-y-1/2 h-10 w-10 text-purple-400" />
+                </div>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="relative z-10 flex flex-col md:flex-row items-center gap-6">
+              {/* Animated icon */}
+              <div className="relative flex-shrink-0">
+                <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 via-orange-500 to-pink-500 rounded-full blur-xl opacity-50 animate-pulse" />
+                <div className="relative h-20 w-20 md:h-24 md:w-24 rounded-full bg-gradient-to-br from-yellow-400 via-orange-500 to-pink-500 flex items-center justify-center shadow-2xl transform hover:scale-110 transition-transform duration-300">
+                  <div className="absolute inset-1 rounded-full bg-gradient-to-br from-yellow-300 to-orange-400 opacity-50" />
+                  <Sparkles className="h-10 w-10 md:h-12 md:w-12 text-white relative z-10 animate-pulse" />
+                </div>
+              </div>
+
+              {/* Text content */}
+              <div className="flex-1 text-center md:text-left">
+                <h3 className="text-2xl md:text-3xl font-bold text-white mb-2 tracking-tight">
+                  <span className="bg-gradient-to-r from-yellow-200 via-pink-200 to-cyan-200 bg-clip-text text-transparent">
+                    Bienvenue sur votre tableau de bord !
+                  </span>
+                </h3>
+                <p className="text-lg text-gray-300 mb-3 max-w-2xl">
+                  Un profil complet augmente les chances de vos utilisateurs de trouver des offres qui leur correspondent !
+                </p>
+                <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-sm">
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/20">
+                    <div className="h-2 w-2 rounded-full bg-green-400 animate-pulse" />
+                    <span className="text-green-300 font-medium">{stats.totals.users} utilisateurs actifs</span>
+                  </div>
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/20">
+                    <div className="h-2 w-2 rounded-full bg-blue-400 animate-pulse" />
+                    <span className="text-blue-300 font-medium">{stats.totals.offres} offres disponibles</span>
+                  </div>
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/20">
+                    <div className="h-2 w-2 rounded-full bg-purple-400 animate-pulse" />
+                    <span className="text-purple-300 font-medium">{stats.totals.retours} retours partagés</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom gradient line */}
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+          </div>
+        </div>
+
         {/* Main Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
