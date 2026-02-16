@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect, type ReactNode } from "react";
+import { useState, useRef, useEffect, useLayoutEffect, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 
 interface TooltipProps {
@@ -17,7 +18,9 @@ export function Tooltip({
   className,
 }: TooltipProps) {
   const [isVisible, setIsVisible] = useState(false);
+  const [isPositioned, setIsPositioned] = useState(false);
   const [coords, setCoords] = useState({ x: 0, y: 0 });
+  const [arrowOffset, setArrowOffset] = useState(0);
   const triggerRef = useRef<HTMLDivElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -33,9 +36,10 @@ export function Tooltip({
       clearTimeout(timeoutRef.current);
     }
     setIsVisible(false);
+    setIsPositioned(false);
   };
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (isVisible && triggerRef.current && tooltipRef.current) {
       const triggerRect = triggerRef.current.getBoundingClientRect();
       const tooltipRect = tooltipRef.current.getBoundingClientRect();
@@ -62,11 +66,19 @@ export function Tooltip({
           break;
       }
 
+      // Calculate original x for arrow offset
+      const originalX = x;
+
       // Keep tooltip within viewport
       x = Math.max(8, Math.min(x, window.innerWidth - tooltipRect.width - 8));
       y = Math.max(8, Math.min(y, window.innerHeight - tooltipRect.height - 8));
 
+      // Calculate arrow offset when tooltip is shifted horizontally
+      const offset = originalX - x;
+      setArrowOffset(offset);
+
       setCoords({ x, y });
+      setIsPositioned(true);
     }
   }, [isVisible, position]);
 
@@ -78,12 +90,38 @@ export function Tooltip({
     };
   }, []);
 
-  const positionClasses = {
-    top: "animate-tooltip-top",
-    bottom: "animate-tooltip-bottom",
-    left: "animate-tooltip-left",
-    right: "animate-tooltip-right",
-  };
+  const tooltipContent = isVisible && (
+    <div
+      ref={tooltipRef}
+      style={{
+        position: "fixed",
+        left: coords.x,
+        top: coords.y,
+        zIndex: 9999,
+        opacity: isPositioned ? 1 : 0,
+        transition: "opacity 0.15s ease-in-out",
+      }}
+      className={cn(
+        "px-3 py-2 text-sm font-medium text-white bg-gray-900 dark:bg-gray-700 rounded-lg shadow-lg",
+        "max-w-xs",
+        className
+      )}
+    >
+      {content}
+      <div
+        style={{
+          transform: `translateX(calc(-50% + ${arrowOffset}px)) rotate(45deg)`,
+        }}
+        className={cn(
+          "absolute w-2 h-2 bg-gray-900 dark:bg-gray-700",
+          position === "top" && "bottom-[-4px] left-1/2",
+          position === "bottom" && "top-[-4px] left-1/2",
+          position === "left" && "right-[-4px] top-1/2 !-translate-y-1/2",
+          position === "right" && "left-[-4px] top-1/2 !-translate-y-1/2"
+        )}
+      />
+    </div>
+  );
 
   return (
     <>
@@ -97,34 +135,7 @@ export function Tooltip({
       >
         {children}
       </div>
-      {isVisible && (
-        <div
-          ref={tooltipRef}
-          style={{
-            position: "fixed",
-            left: coords.x,
-            top: coords.y,
-            zIndex: 9999,
-          }}
-          className={cn(
-            "px-3 py-2 text-sm font-medium text-white bg-gray-900 dark:bg-gray-700 rounded-lg shadow-lg",
-            "max-w-xs backdrop-blur-sm",
-            positionClasses[position],
-            className
-          )}
-        >
-          {content}
-          <div
-            className={cn(
-              "absolute w-2 h-2 bg-gray-900 dark:bg-gray-700 rotate-45",
-              position === "top" && "bottom-[-4px] left-1/2 -translate-x-1/2",
-              position === "bottom" && "top-[-4px] left-1/2 -translate-x-1/2",
-              position === "left" && "right-[-4px] top-1/2 -translate-y-1/2",
-              position === "right" && "left-[-4px] top-1/2 -translate-y-1/2"
-            )}
-          />
-        </div>
-      )}
+      {tooltipContent && createPortal(tooltipContent, document.body)}
     </>
   );
 }

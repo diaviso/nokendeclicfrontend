@@ -16,6 +16,8 @@ import {
   Building2,
   Heart,
   HelpCircle,
+  Sparkles,
+  User,
 } from "lucide-react";
 import { formatRelativeDate, truncate } from "@/lib/utils";
 
@@ -286,43 +288,84 @@ export function Dashboard() {
             </Card>
 
             {/* Profile Completion */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Compléter mon profil</CardTitle>
+            <Card className={profileCompletion < 100 ? "border-primary/20 bg-gradient-to-br from-primary/5 to-transparent" : ""}>
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2">
+                  <User className="h-5 w-5" />
+                  Mon profil
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="mb-4">
                   <div className="flex items-center justify-between text-sm mb-2">
-                    <span className="text-muted-foreground">Progression</span>
-                    <span className="font-medium">{profileCompletion}%</span>
+                    <span className="text-muted-foreground">Complétion</span>
+                    <span className={`font-medium ${profileCompletion === 100 ? 'text-green-600' : 'text-primary'}`}>
+                      {profileCompletion}%
+                    </span>
                   </div>
-                  <div className="h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                  <div className="h-2.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-primary transition-all duration-500"
+                      className={`h-full transition-all duration-500 ${profileCompletion === 100 ? 'bg-green-500' : 'bg-primary'}`}
                       style={{ width: `${profileCompletion}%` }}
                     />
                   </div>
                 </div>
-                <div className="space-y-2 text-sm">
-                  {!user?.firstName && (
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <div className="h-2 w-2 rounded-full bg-orange-400" />
-                      Ajouter votre prénom
+
+                {profileCompletion < 100 ? (
+                  <>
+                    <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 mb-3">
+                      <Sparkles className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+                      <p className="text-xs text-amber-800 dark:text-amber-300">
+                        Un profil complet augmente vos chances de trouver des offres qui vous correspondent !
+                      </p>
                     </div>
-                  )}
-                  {!cv && (
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <div className="h-2 w-2 rounded-full bg-orange-400" />
-                      Créer votre CV
+                    <div className="space-y-2 text-sm">
+                      {!user?.firstName && (
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <div className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                          Ajouter votre prénom
+                        </div>
+                      )}
+                      {!user?.telephone && (
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <div className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                          Ajouter votre téléphone
+                        </div>
+                      )}
+                      {!user?.pays && (
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <div className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                          Indiquer votre pays
+                        </div>
+                      )}
+                      {!cv && (
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <div className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                          Créer votre CV
+                        </div>
+                      )}
+                      {!user?.pictureUrl && (
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <div className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                          Ajouter une photo
+                        </div>
+                      )}
                     </div>
-                  )}
-                  {!user?.pictureUrl && (
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <div className="h-2 w-2 rounded-full bg-orange-400" />
-                      Ajouter une photo de profil
-                    </div>
-                  )}
-                </div>
+                    <Link to="/profile" className="block mt-4">
+                      <Button size="sm" className="w-full">
+                        Compléter mon profil
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Button>
+                    </Link>
+                  </>
+                ) : (
+                  <div className="flex items-center gap-2 p-3 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
+                    <Sparkles className="h-4 w-4 text-green-600 dark:text-green-400" />
+                    <p className="text-xs text-green-800 dark:text-green-300">
+                      Félicitations ! Votre profil est complet.
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -334,13 +377,17 @@ export function Dashboard() {
 
 function calculateProfileCompletion(user: any, cv: CV | null): number {
   let score = 0;
-  const total = 6;
+  const total = 10;
 
   if (user?.email) score++;
   if (user?.username) score++;
   if (user?.firstName) score++;
   if (user?.lastName) score++;
   if (user?.pictureUrl) score++;
+  if (user?.telephone) score++;
+  if (user?.pays) score++;
+  if (user?.statutProfessionnel && user.statutProfessionnel !== 'NON_PRECISE') score++;
+  if (user?.sexe && user.sexe !== 'NON_PRECISE') score++;
   if (cv) score++;
 
   return Math.round((score / total) * 100);
