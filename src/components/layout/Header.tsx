@@ -1,5 +1,3 @@
-import { Search } from "lucide-react";
-import { Input } from "@/components/ui";
 import { useAuth } from "@/contexts/AuthContext";
 import { NotificationDropdown } from "@/components/notifications";
 import { getImageUrl } from "@/services/api";
@@ -21,15 +19,6 @@ export function Header({ title, subtitle }: HeaderProps) {
         </div>
 
         <div className="flex items-center gap-2 sm:gap-4 ml-4">
-          <div className="relative hidden lg:block">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
-            <Input
-              type="search"
-              placeholder="Rechercher..."
-              className="w-64 pl-9 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700"
-            />
-          </div>
-
           <div className="hidden lg:block">
             <NotificationDropdown />
           </div>

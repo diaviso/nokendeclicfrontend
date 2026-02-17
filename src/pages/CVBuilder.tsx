@@ -27,7 +27,7 @@ import {
   Loader2,
   Download,
 } from "lucide-react";
-import { generateCVPdf } from "@/lib/cvPdfGenerator";
+import { generateCVPdf, generateCVWord } from "@/lib/cvPdfGenerator";
 
 type ModalState = {
   isOpen: boolean;
@@ -202,6 +202,26 @@ export function CVBuilder() {
       showModal("error", "Erreur", "Une erreur est survenue lors de la génération du PDF.");
     } finally {
       setDownloading(false);
+    }
+  };
+
+  const handleDownloadWord = () => {
+    if (!cv.id) {
+      showModal("warning", "CV non sauvegardé", "Veuillez d'abord sauvegarder votre CV avant de le télécharger.");
+      return;
+    }
+
+    try {
+      generateCVWord(cv as CV, {
+        firstName: user?.firstName,
+        lastName: user?.lastName,
+        email: user?.email,
+        pictureUrl: user?.pictureUrl,
+      });
+      showModal("success", "CV téléchargé !", "Votre CV a été téléchargé avec succès au format Word.");
+    } catch (error) {
+      console.error("Error generating Word:", error);
+      showModal("error", "Erreur", "Une erreur est survenue lors de la génération du fichier Word.");
     }
   };
 
@@ -425,7 +445,7 @@ export function CVBuilder() {
               Rendre mon CV public (visible par les recruteurs)
             </label>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button 
               variant="outline" 
               onClick={handleDownloadPdf} 
@@ -435,14 +455,23 @@ export function CVBuilder() {
               {downloading ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Génération...
+                  PDF...
                 </>
               ) : (
                 <>
                   <Download className="h-4 w-4" />
-                  Télécharger PDF
+                  PDF
                 </>
               )}
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={handleDownloadWord} 
+              disabled={!cv.id}
+              className="gap-2"
+            >
+              <Download className="h-4 w-4" />
+              Word
             </Button>
             <Button onClick={handleSave} disabled={saving}>
               <Save className="h-4 w-4 mr-2" />
