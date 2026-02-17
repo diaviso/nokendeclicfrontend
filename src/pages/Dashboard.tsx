@@ -18,6 +18,7 @@ import {
   HelpCircle,
   Sparkles,
   User,
+  AlertTriangle,
 } from "lucide-react";
 import { formatRelativeDate, truncate } from "@/lib/utils";
 
@@ -82,6 +83,59 @@ export function Dashboard() {
       />
 
       <div className="p-6 space-y-6">
+        {/* Profile Completion Warning */}
+        {profileCompletion < 100 && (
+          <div className="relative overflow-hidden rounded-xl border border-amber-200 dark:border-amber-700/50 bg-gradient-to-r from-amber-50 via-orange-50 to-yellow-50 dark:from-amber-900/20 dark:via-orange-900/20 dark:to-yellow-900/20 p-4 shadow-sm">
+            {/* Subtle animated background elements */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              <div className="absolute -top-2 -right-2 w-24 h-24 bg-amber-200/30 dark:bg-amber-500/10 rounded-full blur-2xl animate-pulse" />
+              <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-orange-200/20 dark:bg-orange-500/10 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '1s' }} />
+            </div>
+            
+            <div className="relative flex flex-col sm:flex-row items-start sm:items-center gap-4">
+              {/* Animated warning icon */}
+              <div className="relative flex-shrink-0">
+                <div className="absolute inset-0 bg-amber-400/30 dark:bg-amber-500/20 rounded-full blur-md animate-pulse" />
+                <div className="relative h-12 w-12 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 dark:from-amber-500 dark:to-orange-600 flex items-center justify-center shadow-lg transform hover:scale-105 transition-transform">
+                  <AlertTriangle className="h-6 w-6 text-white animate-bounce" style={{ animationDuration: '2s' }} />
+                </div>
+              </div>
+              
+              {/* Content */}
+              <div className="flex-1">
+                <h3 className="font-semibold text-amber-800 dark:text-amber-200 mb-1">
+                  Complétez votre profil !
+                </h3>
+                <p className="text-sm text-amber-700 dark:text-amber-300/80">
+                  Un profil complet augmente vos chances de trouver des offres qui vous correspondent. 
+                  Votre profil est actuellement complété à <span className="font-bold">{profileCompletion}%</span>.
+                </p>
+              </div>
+              
+              {/* CTA Button */}
+              <Link to="/profile" className="flex-shrink-0">
+                <Button 
+                  size="sm" 
+                  className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-md hover:shadow-lg transition-all"
+                >
+                  <User className="mr-2 h-4 w-4" />
+                  Compléter mon profil
+                </Button>
+              </Link>
+            </div>
+            
+            {/* Progress bar */}
+            <div className="relative mt-4">
+              <div className="h-2 bg-amber-200/50 dark:bg-amber-800/30 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-amber-400 to-orange-500 rounded-full transition-all duration-1000 ease-out"
+                  style={{ width: `${profileCompletion}%` }}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 stagger-children perspective-container">
           <Tooltip content="Nombre total d'offres d'emploi, formations et bourses disponibles sur la plateforme" position="bottom">

@@ -25,7 +25,9 @@ import {
   Upload,
   Sparkles,
   Loader2,
+  Download,
 } from "lucide-react";
+import { generateCVPdf } from "@/lib/cvPdfGenerator";
 
 type ModalState = {
   isOpen: boolean;
@@ -40,9 +42,10 @@ type LoadingState = {
 };
 
 export function CVBuilder() {
-  useAuth();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
@@ -176,6 +179,29 @@ export function CVBuilder() {
       showModal("error", "Erreur", "Une erreur est survenue lors de la sauvegarde du CV.");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDownloadPdf = async () => {
+    if (!cv.id) {
+      showModal("warning", "CV non sauvegardé", "Veuillez d'abord sauvegarder votre CV avant de le télécharger.");
+      return;
+    }
+
+    setDownloading(true);
+    try {
+      await generateCVPdf(cv as CV, {
+        firstName: user?.firstName,
+        lastName: user?.lastName,
+        email: user?.email,
+        pictureUrl: user?.pictureUrl,
+      });
+      showModal("success", "CV téléchargé !", "Votre CV a été téléchargé avec succès au format PDF.");
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      showModal("error", "Erreur", "Une erreur est survenue lors de la génération du PDF.");
+    } finally {
+      setDownloading(false);
     }
   };
 
@@ -386,7 +412,7 @@ export function CVBuilder() {
         </Card>
 
         {/* Header Actions */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <input
               type="checkbox"
@@ -399,10 +425,30 @@ export function CVBuilder() {
               Rendre mon CV public (visible par les recruteurs)
             </label>
           </div>
-          <Button onClick={handleSave} disabled={saving}>
-            <Save className="h-4 w-4 mr-2" />
-            {saving ? "Sauvegarde..." : "Sauvegarder"}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              onClick={handleDownloadPdf} 
+              disabled={downloading || !cv.id}
+              className="gap-2"
+            >
+              {downloading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Génération...
+                </>
+              ) : (
+                <>
+                  <Download className="h-4 w-4" />
+                  Télécharger PDF
+                </>
+              )}
+            </Button>
+            <Button onClick={handleSave} disabled={saving}>
+              <Save className="h-4 w-4 mr-2" />
+              {saving ? "Sauvegarde..." : "Sauvegarder"}
+            </Button>
+          </div>
         </div>
 
         {/* Personal Info */}
