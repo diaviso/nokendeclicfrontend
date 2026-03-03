@@ -17,6 +17,11 @@ import {
   MessageSquare,
   Eye,
   FileSpreadsheet,
+  Send,
+  X,
+  Loader2,
+  CheckSquare,
+  Square,
 } from "lucide-react";
 import { formatRelativeDate } from "@/lib/utils";
 import { exportUsersToExcel } from "@/lib/excelExport";
@@ -58,6 +63,10 @@ export function AdminUsers() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
+  const [selectedUserIds, setSelectedUserIds] = useState<Set<number>>(new Set());
+  const [bulkMessageOpen, setBulkMessageOpen] = useState(false);
+  const [bulkMessageContent, setBulkMessageContent] = useState("");
+  const [sendingBulk, setSendingBulk] = useState(false);
 
   const [modal, setModal] = useState<{
     isOpen: boolean;
@@ -85,6 +94,53 @@ export function AdminUsers() {
       console.error("Error fetching users:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const toggleSelectUser = (userId: number) => {
+    setSelectedUserIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(userId)) next.delete(userId);
+      else next.add(userId);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedUserIds.size === users.length) {
+      setSelectedUserIds(new Set());
+    } else {
+      setSelectedUserIds(new Set(users.map((u) => u.id)));
+    }
+  };
+
+  const handleSendBulkMessage = async () => {
+    if (!bulkMessageContent.trim() || selectedUserIds.size === 0) return;
+    setSendingBulk(true);
+    try {
+      const result = await adminService.sendBulkMessage(
+        Array.from(selectedUserIds),
+        bulkMessageContent.trim()
+      );
+      setBulkMessageOpen(false);
+      setBulkMessageContent("");
+      setSelectedUserIds(new Set());
+      setModal({
+        isOpen: true,
+        type: "success",
+        title: "Messages envoyés",
+        message: result.message,
+      });
+    } catch (error) {
+      console.error("Error sending bulk message:", error);
+      setModal({
+        isOpen: true,
+        type: "error",
+        title: "Erreur",
+        message: "Impossible d'envoyer les messages.",
+      });
+    } finally {
+      setSendingBulk(false);
     }
   };
 
@@ -203,7 +259,7 @@ export function AdminUsers() {
       <Header title="Gestion des utilisateurs" subtitle={`${total} utilisateurs au total`} />
 
       <div className="p-6 space-y-6">
-        {/* Search and Export */}
+        {/* Search, Export, and Bulk Actions */}
         <Card>
           <CardContent className="p-4">
             <div className="flex flex-col sm:flex-row gap-4">
@@ -216,6 +272,15 @@ export function AdminUsers() {
                   className="pl-10"
                 />
               </div>
+              <Button
+                variant="outline"
+                onClick={() => setBulkMessageOpen(true)}
+                disabled={selectedUserIds.size === 0}
+                className="gap-2"
+              >
+                <Send className="h-4 w-4" />
+                Envoyer message ({selectedUserIds.size})
+              </Button>
               <Button
                 variant="outline"
                 onClick={handleExportAll}
@@ -247,6 +312,15 @@ export function AdminUsers() {
                 <table className="w-full">
                   <thead className="bg-gray-50 dark:bg-gray-800">
                     <tr>
+                      <th className="px-2 py-3 text-center w-10">
+                        <button onClick={toggleSelectAll} className="text-gray-500 hover:text-primary">
+                          {selectedUserIds.size === users.length && users.length > 0 ? (
+                            <CheckSquare className="h-4 w-4" />
+                          ) : (
+                            <Square className="h-4 w-4" />
+                          )}
+                        </button>
+                      </th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         Utilisateur
                       </th>
@@ -270,6 +344,15 @@ export function AdminUsers() {
                   <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                     {users.map((user) => (
                       <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                        <td className="px-2 py-4 text-center">
+                          <button onClick={() => toggleSelectUser(user.id)} className="text-gray-500 hover:text-primary">
+                            {selectedUserIds.has(user.id) ? (
+                              <CheckSquare className="h-4 w-4 text-primary" />
+                            ) : (
+                              <Square className="h-4 w-4" />
+                            )}
+                          </button>
+                        </td>
                         <td className="px-4 py-4">
                           <div className="flex items-center gap-3">
                             <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
@@ -422,6 +505,59 @@ export function AdminUsers() {
         type={confirmModal.type}
         confirmText="Supprimer"
       />
+
+      {/* Bulk Message Modal */}
+      {bulkMessageOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl w-full max-w-lg mx-4 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Envoyer un message groupé
+              </h3>
+              <button
+                onClick={() => { setBulkMessageOpen(false); setBulkMessageContent(""); }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <p className="text-sm text-muted-foreground mb-4">
+              Ce message sera envoyé à <strong>{selectedUserIds.size}</strong> utilisateur(s) sélectionné(s) via la messagerie privée.
+            </p>
+            <textarea
+              value={bulkMessageContent}
+              onChange={(e) => setBulkMessageContent(e.target.value)}
+              placeholder="Écrivez votre message ici..."
+              className="w-full h-32 px-3 py-2 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+            />
+            <div className="flex justify-end gap-3 mt-4">
+              <Button
+                variant="outline"
+                onClick={() => { setBulkMessageOpen(false); setBulkMessageContent(""); }}
+              >
+                Annuler
+              </Button>
+              <Button
+                onClick={handleSendBulkMessage}
+                disabled={sendingBulk || !bulkMessageContent.trim()}
+                className="gap-2"
+              >
+                {sendingBulk ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Envoi en cours...
+                  </>
+                ) : (
+                  <>
+                    <Send className="h-4 w-4" />
+                    Envoyer
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

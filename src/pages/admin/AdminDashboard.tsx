@@ -392,6 +392,7 @@ export function AdminDashboard() {
                       value: count,
                       fill: AGE_COLORS[index % AGE_COLORS.length],
                     }));
+                    const ageTotal = ageData.reduce((sum, d) => sum + d.value, 0);
                     
                     return (
                       <div className="h-64">
@@ -399,8 +400,8 @@ export function AdminDashboard() {
                           <BarChart data={ageData} layout="vertical">
                             <XAxis type="number" />
                             <YAxis dataKey="name" type="category" width={80} tick={{ fontSize: 12 }} />
-                            <Tooltip formatter={(value) => [`${value} utilisateurs`, ""]} />
-                            <Bar dataKey="value" radius={[0, 4, 4, 0]}>
+                            <Tooltip formatter={(value) => [`${value} utilisateurs (${ageTotal > 0 ? ((Number(value) / ageTotal) * 100).toFixed(1) : 0}%)`, ""]} />
+                            <Bar dataKey="value" radius={[0, 4, 4, 0]} label={{ position: 'right', formatter: (v: unknown) => { const n = Number(v); return ageTotal > 0 ? `${n} (${((n / ageTotal) * 100).toFixed(0)}%)` : n; }, fontSize: 11 }}>
                               {ageData.map((entry, index) => (
                                 <Cell key={`cell-${index}`} fill={entry.fill} />
                               ))}
@@ -422,22 +423,29 @@ export function AdminDashboard() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {disaggregation.geographic.length === 0 ? (
-                    <p className="text-center text-muted-foreground py-4">
-                      Aucune donnée disponible
-                    </p>
-                  ) : (
-                    <div className="h-64">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={disaggregation.geographic.slice(0, 10)} layout="vertical">
-                          <XAxis type="number" />
-                          <YAxis dataKey="pays" type="category" width={100} tick={{ fontSize: 11 }} />
-                          <Tooltip formatter={(value) => [`${value} utilisateurs`, ""]} />
-                          <Bar dataKey="count" fill="#10B981" radius={[0, 4, 4, 0]} />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
-                  )}
+                  {(() => {
+                    if (disaggregation.geographic.length === 0) {
+                      return (
+                        <p className="text-center text-muted-foreground py-4">
+                          Aucune donnée disponible
+                        </p>
+                      );
+                    }
+                    const geoData = disaggregation.geographic.slice(0, 10);
+                    const geoTotal = geoData.reduce((sum, d) => sum + d.count, 0);
+                    return (
+                      <div className="h-64">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={geoData} layout="vertical">
+                            <XAxis type="number" />
+                            <YAxis dataKey="pays" type="category" width={100} tick={{ fontSize: 11 }} />
+                            <Tooltip formatter={(value) => [`${value} utilisateurs (${geoTotal > 0 ? ((Number(value) / geoTotal) * 100).toFixed(1) : 0}%)`, ""]} />
+                            <Bar dataKey="count" fill="#10B981" radius={[0, 4, 4, 0]} label={{ position: 'right', formatter: (v: unknown) => { const n = Number(v); return geoTotal > 0 ? `${n} (${((n / geoTotal) * 100).toFixed(0)}%)` : n; }, fontSize: 11 }} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    );
+                  })()}
                 </CardContent>
               </Card>
             </div>

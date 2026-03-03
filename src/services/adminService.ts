@@ -139,6 +139,11 @@ export const adminService = {
     const { data } = await api.get<AdminOffre[]>("/api/admin/offres/export/all");
     return data;
   },
+
+  async sendBulkMessage(userIds: number[], content: string): Promise<{ message: string; sent: number; failed: number }> {
+    const { data } = await api.post<{ message: string; sent: number; failed: number }>("/api/admin/messaging/bulk", { userIds, content });
+    return data;
+  },
 };
 
 export default adminService;

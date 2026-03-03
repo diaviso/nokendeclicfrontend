@@ -39,6 +39,7 @@ const typeOffreOptions = [
   { value: "FORMATION", label: "Formation", icon: GraduationCap },
   { value: "BOURSE", label: "Bourse", icon: Award },
   { value: "VOLONTARIAT", label: "Volontariat", icon: HandHeart },
+  { value: "PROGRAMME", label: "Programme", icon: Globe },
 ];
 
 const typeEmploiOptions = [
