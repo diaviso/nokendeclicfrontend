@@ -16,8 +16,10 @@ import {
   Briefcase,
   MessageSquare,
   Eye,
+  FileSpreadsheet,
 } from "lucide-react";
 import { formatRelativeDate } from "@/lib/utils";
+import { exportUsersToExcel } from "@/lib/excelExport";
 
 interface AdminUser {
   id: number;
@@ -176,17 +178,28 @@ export function AdminUsers() {
       <Header title="Gestion des utilisateurs" subtitle={`${total} utilisateurs au total`} />
 
       <div className="p-6 space-y-6">
-        {/* Search */}
+        {/* Search and Export */}
         <Card>
           <CardContent className="p-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder="Rechercher par nom, email ou username..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-10"
-              />
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Rechercher par nom, email ou username..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <Button
+                variant="outline"
+                onClick={() => exportUsersToExcel(users)}
+                disabled={users.length === 0}
+                className="gap-2"
+              >
+                <FileSpreadsheet className="h-4 w-4" />
+                Exporter Excel
+              </Button>
             </div>
           </CardContent>
         </Card>

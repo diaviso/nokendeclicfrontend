@@ -29,6 +29,7 @@ interface AdminOffre {
   datePublication: string;
   dateLimite?: string;
   viewCount: number;
+  estCloturee?: boolean;
   auteur?: {
     id: number;
     username: string;
@@ -119,6 +120,11 @@ export const adminService = {
 
   async deleteOffre(id: number): Promise<{ message: string }> {
     const { data } = await api.delete<{ message: string }>(`/api/admin/offres/${id}`);
+    return data;
+  },
+
+  async toggleOffreCloturee(id: number, estCloturee: boolean): Promise<AdminOffre> {
+    const { data } = await api.post<AdminOffre>(`/api/admin/offres/${id}/toggle-cloture`, { estCloturee });
     return data;
   },
 };

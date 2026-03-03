@@ -16,8 +16,12 @@ import {
   Eye,
   Plus,
   Pencil,
+  FileSpreadsheet,
+  Lock,
+  Unlock,
 } from "lucide-react";
 import { formatRelativeDate, truncate } from "@/lib/utils";
+import { exportOffresToExcel } from "@/lib/excelExport";
 
 interface AdminOffre {
   id: number;
@@ -30,6 +34,7 @@ interface AdminOffre {
   datePublication: string;
   dateLimite?: string;
   viewCount: number;
+  estCloturee?: boolean;
   auteur?: {
     id: number;
     username: string;
@@ -45,6 +50,7 @@ const typeOffreColors: Record<string, string> = {
   FORMATION: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
   BOURSE: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400",
   VOLONTARIAT: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400",
+  PROGRAMME: "bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-400",
 };
 
 const typeOffreLabels: Record<string, string> = {
@@ -52,6 +58,7 @@ const typeOffreLabels: Record<string, string> = {
   FORMATION: "Formation",
   BOURSE: "Bourse",
   VOLONTARIAT: "Volontariat",
+  PROGRAMME: "Programme",
 };
 
 export function AdminOffres() {
@@ -140,6 +147,29 @@ export function AdminOffres() {
     });
   };
 
+  const handleToggleCloture = async (offre: AdminOffre) => {
+    try {
+      const newStatus = !offre.estCloturee;
+      await adminService.toggleOffreCloturee(offre.id, newStatus);
+      setOffres((prev) =>
+        prev.map((o) => (o.id === offre.id ? { ...o, estCloturee: newStatus } : o))
+      );
+      setModal({
+        isOpen: true,
+        type: "success",
+        title: newStatus ? "Offre clôturée" : "Offre rouverte",
+        message: `L'offre "${offre.titre}" a été ${newStatus ? "clôturée" : "rouverte"}.`,
+      });
+    } catch (error) {
+      setModal({
+        isOpen: true,
+        type: "error",
+        title: "Erreur",
+        message: "Impossible de modifier le statut de l'offre.",
+      });
+    }
+  };
+
   return (
     <div>
       <Header title="Gestion des offres" subtitle={`${total} offres au total`} />
@@ -180,7 +210,17 @@ export function AdminOffres() {
                 <option value="FORMATION">Formation</option>
                 <option value="BOURSE">Bourse</option>
                 <option value="VOLONTARIAT">Volontariat</option>
+                <option value="PROGRAMME">Programme</option>
               </select>
+              <Button
+                variant="outline"
+                onClick={() => exportOffresToExcel(offres)}
+                disabled={offres.length === 0}
+                className="gap-2"
+              >
+                <FileSpreadsheet className="h-4 w-4" />
+                Exporter Excel
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -213,6 +253,11 @@ export function AdminOffres() {
                         </Badge>
                         {offre.typeEmploi && (
                           <Badge variant="outline">{offre.typeEmploi}</Badge>
+                        )}
+                        {offre.estCloturee && (
+                          <Badge className="bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+                            Clôturée
+                          </Badge>
                         )}
                       </div>
 
@@ -273,6 +318,27 @@ export function AdminOffres() {
                       >
                         <Pencil className="h-4 w-4 mr-1" />
                         Modifier
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleToggleCloture(offre)}
+                        className={offre.estCloturee 
+                          ? "text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200 w-full"
+                          : "text-amber-600 hover:text-amber-700 hover:bg-amber-50 border-amber-200 w-full"
+                        }
+                      >
+                        {offre.estCloturee ? (
+                          <>
+                            <Unlock className="h-4 w-4 mr-1" />
+                            Rouvrir
+                          </>
+                        ) : (
+                          <>
+                            <Lock className="h-4 w-4 mr-1" />
+                            Clôturer
+                          </>
+                        )}
                       </Button>
                       <Button
                         variant="outline"

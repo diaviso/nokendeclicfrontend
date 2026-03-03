@@ -253,9 +253,7 @@ export function Login() {
             className="inline-flex items-center gap-3 cursor-pointer"
             onClick={() => navigate("/")}
           >
-            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center shadow-lg shadow-primary/25">
-              <span className="text-white font-bold text-2xl">N</span>
-            </div>
+            <img src="/NOKEN.png" alt="Noken" className="h-12 w-12 object-contain" />
             <span className="font-bold text-2xl bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
               Noken
             </span>

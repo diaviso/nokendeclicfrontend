@@ -71,9 +71,7 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
         <div className="flex h-16 items-center justify-between px-4 border-b dark:border-gray-700">
           {!collapsed && (
             <Link to="/dashboard" onClick={handleNavClick} className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-                <span className="text-white font-bold text-lg">N</span>
-              </div>
+              <img src="/NOKEN.png" alt="Noken" className="h-8 w-8 object-contain" />
               <span className="font-semibold text-lg text-gray-900 dark:text-white">Noken</span>
             </Link>
           )}

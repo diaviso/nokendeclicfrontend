@@ -35,6 +35,27 @@ const OFFER_TYPE_COLORS: Record<string, string> = {
   FORMATION: "#10B981",
   BOURSE: "#8B5CF6",
   VOLONTARIAT: "#F59E0B",
+  PROGRAMME: "#14B8A6",
+};
+
+const STATUT_PRO_COLORS: Record<string, string> = {
+  EN_RECHERCHE: "#EF4444",
+  EN_POSTE: "#10B981",
+  ETUDIANT: "#3B82F6",
+  FREELANCE: "#F59E0B",
+  CHOMAGE: "#6B7280",
+  RECONVERSION: "#8B5CF6",
+  NON_PRECISE: "#9CA3AF",
+};
+
+const STATUT_PRO_LABELS: Record<string, string> = {
+  EN_RECHERCHE: "En recherche",
+  EN_POSTE: "En poste",
+  ETUDIANT: "Étudiant",
+  FREELANCE: "Freelance",
+  CHOMAGE: "Chômage",
+  RECONVERSION: "Reconversion",
+  NON_PRECISE: "Non précisé",
 };
 
 
@@ -420,6 +441,59 @@ export function AdminDashboard() {
                 </CardContent>
               </Card>
             </div>
+
+            {/* Professional Status Distribution */}
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Briefcase className="h-5 w-5" />
+                  Répartition par statut professionnel
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {(() => {
+                  const statutData = Object.entries(disaggregation.statutProfessionnel)
+                    .filter(([_, count]) => count > 0)
+                    .map(([statut, count]) => ({
+                      name: STATUT_PRO_LABELS[statut] || statut,
+                      value: count,
+                      fill: STATUT_PRO_COLORS[statut] || "#6B7280",
+                    }));
+                  
+                  if (statutData.length === 0) {
+                    return (
+                      <p className="text-center text-muted-foreground py-4">
+                        Aucune donnée disponible
+                      </p>
+                    );
+                  }
+                  
+                  return (
+                    <div className="h-72">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={statutData}
+                            cx="50%"
+                            cy="50%"
+                            outerRadius={100}
+                            paddingAngle={2}
+                            dataKey="value"
+                            label={({ name, value, percent }) => `${name}: ${value} (${((percent || 0) * 100).toFixed(0)}%)`}
+                          >
+                            {statutData.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={entry.fill} />
+                            ))}
+                          </Pie>
+                          <Tooltip formatter={(value) => [`${value} utilisateurs`, ""]} />
+                          <Legend />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  );
+                })()}
+              </CardContent>
+            </Card>
 
             {/* Offers by Type - Colorful Pie Chart */}
             {stats && Object.keys(stats.offresByType).length > 0 && (

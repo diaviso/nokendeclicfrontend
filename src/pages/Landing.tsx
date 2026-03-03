@@ -215,9 +215,7 @@ export function Landing() {
           <div className="flex items-center justify-between h-16 md:h-20">
             <div className="flex items-center gap-3">
               <div className="relative">
-                <div className="h-10 w-10 md:h-12 md:w-12 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg shadow-primary/25">
-                  <span className="text-white font-bold text-xl md:text-2xl">N</span>
-                </div>
+                <img src="/NOKEN.png" alt="Noken" className="h-10 w-10 md:h-12 md:w-12 object-contain" />
                 <div className="absolute -top-1 -right-1 h-3 w-3 bg-emerald-400 rounded-full animate-ping" />
                 <div className="absolute -top-1 -right-1 h-3 w-3 bg-emerald-400 rounded-full" />
               </div>
@@ -714,9 +712,7 @@ export function Landing() {
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div className="md:col-span-2">
               <div className="flex items-center gap-3 mb-4">
-                <div className="h-10 w-10 rounded-xl bg-white flex items-center justify-center">
-                  <span className="text-primary font-bold text-xl">N</span>
-                </div>
+                <img src="/NOKEN.png" alt="Noken" className="h-10 w-10 object-contain" />
                 <span className="font-bold text-xl text-white">Noken</span>
               </div>
               <p className="text-gray-400 max-w-md">
