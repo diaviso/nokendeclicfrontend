@@ -56,6 +56,8 @@ export interface DisaggregationStats {
   ageRanges: Record<string, number>;
   statutProfessionnel: Record<string, number>;
   geographic: { pays: string; count: number }[];
+  communes: { commune: string; count: number }[];
+  quartiers: { quartier: string; count: number }[];
 }
 
 export const adminService = {
@@ -101,6 +103,11 @@ export const adminService = {
     return data;
   },
 
+  async getUsersForExport(): Promise<AdminUser[]> {
+    const { data } = await api.get<AdminUser[]>("/api/admin/users/export/all");
+    return data;
+  },
+
   // Offres
   async getOffres(page = 1, limit = 20, search?: string, typeOffre?: string): Promise<PaginatedResponse<AdminOffre>> {
     const params = new URLSearchParams();
@@ -125,6 +132,11 @@ export const adminService = {
 
   async toggleOffreCloturee(id: number, estCloturee: boolean): Promise<AdminOffre> {
     const { data } = await api.post<AdminOffre>(`/api/admin/offres/${id}/toggle-cloture`, { estCloturee });
+    return data;
+  },
+
+  async getOffresForExport(): Promise<AdminOffre[]> {
+    const { data } = await api.get<AdminOffre[]>("/api/admin/offres/export/all");
     return data;
   },
 };

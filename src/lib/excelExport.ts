@@ -54,6 +54,9 @@ export function exportUsersToExcel(users: Array<{
   role: string;
   isActive: boolean;
   statutProfessionnel?: string;
+  telephone?: string;
+  commune?: string;
+  quartier?: string;
   createdAt: string;
   _count?: { retours: number; offres: number };
 }>): void {
@@ -63,6 +66,9 @@ export function exportUsersToExcel(users: Array<{
     { header: "Nom d'utilisateur", key: "username", width: 20 },
     { header: "Prenom", key: "firstName", width: 15 },
     { header: "Nom", key: "lastName", width: 15 },
+    { header: "Telephone", key: "telephone", width: 15 },
+    { header: "Commune", key: "commune", width: 20 },
+    { header: "Quartier", key: "quartier", width: 20 },
     { header: "Role", key: "role", width: 12 },
     { header: "Statut Pro", key: "statutProfessionnel", width: 15 },
     { header: "Actif", key: "isActive", width: 8 },

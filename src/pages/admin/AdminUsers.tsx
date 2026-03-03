@@ -53,6 +53,7 @@ const roleLabels: Record<string, string> = {
 export function AdminUsers() {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -84,6 +85,30 @@ export function AdminUsers() {
       console.error("Error fetching users:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleExportAll = async () => {
+    setExporting(true);
+    try {
+      const allUsers = await adminService.getUsersForExport();
+      exportUsersToExcel(allUsers);
+      setModal({
+        isOpen: true,
+        type: "success",
+        title: "Export réussi",
+        message: `${allUsers.length} utilisateurs exportés avec succès.`,
+      });
+    } catch (error) {
+      console.error("Error exporting users:", error);
+      setModal({
+        isOpen: true,
+        type: "error",
+        title: "Erreur",
+        message: "Impossible d'exporter les utilisateurs.",
+      });
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -193,12 +218,12 @@ export function AdminUsers() {
               </div>
               <Button
                 variant="outline"
-                onClick={() => exportUsersToExcel(users)}
-                disabled={users.length === 0}
+                onClick={handleExportAll}
+                disabled={exporting || total === 0}
                 className="gap-2"
               >
                 <FileSpreadsheet className="h-4 w-4" />
-                Exporter Excel
+                {exporting ? "Export en cours..." : `Exporter tout (${total})`}
               </Button>
             </div>
           </CardContent>

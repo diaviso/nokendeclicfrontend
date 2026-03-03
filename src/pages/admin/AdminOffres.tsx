@@ -65,6 +65,7 @@ export function AdminOffres() {
   const navigate = useNavigate();
   const [offres, setOffres] = useState<AdminOffre[]>([]);
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
   const [page, setPage] = useState(1);
@@ -102,6 +103,30 @@ export function AdminOffres() {
       console.error("Error fetching offres:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleExportAll = async () => {
+    setExporting(true);
+    try {
+      const allOffres = await adminService.getOffresForExport();
+      exportOffresToExcel(allOffres);
+      setModal({
+        isOpen: true,
+        type: "success",
+        title: "Export réussi",
+        message: `${allOffres.length} offres exportées avec succès.`,
+      });
+    } catch (error) {
+      console.error("Error exporting offres:", error);
+      setModal({
+        isOpen: true,
+        type: "error",
+        title: "Erreur",
+        message: "Impossible d'exporter les offres.",
+      });
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -214,12 +239,12 @@ export function AdminOffres() {
               </select>
               <Button
                 variant="outline"
-                onClick={() => exportOffresToExcel(offres)}
-                disabled={offres.length === 0}
+                onClick={handleExportAll}
+                disabled={exporting || total === 0}
                 className="gap-2"
               >
                 <FileSpreadsheet className="h-4 w-4" />
-                Exporter Excel
+                {exporting ? "Export en cours..." : `Exporter tout (${total})`}
               </Button>
             </div>
           </CardContent>
