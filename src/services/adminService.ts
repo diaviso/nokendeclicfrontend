@@ -57,7 +57,8 @@ export interface DisaggregationStats {
   statutProfessionnel: Record<string, number>;
   geographic: { pays: string; count: number }[];
   communes: { commune: string; count: number }[];
-  quartiers: { quartier: string; count: number }[];
+  regions: { region: string; count: number }[];
+  departements: { departement: string; count: number }[];
 }
 
 export const adminService = {

@@ -49,8 +49,9 @@ interface UserDetails {
   dateNaissance?: string;
   telephone?: string;
   pays?: string;
+  region?: string;
+  departement?: string;
   commune?: string;
-  quartier?: string;
   adresse?: string;
   handicap?: boolean;
   typeHandicap?: string;
@@ -655,8 +656,12 @@ export function AdminUserDetails() {
                   <p className="font-medium">{user.commune || "Non renseigné"}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground mb-1">Quartier</p>
-                  <p className="font-medium">{user.quartier || "Non renseigné"}</p>
+                  <p className="text-xs text-muted-foreground mb-1">Région</p>
+                  <p className="font-medium">{user.region || "Non renseigné"}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Département</p>
+                  <p className="font-medium">{user.departement || "Non renseigné"}</p>
                 </div>
                 <div className="col-span-2">
                   <p className="text-xs text-muted-foreground mb-1">Adresse complète</p>

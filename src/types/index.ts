@@ -17,8 +17,9 @@ export interface User {
   lastName?: string;
   statutProfessionnel: StatutProfessionnel;
   pays?: string;
+  region?: string;
+  departement?: string;
   commune?: string;
-  quartier?: string;
   sexe?: Sexe;
   dateNaissance?: string;
   adresse?: string;

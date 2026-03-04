@@ -503,27 +503,27 @@ export function AdminDashboard() {
               </CardContent>
             </Card>
 
-            {/* Commune and Quartier Distribution */}
+            {/* Region and Departement Distribution */}
             <div className="grid lg:grid-cols-2 gap-6 mt-6">
-              {/* Commune Distribution */}
+              {/* Region Distribution */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-base">
                     <MapPin className="h-4 w-4" />
-                    Répartition par commune (Top 15)
+                    Répartition par région
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {disaggregation.communes?.length === 0 ? (
+                  {disaggregation.regions?.length === 0 ? (
                     <p className="text-center text-muted-foreground py-4">
                       Aucune donnée disponible
                     </p>
                   ) : (
                     <div className="h-80">
                       <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={disaggregation.communes?.slice(0, 15) || []} layout="vertical">
+                        <BarChart data={disaggregation.regions?.slice(0, 15) || []} layout="vertical">
                           <XAxis type="number" />
-                          <YAxis dataKey="commune" type="category" width={120} tick={{ fontSize: 10 }} />
+                          <YAxis dataKey="region" type="category" width={120} tick={{ fontSize: 10 }} />
                           <Tooltip formatter={(value) => [`${value} utilisateurs`, ""]} />
                           <Bar dataKey="count" fill="#3B82F6" radius={[0, 4, 4, 0]} />
                         </BarChart>
@@ -533,25 +533,25 @@ export function AdminDashboard() {
                 </CardContent>
               </Card>
 
-              {/* Quartier Distribution */}
+              {/* Departement Distribution */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-base">
                     <MapPin className="h-4 w-4" />
-                    Répartition par quartier (Top 15)
+                    Répartition par département (Top 15)
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {disaggregation.quartiers?.length === 0 ? (
+                  {disaggregation.departements?.length === 0 ? (
                     <p className="text-center text-muted-foreground py-4">
                       Aucune donnée disponible
                     </p>
                   ) : (
                     <div className="h-80">
                       <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={disaggregation.quartiers?.slice(0, 15) || []} layout="vertical">
+                        <BarChart data={disaggregation.departements?.slice(0, 15) || []} layout="vertical">
                           <XAxis type="number" />
-                          <YAxis dataKey="quartier" type="category" width={120} tick={{ fontSize: 10 }} />
+                          <YAxis dataKey="departement" type="category" width={120} tick={{ fontSize: 10 }} />
                           <Tooltip formatter={(value) => [`${value} utilisateurs`, ""]} />
                           <Bar dataKey="count" fill="#8B5CF6" radius={[0, 4, 4, 0]} />
                         </BarChart>

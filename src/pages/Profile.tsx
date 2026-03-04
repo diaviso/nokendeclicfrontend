@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, Button, Input } from "@/compo
 import { useAuth } from "@/contexts/AuthContext";
 import { usersService } from "@/services";
 import { getImageUrl } from "@/services/api";
+import { senegalRegions, getDepartementsForRegion } from "@/lib/senegalData";
 import confetti from "canvas-confetti";
 import {
   User,
@@ -83,8 +84,9 @@ export function Profile() {
     username: user?.username || "",
     statutProfessionnel: user?.statutProfessionnel || "NON_PRECISE" as string,
     pays: user?.pays || "Sénégal",
+    region: user?.region || "",
+    departement: user?.departement || "",
     commune: user?.commune || "",
-    quartier: user?.quartier || "",
     sexe: user?.sexe || "NON_PRECISE" as string,
     dateNaissance: user?.dateNaissance ? user.dateNaissance.split("T")[0] : "",
     adresse: user?.adresse || "",
@@ -102,8 +104,9 @@ export function Profile() {
         username: user.username || "",
         statutProfessionnel: user.statutProfessionnel || "NON_PRECISE",
         pays: user.pays || "Sénégal",
+        region: user.region || "",
+        departement: user.departement || "",
         commune: user.commune || "",
-        quartier: user.quartier || "",
         sexe: user.sexe || "NON_PRECISE",
         dateNaissance: user.dateNaissance ? user.dateNaissance.split("T")[0] : "",
         adresse: user.adresse || "",
@@ -350,29 +353,56 @@ export function Profile() {
                 </div>
               )}
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium mb-1 block dark:text-gray-200">Commune</label>
-                <Input
-                  value={formData.commune}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, commune: e.target.value }))
-                  }
-                  placeholder="Ex: Dakar Plateau"
-                  className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                />
+            {formData.pays === "Sénégal" && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium mb-1 block dark:text-gray-200">Région</label>
+                  <select
+                    value={formData.region}
+                    onChange={(e) => {
+                      const newRegion = e.target.value;
+                      setFormData((prev) => ({ ...prev, region: newRegion, departement: "" }));
+                    }}
+                    className="w-full px-3 py-2 border rounded-lg text-sm bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  >
+                    <option value="">Sélectionner une région</option>
+                    {senegalRegions.map((r) => (
+                      <option key={r.name} value={r.name}>{r.name}</option>
+                    ))}
+                    <option value="Autre">Autre</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-1 block dark:text-gray-200">Département</label>
+                  <select
+                    value={formData.departement}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, departement: e.target.value }))
+                    }
+                    disabled={!formData.region}
+                    className="w-full px-3 py-2 border rounded-lg text-sm bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white disabled:opacity-50"
+                  >
+                    <option value="">Sélectionner un département</option>
+                    {formData.region && getDepartementsForRegion(formData.region).map((d) => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                    {formData.region && formData.region !== "Autre" && (
+                      <option value="Autre">Autre</option>
+                    )}
+                  </select>
+                </div>
               </div>
-              <div>
-                <label className="text-sm font-medium mb-1 block dark:text-gray-200">Quartier</label>
-                <Input
-                  value={formData.quartier}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, quartier: e.target.value }))
-                  }
-                  placeholder="Ex: Médina"
-                  className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                />
-              </div>
+            )}
+            <div>
+              <label className="text-sm font-medium mb-1 block dark:text-gray-200">Commune</label>
+              <Input
+                value={formData.commune}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, commune: e.target.value }))
+                }
+                placeholder="Saisissez votre commune..."
+                className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              />
             </div>
             <div>
               <label className="text-sm font-medium mb-1 block dark:text-gray-200">Adresse complète</label>
