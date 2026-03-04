@@ -12,4 +12,6 @@ export { AuthCallback } from "./AuthCallback";
 export { Messagerie } from "./Messagerie";
 export { ForgotPassword } from "./ForgotPassword";
 export { ResetPassword } from "./ResetPassword";
-export { AdminDashboard, AdminUsers, AdminUserDetails, AdminOffres, AdminOffreForm } from "./admin";
+export { FeedbackPage } from "./Feedback";
+export { FeedbackDetail } from "./FeedbackDetail";
+export { AdminDashboard, AdminUsers, AdminUserDetails, AdminOffres, AdminOffreForm, AdminFeedback, AdminFeedbackDetail } from "./admin";

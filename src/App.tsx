@@ -17,11 +17,15 @@ import {
   Profile,
   AuthCallback,
   Messagerie,
+  FeedbackPage,
+  FeedbackDetail,
   AdminDashboard,
   AdminUsers,
   AdminUserDetails,
   AdminOffres,
   AdminOffreForm,
+  AdminFeedback,
+  AdminFeedbackDetail,
   ForgotPassword,
   ResetPassword,
 } from "@/pages";
@@ -66,6 +70,8 @@ function App() {
               <Route path="/retours" element={<Retours />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/messagerie" element={<Messagerie />} />
+              <Route path="/feedback" element={<FeedbackPage />} />
+              <Route path="/feedback/:id" element={<FeedbackDetail />} />
 
               {/* Admin routes */}
               <Route
@@ -113,6 +119,22 @@ function App() {
                 element={
                   <ProtectedRoute requiredRole="ADMIN">
                     <AdminOffreForm />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/feedback"
+                element={
+                  <ProtectedRoute requiredRole="ADMIN">
+                    <AdminFeedback />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/feedback/:id"
+                element={
+                  <ProtectedRoute requiredRole="ADMIN">
+                    <AdminFeedbackDetail />
                   </ProtectedRoute>
                 }
               />

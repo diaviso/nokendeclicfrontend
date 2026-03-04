@@ -3,3 +3,5 @@ export { AdminUsers } from "./AdminUsers";
 export { AdminUserDetails } from "./AdminUserDetails";
 export { AdminOffres } from "./AdminOffres";
 export { AdminOffreForm } from "./AdminOffreForm";
+export { AdminFeedback } from "./AdminFeedback";
+export { AdminFeedbackDetail } from "./AdminFeedbackDetail";

@@ -14,6 +14,7 @@ import {
   Users,
   BarChart3,
   LogOut,
+  MessageCircleHeart,
   ChevronLeft,
   Menu,
   Moon,
@@ -32,12 +33,14 @@ const navigation = [
   { name: "Mes Retours", href: "/retours", icon: MessageSquare },
   { name: "Favoris", href: "/favoris", icon: Heart },
   { name: "Assistant IA", href: "/chatbot", icon: Bot },
+  { name: "Feedback", href: "/feedback", icon: MessageCircleHeart },
 ];
 
 const adminNavigation = [
   { name: "Statistiques", href: "/admin", icon: BarChart3 },
   { name: "Utilisateurs", href: "/admin/users", icon: Users },
   { name: "Offres", href: "/admin/offres", icon: Briefcase },
+  { name: "Feedbacks", href: "/admin/feedback", icon: MessageCircleHeart },
 ];
 
 interface SidebarProps {
