@@ -139,6 +139,7 @@ const typeOffreColors: Record<string, string> = {
   FORMATION: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
   BOURSE: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400",
   VOLONTARIAT: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400",
+  PROGRAMME: "bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-400",
 };
 
 export function AdminUserDetails() {

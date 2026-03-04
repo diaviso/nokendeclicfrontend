@@ -123,6 +123,7 @@ const typeOffreLabels: Record<string, string> = {
   FORMATION: "Formation",
   BOURSE: "Bourse",
   VOLONTARIAT: "Volontariat",
+  PROGRAMME: "Programme",
 };
 
 const typeOffreColors: Record<string, string> = {
@@ -130,6 +131,7 @@ const typeOffreColors: Record<string, string> = {
   FORMATION: "from-emerald-500 to-emerald-600",
   BOURSE: "from-amber-500 to-amber-600",
   VOLONTARIAT: "from-orange-500 to-orange-600",
+  PROGRAMME: "from-teal-500 to-teal-600",
 };
 
 const typeOffreIcons: Record<string, React.ElementType> = {
@@ -137,6 +139,7 @@ const typeOffreIcons: Record<string, React.ElementType> = {
   FORMATION: GraduationCap,
   BOURSE: Award,
   VOLONTARIAT: HandHeart,
+  PROGRAMME: Globe,
 };
 
 export function Landing() {
