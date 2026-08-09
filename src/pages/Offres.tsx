@@ -14,36 +14,13 @@ import {
   ChevronLeft,
   ChevronRight,
   Briefcase,
-  GraduationCap,
-  Award,
-  HandHeart,
-  Globe,
 } from "lucide-react";
 import { formatRelativeDate, truncate, cn } from "@/lib/utils";
+import { TYPE_OFFRE_LABELS, TYPE_OFFRE_BADGE, TYPE_OFFRE_ICONS } from "@/lib/enums";
 
-const typeOffreLabels: Record<string, string> = {
-  EMPLOI: "Emploi",
-  FORMATION: "Formation",
-  BOURSE: "Bourse",
-  VOLONTARIAT: "Volontariat",
-  PROGRAMME: "Programme",
-};
-
-const typeOffreColors: Record<string, string> = {
-  EMPLOI: "bg-blue-100 text-blue-800",
-  FORMATION: "bg-green-100 text-green-800",
-  BOURSE: "bg-purple-100 text-purple-800",
-  VOLONTARIAT: "bg-orange-100 text-orange-800",
-  PROGRAMME: "bg-teal-100 text-teal-800",
-};
-
-const typeOffreIcons: Record<string, React.ElementType> = {
-  EMPLOI: Briefcase,
-  FORMATION: GraduationCap,
-  BOURSE: Award,
-  VOLONTARIAT: HandHeart,
-  PROGRAMME: Globe,
-};
+const typeOffreLabels = TYPE_OFFRE_LABELS as Record<string, string>;
+const typeOffreColors = TYPE_OFFRE_BADGE as Record<string, string>;
+const typeOffreIcons = TYPE_OFFRE_ICONS as Record<string, React.ElementType>;
 
 export function Offres() {
   const [searchParams, setSearchParams] = useSearchParams();

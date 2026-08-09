@@ -18,11 +18,15 @@ import {
   Mail,
   Moon,
   Sun,
-  HandHeart,
 } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { offresService } from "@/services";
 import type { Offre } from "@/types";
+import { TYPE_OFFRE_LABELS, TYPE_OFFRE_GRADIENT, TYPE_OFFRE_ICONS } from "@/lib/enums";
+
+const typeOffreLabels = TYPE_OFFRE_LABELS as Record<string, string>;
+const typeOffreColors = TYPE_OFFRE_GRADIENT as Record<string, string>;
+const typeOffreIcons = TYPE_OFFRE_ICONS as Record<string, React.ElementType>;
 
 // Animated counter hook
 function useCountUp(end: number, duration: number = 2000, startOnView: boolean = true) {
@@ -117,30 +121,6 @@ const partners = [
   { name: "Campus France", color: "from-red-400 to-red-600" },
   { name: "USAID", color: "from-indigo-400 to-indigo-600" },
 ];
-
-const typeOffreLabels: Record<string, string> = {
-  EMPLOI: "Emploi",
-  FORMATION: "Formation",
-  BOURSE: "Bourse",
-  VOLONTARIAT: "Volontariat",
-  PROGRAMME: "Programme",
-};
-
-const typeOffreColors: Record<string, string> = {
-  EMPLOI: "from-blue-500 to-blue-600",
-  FORMATION: "from-emerald-500 to-emerald-600",
-  BOURSE: "from-amber-500 to-amber-600",
-  VOLONTARIAT: "from-orange-500 to-orange-600",
-  PROGRAMME: "from-teal-500 to-teal-600",
-};
-
-const typeOffreIcons: Record<string, React.ElementType> = {
-  EMPLOI: Briefcase,
-  FORMATION: GraduationCap,
-  BOURSE: Award,
-  VOLONTARIAT: HandHeart,
-  PROGRAMME: Globe,
-};
 
 export function Landing() {
   const navigate = useNavigate();

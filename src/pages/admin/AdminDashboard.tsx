@@ -26,37 +26,14 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
+import { TYPE_OFFRE_CHART_COLORS, STATUT_PROFESSIONNEL_CHART_COLORS, STATUT_PROFESSIONNEL_LABELS } from "@/lib/enums";
 
 const GENDER_COLORS = ["#3B82F6", "#EC4899", "#8B5CF6", "#9CA3AF"];
 const AGE_COLORS = ["#10B981", "#14B8A6", "#06B6D4", "#0EA5E9", "#3B82F6", "#6366F1", "#8B5CF6", "#9CA3AF"];
 const HANDICAP_COLORS = ["#8B5CF6", "#D1D5DB"];
-const OFFER_TYPE_COLORS: Record<string, string> = {
-  EMPLOI: "#3B82F6",
-  FORMATION: "#10B981",
-  BOURSE: "#8B5CF6",
-  VOLONTARIAT: "#F59E0B",
-  PROGRAMME: "#14B8A6",
-};
-
-const STATUT_PRO_COLORS: Record<string, string> = {
-  EN_RECHERCHE: "#EF4444",
-  EN_POSTE: "#10B981",
-  ETUDIANT: "#3B82F6",
-  FREELANCE: "#F59E0B",
-  CHOMAGE: "#6B7280",
-  RECONVERSION: "#8B5CF6",
-  NON_PRECISE: "#9CA3AF",
-};
-
-const STATUT_PRO_LABELS: Record<string, string> = {
-  EN_RECHERCHE: "En recherche",
-  EN_POSTE: "En poste",
-  ETUDIANT: "Étudiant",
-  FREELANCE: "Freelance",
-  CHOMAGE: "Chômage",
-  RECONVERSION: "Reconversion",
-  NON_PRECISE: "Non précisé",
-};
+const OFFER_TYPE_COLORS = TYPE_OFFRE_CHART_COLORS as Record<string, string>;
+const STATUT_PRO_COLORS = STATUT_PROFESSIONNEL_CHART_COLORS as Record<string, string>;
+const STATUT_PRO_LABELS = STATUT_PROFESSIONNEL_LABELS as Record<string, string>;
 
 
 export function AdminDashboard() {

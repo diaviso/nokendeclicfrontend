@@ -49,7 +49,9 @@ export const authService = {
 
   async verifyEmail(data: VerifyEmailData): Promise<LoginResponse> {
     const response = await api.post<LoginResponse>("/auth/verify-email", data);
-    if (response.data.access_token) {
+    // Le backend renvoie `accessToken` (camelCase). Ne tester que `access_token`
+    // faisait que les jetons n'étaient jamais persistés après vérification.
+    if (response.data.accessToken || response.data.access_token) {
       saveTokens(response.data);
     }
     return response.data;
@@ -101,7 +103,15 @@ export const authService = {
   
   getUser: (): User | null => {
     const user = localStorage.getItem("user");
-    return user ? JSON.parse(user) : null;
+    if (!user) return null;
+    try {
+      return JSON.parse(user) as User;
+    } catch {
+      // Entrée corrompue : sans ce garde, l'exception remontait jusqu'à
+      // AuthContext.initAuth et empêchait l'application de démarrer.
+      localStorage.removeItem("user");
+      return null;
+    }
   },
 
   isAuthenticated: () => !!(localStorage.getItem("accessToken") || localStorage.getItem("access_token")),

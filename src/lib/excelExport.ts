@@ -1,4 +1,5 @@
 import * as XLSX from "xlsx";
+import { TYPE_OFFRE_LABELS } from "@/lib/enums";
 
 interface ExportColumn {
   header: string;
@@ -120,13 +121,7 @@ export function exportOffresToExcel(offres: Array<{
     { header: "Auteur", key: "auteur.username", width: 20 },
   ];
 
-  const typeLabels: Record<string, string> = {
-    EMPLOI: "Emploi",
-    FORMATION: "Formation",
-    BOURSE: "Bourse",
-    VOLONTARIAT: "Volontariat",
-    PROGRAMME: "Programme",
-  };
+  const typeLabels = TYPE_OFFRE_LABELS as Record<string, string>;
 
   const formattedOffres = offres.map((offre) => ({
     ...offre,

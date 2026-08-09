@@ -21,22 +21,10 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { formatRelativeDate, truncate } from "@/lib/utils";
+import { TYPE_OFFRE_LABELS, TYPE_OFFRE_BADGE } from "@/lib/enums";
 
-const typeOffreLabels: Record<string, string> = {
-  EMPLOI: "Emploi",
-  FORMATION: "Formation",
-  BOURSE: "Bourse",
-  VOLONTARIAT: "Volontariat",
-  PROGRAMME: "Programme",
-};
-
-const typeOffreColors: Record<string, string> = {
-  EMPLOI: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
-  FORMATION: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
-  BOURSE: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400",
-  VOLONTARIAT: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400",
-  PROGRAMME: "bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-400",
-};
+const typeOffreLabels = TYPE_OFFRE_LABELS as Record<string, string>;
+const typeOffreColors = TYPE_OFFRE_BADGE as Record<string, string>;
 
 export function Dashboard() {
   const { user } = useAuth();

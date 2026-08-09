@@ -33,6 +33,7 @@ import {
   Star,
 } from "lucide-react";
 import { formatRelativeDate } from "@/lib/utils";
+import { STATUT_PROFESSIONNEL_LABELS, SEXE_LABELS, TYPE_OFFRE_BADGE } from "@/lib/enums";
 
 interface UserDetails {
   id: number;
@@ -118,30 +119,14 @@ const roleLabels: Record<string, string> = {
   MEMBRE: "Membre",
 };
 
-const statutLabels: Record<string, string> = {
-  ETUDIANT: "Étudiant",
-  DIPLOME: "Diplômé",
-  EMPLOYE: "Employé",
-  CHERCHEUR_EMPLOI: "Chercheur d'emploi",
-  ENTREPRENEUR: "Entrepreneur",
-  AUTRE: "Autre",
-  NON_PRECISE: "Non précisé",
-};
+// Cette page utilisait une table de statuts entièrement obsolète (DIPLOME,
+// EMPLOYE, CHERCHEUR_EMPLOI, ENTREPRENEUR) : aucune de ces valeurs n'existe dans
+// l'énumération StatutProfessionnel, si bien que le statut de la plupart des
+// utilisateurs ne s'affichait pas. Corrigé en pointant vers la source unique.
+const statutLabels = STATUT_PROFESSIONNEL_LABELS as Record<string, string>;
+const sexeLabels = SEXE_LABELS as Record<string, string>;
 
-const sexeLabels: Record<string, string> = {
-  HOMME: "Homme",
-  FEMME: "Femme",
-  AUTRE: "Autre",
-  NON_PRECISE: "Non précisé",
-};
-
-const typeOffreColors: Record<string, string> = {
-  EMPLOI: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
-  FORMATION: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
-  BOURSE: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400",
-  VOLONTARIAT: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400",
-  PROGRAMME: "bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-400",
-};
+const typeOffreColors = TYPE_OFFRE_BADGE as Record<string, string>;
 
 export function AdminUserDetails() {
   const { id } = useParams<{ id: string }>();
