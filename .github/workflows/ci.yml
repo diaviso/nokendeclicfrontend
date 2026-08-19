@@ -21,15 +21,22 @@ jobs:
       - name: Installer les dépendances
         run: npm ci
 
-      # `npm run build` enchaîne déjà `tsc -b` puis `vite build`.
+      - name: Lint
+        run: npm run lint
+
+      # `npm run build` enchaîne la compilation Turbopack et la vérification
+      # des types : inutile de lancer `tsc` séparément.
       - name: Types et build
         run: npm run build
+        env:
+          NEXT_PUBLIC_API_URL: https://nokendeclicbackend-production.up.railway.app
 
       - name: Audit de sécurité (critique bloquant)
         run: npm audit --audit-level=critical
 
-      # Non bloquant pour l'instant : ~67 erreurs de lint en attente.
-      # À basculer en bloquant une fois l'arriéré résorbé.
-      - name: Lint (informatif)
-        continue-on-error: true
-        run: npm run lint
+      # Les icônes sont générées depuis le logo de marque : on vérifie que le
+      # script reste fonctionnel et que le résultat est bien celui commité.
+      - name: Cohérence des icônes PWA
+        run: |
+          node scripts/generate-icons.mjs
+          git diff --exit-code public/icons src/app/icon.png src/app/apple-icon.png
