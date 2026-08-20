@@ -256,7 +256,11 @@
     "pagination": "Pagination",
     "precedent": "Précédent",
     "suivant": "Suivant",
-    "page": "Page {page} sur {total}"
+    "page": "Page {page} sur {total}",
+    "echeance": "Échéance",
+    "toutesEcheances": "Toutes les échéances",
+    "echeanceOuverte": "Encore ouvertes",
+    "echeanceDepassee": "Échéance dépassée"
   },
   "cgu": {
     "accueil": "Accueil",

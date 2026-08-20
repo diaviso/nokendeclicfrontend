@@ -15,6 +15,7 @@ import { formatNumber } from "@/lib/format";
 import type {
   NiveauExperience,
   Offre,
+  OffresFilters,
   PaginatedResponse,
   Secteur,
   TypeOffreDef,
@@ -43,6 +44,7 @@ type Search = {
   secteur?: string;
   niveauExperience?: string;
   localisation?: string;
+  echeance?: string;
   page?: string;
 };
 
@@ -72,7 +74,7 @@ export default async function OffresPage(props: {
   const typeDemande = types.find((type) => type.code === sp.typeOffre);
 
   const page = Math.max(1, Number(sp.page) || 1);
-  const filters = {
+  const filters: OffresFilters = {
     keyword: sp.keyword?.trim() || undefined,
     typeOffre: typeDemande?.code,
     secteur: pick<Secteur>(sp.secteur, SECTEUR_LABELS),
@@ -81,6 +83,10 @@ export default async function OffresPage(props: {
       NIVEAU_EXPERIENCE_LABELS,
     ),
     localisation: sp.localisation?.trim() || undefined,
+    echeance:
+      sp.echeance === "ouverte" || sp.echeance === "depassee"
+        ? sp.echeance
+        : undefined,
     page,
     limit: 18,
   };
@@ -173,6 +179,17 @@ export default async function OffresPage(props: {
                 {type.libelle}
               </option>
             ))}
+          </select>
+
+          <select
+            name="echeance"
+            defaultValue={sp.echeance ?? ""}
+            aria-label={t("echeance")}
+            className="h-9 rounded-md border bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:ring-2 focus-visible:ring-ring/50 lg:w-44"
+          >
+            <option value="">{t("toutesEcheances")}</option>
+            <option value="ouverte">{t("echeanceOuverte")}</option>
+            <option value="depassee">{t("echeanceDepassee")}</option>
           </select>
 
           <select

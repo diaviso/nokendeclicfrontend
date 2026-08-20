@@ -264,6 +264,11 @@ export interface OffresFilters {
   tag?: string;
   keyword?: string;
   localisation?: string;
+  /**
+   * État de l'échéance. « ouverte » retient aussi les offres sans date limite —
+   * candidature spontanée, programme permanent.
+   */
+  echeance?: "ouverte" | "depassee";
   page?: number;
   limit?: number;
 }

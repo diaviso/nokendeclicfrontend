@@ -84,7 +84,16 @@
  * fond blanc, hiérarchie portée par des bordures 1px très claires plutôt que
  * par des ombres, accent bleu de marque réservé aux actions et aux données.
  */
+/*
+ * `color-scheme` gouverne tout ce que le navigateur dessine lui-même : la
+ * liste déroulante d'un `<select>`, les barres de défilement, les sélecteurs
+ * de date, l'autocomplétion. Sans elle, ces éléments restent clairs en thème
+ * sombre — la liste des secteurs s'ouvrait en gris pâle sur blanc, illisible.
+ * Aucune feuille de style ne peut atteindre ces surfaces : seule cette
+ * propriété le peut.
+ */
 :root {
+  color-scheme: light;
   --background: oklch(1 0 0);
   --foreground: oklch(0.21 0.006 285);
 
@@ -134,6 +143,7 @@
 }
 
 .dark {
+  color-scheme: dark;
   --background: oklch(0.165 0.005 285);
   --foreground: oklch(0.96 0.002 285);
 

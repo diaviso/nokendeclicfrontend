@@ -17,7 +17,7 @@ import { NIVEAU_EXPERIENCE_LABELS, SECTEUR_LABELS } from "@/lib/enums";
 import { styleType } from "@/lib/type-offre";
 import { cn } from "@/lib/utils";
 import { formatNumber } from "@/lib/format";
-import type { NiveauExperience, Secteur } from "@/lib/types";
+import type { NiveauExperience, OffresFilters, Secteur } from "@/lib/types";
 
 const PAGE_SIZE = 18;
 
@@ -42,6 +42,7 @@ function RechercheInner() {
   const [localisation, setLocalisation] = useState(
     searchParams.get("localisation") ?? "",
   );
+  const [echeance, setEcheance] = useState(searchParams.get("echeance") ?? "");
   const [page, setPage] = useState(Number(searchParams.get("page")) || 1);
 
   const debouncedKeyword = useDebounced(keyword);
@@ -54,10 +55,19 @@ function RechercheInner() {
       secteur: (secteur || undefined) as Secteur | undefined,
       niveauExperience: (niveau || undefined) as NiveauExperience | undefined,
       localisation: debouncedLocalisation || undefined,
+      echeance: (echeance || undefined) as OffresFilters["echeance"],
       page,
       limit: PAGE_SIZE,
     }),
-    [debouncedKeyword, typeOffre, secteur, niveau, debouncedLocalisation, page],
+    [
+      debouncedKeyword,
+      typeOffre,
+      secteur,
+      niveau,
+      debouncedLocalisation,
+      echeance,
+      page,
+    ],
   );
 
   // Les filtres restent dans l'URL : l'état est partageable et survit à un
@@ -70,6 +80,7 @@ function RechercheInner() {
     if (filters.niveauExperience)
       params.set("niveauExperience", filters.niveauExperience);
     if (filters.localisation) params.set("localisation", filters.localisation);
+    if (filters.echeance) params.set("echeance", filters.echeance);
     if (filters.page > 1) params.set("page", String(filters.page));
     const qs = params.toString();
     router.replace(qs ? `/recherche?${qs}` : "/recherche", { scroll: false });
@@ -242,6 +253,20 @@ function RechercheInner() {
                 {SECTEUR_LABELS[s]}
               </option>
             ))}
+          </select>
+
+          <select
+            value={echeance}
+            onChange={(e) => {
+              setEcheance(e.target.value);
+              setPage(1);
+            }}
+            aria-label="État de l'échéance"
+            className="h-11 rounded-xl border bg-transparent px-3 text-sm shadow-xs outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/50 lg:w-44"
+          >
+            <option value="">Toutes les échéances</option>
+            <option value="ouverte">Encore ouvertes</option>
+            <option value="depassee">Échéance dépassée</option>
           </select>
 
           <select

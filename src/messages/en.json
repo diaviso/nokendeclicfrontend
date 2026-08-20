@@ -256,7 +256,11 @@
     "pagination": "Pagination",
     "precedent": "Previous",
     "suivant": "Next",
-    "page": "Page {page} of {total}"
+    "page": "Page {page} of {total}",
+    "echeance": "Deadline",
+    "toutesEcheances": "Any deadline",
+    "echeanceOuverte": "Still open",
+    "echeanceDepassee": "Deadline passed"
   },
   "cgu": {
     "accueil": "Home",
