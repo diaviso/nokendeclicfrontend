@@ -24,7 +24,16 @@ export function ServiceWorkerManager() {
       try {
         const registration = await navigator.serviceWorker.register("/sw.js", {
           scope: "/",
+          // Le script du worker n'est jamais lu depuis le cache HTTP : sans
+          // cela, le navigateur peut resservir l'ancien pendant des heures et
+          // la mise à jour n'est même pas détectée.
+          updateViaCache: "none",
         });
+
+        // Vérification à chaque chargement : une version publiée entre-temps
+        // est repérée tout de suite, plutôt qu'au prochain redémarrage du
+        // navigateur.
+        void registration.update();
 
         if (cancelled) return;
 

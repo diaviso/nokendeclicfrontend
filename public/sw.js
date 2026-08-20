@@ -7,7 +7,7 @@
  *
  * Incrémenter VERSION invalide tous les caches au prochain déploiement.
  */
-const VERSION = "v2";
+const VERSION = "v3";
 const STATIC_CACHE = `noken-static-${VERSION}`;
 const PAGES_CACHE = `noken-pages-${VERSION}`;
 const OFFLINE_URL = "/hors-ligne";
