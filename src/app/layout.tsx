@@ -31,10 +31,10 @@ const jakarta = Plus_Jakarta_Sans({
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: {
-    default: "Noken Declic — Emploi, formations et bourses au Sénégal",
-    template: "%s · Noken Declic",
-  },
+  // Pas de `template` ici : les pages traduites en déclarent un, et le gabarit
+  // racine l'appliquait par-dessus — le titre de l'accueil sortait avec deux
+  // fois « · Noken Declic ». Ce titre ne sert qu'aux routes non traduites.
+  title: "Noken Declic — Emploi, formations et bourses au Sénégal",
   description:
     "Trouvez des offres d'emploi, formations, bourses et programmes de volontariat au Sénégal, avec un focus sur la Casamance.",
   applicationName: "Noken Declic",
