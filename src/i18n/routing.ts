@@ -16,6 +16,22 @@ export const routing = defineRouting({
   locales: ["fr", "en"],
   defaultLocale: "fr",
   localePrefix: "as-needed",
+  /*
+   * Pas de détection automatique.
+   *
+   * Activée, elle redirigeait « / » vers « /en » dès que le cookie de langue ou
+   * l'en-tête du navigateur disaient « anglais ». Le sélecteur devenait alors
+   * à sens unique : cliquer sur « Français » menait à « / », que le middleware
+   * renvoyait aussitôt sur « /en ». Impossible de revenir.
+   *
+   * Elle envoyait par ailleurs sur la version anglaise un visiteur sénégalais
+   * dont le téléphone est configuré en anglais — sur un site francophone
+   * d'abord, ce n'est pas le bon défaut.
+   *
+   * La langue est désormais déterminée par la seule adresse : « / » en
+   * français, « /en » en anglais, et le sélecteur mène de l'une à l'autre.
+   */
+  localeDetection: false,
 });
 
 export type Locale = (typeof routing.locales)[number];
