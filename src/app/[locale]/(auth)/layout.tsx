@@ -65,7 +65,7 @@ export default async function AuthLayout({
         </main>
 
         <p className="text-center text-xs text-muted-foreground">
-          © {new Date().getFullYear()} Noken Declic
+          © {new Date().getFullYear()} Noken
         </p>
       </div>
 

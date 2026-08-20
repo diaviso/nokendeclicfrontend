@@ -53,7 +53,7 @@ export function InstallPrompt() {
           <Download className="size-4 text-primary" aria-hidden />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium">Installer Noken Declic</p>
+          <p className="text-sm font-medium">Installer Noken</p>
           <p className="mt-0.5 text-xs text-muted-foreground">
             Accès direct depuis votre écran d&apos;accueil, et consultation même
             sans connexion.

@@ -123,7 +123,7 @@ export function ConsoleShell({ children }: { children: React.ReactNode }) {
             </span>
             <span className="hidden leading-tight sm:block">
               <span className="block text-[13px] font-bold tracking-tight">
-                Noken Declic
+                Noken
               </span>
               <span className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-white/50">
                 Console

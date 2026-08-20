@@ -181,7 +181,7 @@ export default function ProfilPage() {
       if (nouveauPoste) {
         celebrer("forte");
         toast.success("Félicitations pour votre poste !", {
-          description: "Toute l'équipe Noken Declic vous souhaite une belle réussite.",
+          description: "Toute l'équipe Noken vous souhaite une belle réussite.",
         });
         return;
       }

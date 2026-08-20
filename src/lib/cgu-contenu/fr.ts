@@ -14,7 +14,7 @@ export const ARTICLES_FR: ArticleCgu[] = [
     id: "objet",
     titre: "1. Objet et acceptation",
     contenu: [
-      "Les présentes conditions générales d'utilisation (les « Conditions ») régissent l'accès et l'usage de la plateforme Noken Declic (la « Plateforme »), accessible par navigateur web et sous forme d'application installable.",
+      "Les présentes conditions générales d'utilisation (les « Conditions ») régissent l'accès et l'usage de la plateforme Noken (la « Plateforme »), accessible par navigateur web et sous forme d'application installable.",
       "La Plateforme met en relation des personnes en recherche d'opportunités (emploi, formation, bourse, volontariat, programme d'accompagnement) et les structures qui les proposent.",
       "La création d'un compte vaut acceptation pleine et entière des présentes Conditions. Toute personne qui ne les accepte pas doit renoncer à utiliser la Plateforme.",
     ],
@@ -27,7 +27,7 @@ export const ARTICLES_FR: ArticleCgu[] = [
         liste: [
           "« Membre » : toute personne physique disposant d'un compte, qui consulte les opportunités et peut constituer un curriculum vitae en ligne.",
           "« Partenaire » : toute structure (entreprise, association, institution, établissement de formation) dotée d'un compte lui permettant de publier des opportunités et, dans les conditions prévues à l'article 7, de consulter des profils.",
-          "« Éditeur » : l'équipe Noken Declic, qui administre la Plateforme, valide les publications et assure la modération.",
+          "« Éditeur » : Declic, structure porteuse du projet Noken, qui administre la Plateforme, valide les publications et assure la modération.",
           "« Opportunité » : toute annonce publiée sur la Plateforme, quelle que soit sa catégorie.",
           "« Contenu » : toute donnée déposée sur la Plateforme par un Membre ou un Partenaire (curriculum vitae, annonce, commentaire, retour d'expérience, message).",
         ],

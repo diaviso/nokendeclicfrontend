@@ -6,7 +6,7 @@ import type { MetadataRoute } from "next";
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Noken Declic — Emploi, formations et bourses",
+    name: "Noken — Emploi, formations et bourses",
     short_name: "Noken",
     description:
       "Offres d'emploi, formations, bourses et volontariat au Sénégal, avec un focus sur la Casamance.",

@@ -33,28 +33,28 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   // Pas de `template` ici : les pages traduites en déclarent un, et le gabarit
   // racine l'appliquait par-dessus — le titre de l'accueil sortait avec deux
-  // fois « · Noken Declic ». Ce titre ne sert qu'aux routes non traduites.
-  title: "Noken Declic — Emploi, formations et bourses au Sénégal",
+  // fois « · Noken ». Ce titre ne sert qu'aux routes non traduites.
+  title: "Noken — Emploi, formations et bourses au Sénégal",
   description:
     "Trouvez des offres d'emploi, formations, bourses et programmes de volontariat au Sénégal, avec un focus sur la Casamance.",
-  applicationName: "Noken Declic",
+  applicationName: "Noken",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
-    title: "Noken Declic",
+    title: "Noken",
     statusBarStyle: "default",
   },
   openGraph: {
     type: "website",
     locale: "fr_SN",
-    siteName: "Noken Declic",
-    title: "Noken Declic — Emploi, formations et bourses au Sénégal",
+    siteName: "Noken",
+    title: "Noken — Emploi, formations et bourses au Sénégal",
     description:
       "Trouvez des offres d'emploi, formations, bourses et programmes de volontariat au Sénégal.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Noken Declic",
+    title: "Noken",
     description:
       "Emploi, formations, bourses et volontariat au Sénégal.",
   },

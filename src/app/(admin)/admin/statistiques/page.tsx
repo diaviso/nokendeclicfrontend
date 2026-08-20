@@ -352,7 +352,7 @@ export default function StatistiquesPage() {
             l'imprimante ne dit ni de quoi elle parle ni de quand elle date. */}
         <header className="hidden print:block">
           <h1 className="text-2xl font-bold">
-            Noken Declic — Rapport d&apos;activité
+            Noken — Rapport d&apos;activité
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Période de {rapport.periode.mois} mois · document établi le{" "}

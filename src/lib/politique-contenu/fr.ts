@@ -16,7 +16,7 @@ export const ARTICLES_FR: ArticleLegal[] = [
     id: "responsable",
     titre: "1. Responsable du traitement et objet",
     contenu: [
-      "Noken Declic (la « Plateforme ») met en relation des personnes en recherche d'opportunités et les structures qui en proposent. Son exploitation implique le traitement de données à caractère personnel.",
+      "Noken (la « Plateforme »), projet porté par la structure Declic, met en relation des personnes en recherche d'opportunités et les structures qui en proposent. Son exploitation implique le traitement de données à caractère personnel.",
       "La présente politique explique quelles données sont collectées, pourquoi, combien de temps elles sont conservées, qui peut y accéder, et comment exercer vos droits. Elle complète les conditions générales d'utilisation, qui restent le document contractuel.",
       "Les traitements sont soumis à la loi n° 2008-12 du 25 janvier 2008 sur la protection des données à caractère personnel et relèvent du contrôle de la Commission de Protection des Données Personnelles (CDP).",
     ],

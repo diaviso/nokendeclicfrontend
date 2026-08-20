@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 // pas exporter `metadata`. Le titre est donc porté par ce layout.
 export const metadata: Metadata = {
   title: "Connexion",
-  description: "Connectez-vous à votre espace Noken Declic.",
+  description: "Connectez-vous à votre espace Noken.",
   robots: { index: false, follow: false },
 };
 

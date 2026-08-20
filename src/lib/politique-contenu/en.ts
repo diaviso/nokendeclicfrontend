@@ -12,7 +12,7 @@ export const ARTICLES_EN: ArticleLegal[] = [
     id: "responsable",
     titre: "1. Data controller and purpose of this policy",
     contenu: [
-      "Noken Declic (the “Platform”) connects people looking for opportunities with the organisations that offer them. Running it involves processing personal data.",
+      "Noken (the “Platform”), a project run by the organisation Declic, connects people looking for opportunities with the organisations that offer them. Running it involves processing personal data.",
       "This policy explains what data is collected, why, how long it is kept, who can access it, and how to exercise your rights. It supplements the terms of use, which remain the contractual document.",
       "This processing is governed by Senegalese law no. 2008-12 of 25 January 2008 on the protection of personal data, and falls under the supervision of the Personal Data Protection Commission (CDP).",
     ],

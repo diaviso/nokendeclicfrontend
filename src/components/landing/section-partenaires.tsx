@@ -132,7 +132,7 @@ export function SectionPartenaires({
           <p className="mt-8 text-center text-sm text-muted-foreground">
             {t("appelDebut")}{" "}
             <a
-              href="mailto:contact@nokendeclic.com?subject=Devenir%20partenaire"
+              href="mailto:contact@noken.app?subject=Devenir%20partenaire"
               className="font-semibold text-primary underline-offset-4 hover:underline"
             >
               {t("appelLien")}

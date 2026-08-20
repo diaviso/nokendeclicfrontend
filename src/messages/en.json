@@ -11,18 +11,20 @@
     "bourses": "Scholarships"
   },
   "pied": {
-    "droits": "© {annee} Noken Declic — Jobs, training and scholarships in Senegal.",
+    "droits": "© {annee} Noken — Jobs, training and scholarships in Senegal.",
     "navigation": "Footer links",
     "toutesLesOffres": "All opportunities",
     "espaceMembre": "Member area",
     "conditions": "Terms of use",
-    "confidentialite": "Privacy"
+    "confidentialite": "Privacy",
+    "porteDebut": "A project by",
+    "porteLien": "Declic"
   },
   "meta": {
-    "accueilTitre": "Noken Declic — Jobs, training and scholarships in Senegal",
+    "accueilTitre": "Noken — Jobs, training and scholarships in Senegal",
     "accueilDescription": "Find jobs, training courses, scholarships and volunteering programmes across Senegal, with a particular focus on Casamance.",
     "offresTitre": "All opportunities",
-    "offresDescription": "Jobs, training, scholarships, assignments and programmes published on Noken Declic.",
+    "offresDescription": "Jobs, training, scholarships, assignments and programmes published on Noken.",
     "cguTitre": "Terms of use",
     "politiqueTitre": "Privacy policy"
   },
@@ -100,7 +102,7 @@
       "partageTitre": "Careful sharing",
       "partageTexte": "Every opportunity has its own page, preview and image: a link shared on WhatsApp displays properly.",
       "installableTitre": "Installable app",
-      "installableTexte": "Install Noken Declic on your phone straight from the browser. Readable offline too.",
+      "installableTexte": "Install Noken on your phone straight from the browser. Readable offline too.",
       "donneesTitre": "Your data, your call",
       "donneesTexte": "Your profile belongs to you. You choose what is visible, and you can delete everything."
     },
@@ -129,7 +131,7 @@
       "surtitre": "Where we stand",
       "titreDebut": "Built in Senegal,",
       "titreAccent": "from Casamance",
-      "texte": "Opportunities in the south of the country are rarely relayed elsewhere. Noken Declic gathers them in the same place as those from Dakar, so there is no need to look in ten different places.",
+      "texte": "Opportunities in the south of the country are rarely relayed elsewhere. Noken gathers them in the same place as those from Dakar, so there is no need to look in ten different places.",
       "photoAlt": "Three young people browsing opportunities together on Noken — the opportunity is right here.",
       "casamanceTitre": "Casamance first",
       "casamanceTexte": "Ziguinchor, Kolda, Sédhiou — local opportunities appear on the same footing as any other.",
@@ -142,7 +144,7 @@
       "surtitre": "Mobile",
       "titreDebut": "In your pocket,",
       "titreAccent": "even offline",
-      "texte": "Noken Declic installs straight from the browser — no app store, no updates to manage. Pages you have already opened stay available when the network drops.",
+      "texte": "Noken installs straight from the browser — no app store, no updates to manage. Pages you have already opened stay available when the network drops.",
       "apercuOffres": "Opportunities",
       "installationTitre": "Direct install",
       "installationTexte": "Added to your home screen",
@@ -189,7 +191,7 @@
       "q4": "Can I browse opportunities without an internet connection?",
       "r4": "Pages you have already visited remain readable offline. New opportunities need a connection to load.",
       "q5": "Who publishes the opportunities?",
-      "r5": "Partner organisations and the Noken Declic team. Every listing names its author and links to the official source where one exists.",
+      "r5": "Partner organisations and the Noken team. Every listing names its author and links to the official source where one exists.",
       "q6": "How do I report an incorrect or expired listing?",
       "r6": "From the listing's own page, or through the “Reports” area of your account. Every report gets a reply."
     },
@@ -204,7 +206,7 @@
   },
   "installation": {
     "badge": "Mobile app",
-    "titre": "Install Noken Declic on your phone",
+    "titre": "Install Noken on your phone",
     "texte": "Keep your opportunities within reach. Installing takes seconds and goes through no app store.",
     "ecranTitre": "On your home screen",
     "ecranTexte": "An icon, like any other app — no browser needed.",
@@ -230,7 +232,7 @@
   "partenaires": {
     "surtitre": "They recruit here",
     "titre": "Our partner organisations",
-    "texte": "Companies, institutions and organisations publishing their opportunities directly on Noken Declic.",
+    "texte": "Companies, institutions and organisations publishing their opportunities directly on Noken.",
     "appelDebut": "Does your organisation recruit in Senegal?",
     "appelLien": "Become a partner",
     "appelFin": "and publish your opportunities directly."
@@ -260,7 +262,7 @@
     "accueil": "Home",
     "version": "Version {version}",
     "titre": "Terms of use",
-    "envigueur": "In force since {date}. They apply to anyone who accesses the Noken Declic platform.",
+    "envigueur": "In force since {date}. They apply to anyone who accesses the Noken platform.",
     "sommaire": "Contents",
     "traductionAvis": "English version provided as a courtesy: only the French text is binding.",
     "piedDebut": "A question about these terms, or a request concerning your personal data? Write to us from the",
@@ -367,7 +369,7 @@
   "politique": {
     "titre": "Privacy policy",
     "version": "Version {version}",
-    "misAJour": "Updated on {date}. It explains what data Noken Declic collects, why, and how to exercise your rights.",
+    "misAJour": "Updated on {date}. It explains what data Noken collects, why, and how to exercise your rights.",
     "traductionAvis": "English version provided as a courtesy: only the French text is binding.",
     "piedDebut": "A question about your data, or a request for access, correction or deletion? Write to us from the",
     "piedLien": "Reports",

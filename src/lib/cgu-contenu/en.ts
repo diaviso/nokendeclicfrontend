@@ -14,7 +14,7 @@ export const ARTICLES_EN: ArticleCgu[] = [
     id: "objet",
     titre: "1. Purpose and acceptance",
     contenu: [
-      "These terms of use (the “Terms”) govern access to and use of the Noken Declic platform (the “Platform”), available through a web browser and as an installable application.",
+      "These terms of use (the “Terms”) govern access to and use of the Noken platform (the “Platform”), available through a web browser and as an installable application.",
       "The Platform connects people looking for opportunities (employment, training, scholarships, volunteering, support programmes) with the organisations that offer them.",
       "Creating an account constitutes full acceptance of these Terms. Anyone who does not accept them must refrain from using the Platform.",
     ],
@@ -27,7 +27,7 @@ export const ARTICLES_EN: ArticleCgu[] = [
         liste: [
           "“Member”: any natural person holding an account, who browses opportunities and may build an online curriculum vitae.",
           "“Partner”: any organisation (company, association, institution, training provider) holding an account that allows it to publish opportunities and, under the conditions set out in article 7, to view profiles.",
-          "“Publisher”: the Noken Declic team, which administers the Platform, approves listings and carries out moderation.",
+          "“Publisher”: Declic, the organisation behind the Noken project, which administers the Platform, approves listings and carries out moderation.",
           "“Opportunity”: any listing published on the Platform, whatever its category.",
           "“Content”: any data placed on the Platform by a Member or a Partner (curriculum vitae, listing, comment, first-hand account, message).",
         ],

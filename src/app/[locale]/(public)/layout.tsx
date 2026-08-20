@@ -59,7 +59,22 @@ export default async function PublicLayout({
 
       <footer className="border-t">
         <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-8 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6">
-          <p>{p("droits", { annee: new Date().getFullYear() })}</p>
+          <div className="space-y-1">
+            <p>{p("droits", { annee: new Date().getFullYear() })}</p>
+            {/* Declic est la structure porteuse, pas le nom du produit : sa
+                place est ici, avec un lien vers son propre site. */}
+            <p>
+              {p("porteDebut")}{" "}
+              <a
+                href="https://www.declicsud.org"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-foreground underline-offset-4 hover:underline"
+              >
+                {p("porteLien")}
+              </a>
+            </p>
+          </div>
           <nav aria-label={p("navigation")} className="flex gap-4">
             <Link href="/offres" className="hover:text-foreground">
               {p("toutesLesOffres")}

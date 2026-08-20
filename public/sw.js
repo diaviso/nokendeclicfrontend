@@ -1,5 +1,5 @@
 /**
- * Service worker de Noken Declic.
+ * Service worker de Noken.
  *
  * Écrit à la main plutôt que généré : @serwist/next et workbox reposent sur
  * webpack, or Next 16 construit avec Turbopack et échoue si une configuration
@@ -142,10 +142,10 @@ self.addEventListener("push", (event) => {
   try {
     charge = event.data ? event.data.json() : {};
   } catch {
-    charge = { titre: "Noken Declic", corps: event.data ? event.data.text() : "" };
+    charge = { titre: "Noken", corps: event.data ? event.data.text() : "" };
   }
 
-  const titre = charge.titre || "Noken Declic";
+  const titre = charge.titre || "Noken";
   const options = {
     body: charge.corps || "",
     icon: "/icons/icon-192.png",

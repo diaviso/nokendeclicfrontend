@@ -11,18 +11,20 @@
     "bourses": "Bourses"
   },
   "pied": {
-    "droits": "© {annee} Noken Declic — Emploi, formations et bourses au Sénégal.",
+    "droits": "© {annee} Noken — Emploi, formations et bourses au Sénégal.",
     "navigation": "Liens de pied de page",
     "toutesLesOffres": "Toutes les offres",
     "espaceMembre": "Espace membre",
     "conditions": "Conditions d'utilisation",
-    "confidentialite": "Confidentialité"
+    "confidentialite": "Confidentialité",
+    "porteDebut": "Un projet porté par",
+    "porteLien": "Declic"
   },
   "meta": {
-    "accueilTitre": "Noken Declic — Emploi, formations et bourses au Sénégal",
+    "accueilTitre": "Noken — Emploi, formations et bourses au Sénégal",
     "accueilDescription": "Trouvez des offres d'emploi, formations, bourses et programmes de volontariat au Sénégal, avec un focus sur la Casamance.",
     "offresTitre": "Toutes les opportunités",
-    "offresDescription": "Emplois, formations, bourses, missions et programmes publiés sur Noken Declic.",
+    "offresDescription": "Emplois, formations, bourses, missions et programmes publiés sur Noken.",
     "cguTitre": "Conditions générales d'utilisation",
     "politiqueTitre": "Politique de confidentialité"
   },
@@ -100,7 +102,7 @@
       "partageTitre": "Partage soigné",
       "partageTexte": "Chaque offre a sa page, son aperçu et son image : un lien partagé sur WhatsApp s'affiche correctement.",
       "installableTitre": "Application installable",
-      "installableTexte": "Installez Noken Declic sur votre téléphone depuis le navigateur. Consultation possible hors connexion.",
+      "installableTexte": "Installez Noken sur votre téléphone depuis le navigateur. Consultation possible hors connexion.",
       "donneesTitre": "Données maîtrisées",
       "donneesTexte": "Votre profil vous appartient. Vous choisissez ce qui est visible et pouvez tout supprimer."
     },
@@ -129,7 +131,7 @@
       "surtitre": "Notre ancrage",
       "titreDebut": "Pensé au Sénégal,",
       "titreAccent": "depuis la Casamance",
-      "texte": "Les opportunités du Sud du pays sont rarement relayées ailleurs. Noken Declic les rassemble au même endroit que celles de Dakar, sans qu'il faille chercher à dix endroits différents.",
+      "texte": "Les opportunités du Sud du pays sont rarement relayées ailleurs. Noken les rassemble au même endroit que celles de Dakar, sans qu'il faille chercher à dix endroits différents.",
       "photoAlt": "Trois jeunes consultent ensemble des offres sur Noken — l'opportunité est là.",
       "casamanceTitre": "La Casamance d'abord",
       "casamanceTexte": "Ziguinchor, Kolda, Sédhiou — les offres locales y sont visibles au même titre que les autres.",
@@ -142,7 +144,7 @@
       "surtitre": "Mobile",
       "titreDebut": "Dans votre poche,",
       "titreAccent": "même hors connexion",
-      "texte": "Noken Declic s'installe depuis le navigateur, sans magasin d'applications ni mise à jour à gérer. Les pages consultées restent accessibles quand le réseau faiblit.",
+      "texte": "Noken s'installe depuis le navigateur, sans magasin d'applications ni mise à jour à gérer. Les pages consultées restent accessibles quand le réseau faiblit.",
       "apercuOffres": "Offres",
       "installationTitre": "Installation directe",
       "installationTexte": "Ajout à l'écran d'accueil",
@@ -189,7 +191,7 @@
       "q4": "Puis-je consulter les offres sans connexion internet ?",
       "r4": "Les pages déjà visitées restent consultables hors connexion. Les nouvelles offres nécessitent une connexion pour être chargées.",
       "q5": "Qui publie les offres ?",
-      "r5": "Des structures partenaires et l'équipe Noken Declic. Chaque offre indique son auteur et renvoie vers la source officielle quand elle existe.",
+      "r5": "Des structures partenaires et l'équipe Noken. Chaque offre indique son auteur et renvoie vers la source officielle quand elle existe.",
       "q6": "Comment signaler une offre erronée ou expirée ?",
       "r6": "Depuis la page de l'offre, ou via l'espace « Signalements » de votre compte. Chaque signalement reçoit une réponse."
     },
@@ -204,7 +206,7 @@
   },
   "installation": {
     "badge": "Application mobile",
-    "titre": "Installez Noken Declic sur votre téléphone",
+    "titre": "Installez Noken sur votre téléphone",
     "texte": "Gardez vos opportunités à portée de main. L'installation prend quelques secondes et ne passe par aucun magasin d'applications.",
     "ecranTitre": "Sur votre écran d'accueil",
     "ecranTexte": "Une icône, comme n'importe quelle application — sans passer par le navigateur.",
@@ -230,7 +232,7 @@
   "partenaires": {
     "surtitre": "Ils recrutent ici",
     "titre": "Nos structures partenaires",
-    "texte": "Entreprises, institutions et organisations qui publient leurs opportunités directement sur Noken Declic.",
+    "texte": "Entreprises, institutions et organisations qui publient leurs opportunités directement sur Noken.",
     "appelDebut": "Votre structure recrute au Sénégal ?",
     "appelLien": "Devenez partenaire",
     "appelFin": "et publiez vos offres directement."
@@ -260,7 +262,7 @@
     "accueil": "Accueil",
     "version": "Version {version}",
     "titre": "Conditions générales d'utilisation",
-    "envigueur": "En vigueur depuis le {date}. Elles s'appliquent à toute personne qui accède à la plateforme Noken Declic.",
+    "envigueur": "En vigueur depuis le {date}. Elles s'appliquent à toute personne qui accède à la plateforme Noken.",
     "sommaire": "Sommaire",
     "traductionAvis": "Version anglaise fournie par courtoisie : seul le texte français fait foi.",
     "piedDebut": "Une question sur ces conditions, ou une demande concernant vos données personnelles ? Écrivez-nous depuis la page",
@@ -367,7 +369,7 @@
   "politique": {
     "titre": "Politique de confidentialité",
     "version": "Version {version}",
-    "misAJour": "Mise à jour le {date}. Elle explique quelles données Noken Declic collecte, pourquoi, et comment exercer vos droits.",
+    "misAJour": "Mise à jour le {date}. Elle explique quelles données Noken collecte, pourquoi, et comment exercer vos droits.",
     "traductionAvis": "Version anglaise fournie par courtoisie : seul le texte français fait foi.",
     "piedDebut": "Une question sur vos données, ou une demande d'accès, de rectification ou de suppression ? Écrivez-nous depuis la page",
     "piedLien": "Signalements",

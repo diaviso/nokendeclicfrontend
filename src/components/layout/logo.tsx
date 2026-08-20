@@ -3,8 +3,10 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 /**
- * Logo de marque. L'image porte déjà le mot « NOKEN » : le libellé texte à
- * côté ne le répète pas, il complète avec « Declic ».
+ * Logo de marque.
+ *
+ * L'application s'appelle Noken. Declic est la structure qui la porte, et sa
+ * place est au pied de page, pas dans le nom du produit.
  */
 export function Logo({
   href = "/",
@@ -34,10 +36,10 @@ export function Logo({
       />
       {showWordmark ? (
         <span className="text-[15px] font-semibold tracking-tight">
-          Noken<span className="text-primary"> Declic</span>
+          Nok<span className="text-primary">e</span>n
         </span>
       ) : null}
-      <span className="sr-only">Noken Declic — accueil</span>
+      <span className="sr-only">Noken — accueil</span>
     </Link>
   );
 }

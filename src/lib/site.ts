@@ -7,7 +7,7 @@
  * ce qui les rendrait inutilisables au rendu serveur.
  */
 export const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://nokendeclic.com";
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://noken.app";
 
 /** Construit une URL absolue à partir d'un chemin de l'application. */
 export function absoluteUrl(path: string): string {

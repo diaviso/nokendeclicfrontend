@@ -37,7 +37,7 @@ export async function generateMetadata({
   return {
     title: {
       default: t("accueilTitre"),
-      template: "%s · Noken Declic",
+      template: "%s · Noken",
     },
     description: t("accueilDescription"),
     alternates: alternatesPour("/", locale),
