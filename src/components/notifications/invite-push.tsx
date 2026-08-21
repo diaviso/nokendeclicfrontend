@@ -52,7 +52,7 @@ function useEcartee() {
  * une fois, là où le regard passe.
  */
 export function InvitePush() {
-  const { etat, activer } = useNotificationsPush();
+  const { etat, erreur, activer } = useNotificationsPush();
   const { installee, ios } = useInstallation();
   const cachee = useEcartee();
 
@@ -109,6 +109,10 @@ export function InvitePush() {
               if (ok) {
                 jouerCarillon();
                 toast.success("Notifications activées sur cet appareil");
+              } else {
+                toast.error("Les notifications n'ont pas pu être activées", {
+                  description: erreur ?? undefined,
+                });
               }
             }}
           >
@@ -137,7 +141,7 @@ export function InvitePush() {
  * que la réponse s'y trouve.
  */
 export function LignePush({ className }: { className?: string }) {
-  const { etat, activer } = useNotificationsPush();
+  const { etat, erreur, activer } = useNotificationsPush();
   const { installee, ios } = useInstallation();
 
   // Safari ne sait pousser que depuis une application installée. Ne rien
@@ -195,6 +199,10 @@ export function LignePush({ className }: { className?: string }) {
         if (ok) {
           jouerCarillon();
           toast.success("Notifications activées sur cet appareil");
+        } else {
+          toast.error("Les notifications n'ont pas pu être activées", {
+            description: erreur ?? undefined,
+          });
         }
       }}
       disabled={etat === "en-cours"}

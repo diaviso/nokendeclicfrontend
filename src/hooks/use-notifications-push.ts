@@ -88,6 +88,14 @@ export function useNotificationsPush() {
     try {
       const permission = await Notification.requestPermission();
       if (permission !== "granted") {
+        // « default » signifie que la demande a été écartée sans réponse — le
+        // navigateur peut l'avoir affichée discrètement, voire pas du tout.
+        // Sans ce message, le bouton semblait ne rien faire.
+        setErreur(
+          permission === "denied"
+            ? "Les notifications sont bloquées pour ce site dans les réglages du navigateur."
+            : "La demande d'autorisation a été fermée sans réponse. Réessayez, ou vérifiez les notifications dans les réglages du site.",
+        );
         setEtat(permission === "denied" ? "refusee" : "a-activer");
         return false;
       }
@@ -113,7 +121,13 @@ export function useNotificationsPush() {
           applicationServerKey: versOctets(data.cle),
         }));
 
-      await api.post("/api/notifications/push/abonnement", abonnement.toJSON());
+      // On envoie une forme explicite plutôt que `toJSON()` brut : sa
+      // composition appartient au navigateur, qui peut y ajouter des champs —
+      // Chrome sérialise déjà `expirationTime`, absent chez WebKit. Le serveur
+      // refusait alors la requête, et aucun appareil Android ne parvenait à
+      // s'abonner. Les deux seuls champs utiles sont ceux-ci.
+      const { endpoint, keys } = abonnement.toJSON();
+      await api.post("/api/notifications/push/abonnement", { endpoint, keys });
       setEtat("activee");
       return true;
     } catch (cause) {
