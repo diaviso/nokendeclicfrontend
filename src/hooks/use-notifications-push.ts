@@ -45,7 +45,19 @@ export function useNotificationsPush() {
     if (!supporte) return "indisponible";
     if (Notification.permission === "denied") return "refusee";
 
-    const enregistrement = await navigator.serviceWorker.ready;
+    // `serviceWorker.ready` ne se résout que lorsqu'un service worker est
+    // actif — et jamais s'il n'y en a pas. Sans cette limite de temps, l'état
+    // restait « indisponible » pour toujours et *tous* les points d'entrée du
+    // réglage disparaissaient en silence : c'est précisément le symptôme
+    // remonté, « on ne trouve pas l'option ». Passé le délai, on propose
+    // l'activation : au pire elle échouera en le disant.
+    const enregistrement = await Promise.race([
+      navigator.serviceWorker.ready,
+      new Promise<null>((resoudre) => setTimeout(() => resoudre(null), 4000)),
+    ]);
+
+    if (!enregistrement) return "a-activer";
+
     const abonnement = await enregistrement.pushManager.getSubscription();
     return abonnement ? "activee" : "a-activer";
   }, [supporte]);

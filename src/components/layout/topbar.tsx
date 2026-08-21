@@ -25,6 +25,7 @@ import { ThemeToggle } from "./theme-toggle";
 import { SidebarNav } from "./sidebar-nav";
 import { Logo } from "./logo";
 import { useAuth } from "@/hooks/use-auth";
+import { LignePush } from "@/components/notifications/invite-push";
 import { fileUrl, notificationsApi } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { formatRelative } from "@/lib/format";
@@ -118,6 +119,10 @@ function NotificationsMenu() {
             </ul>
           )}
         </ScrollArea>
+
+        <div className="border-t">
+          <LignePush />
+        </div>
       </DropdownMenuContent>
     </DropdownMenu>
   );

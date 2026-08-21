@@ -13,6 +13,8 @@ import {
   Star,
   UserCircle,
 } from "lucide-react";
+import { InvitePush } from "@/components/notifications/invite-push";
+import { InviteInstallation } from "@/components/pwa/invite-installation";
 import { Button } from "@/components/ui/button";
 import { StatCard, StatCardSkeleton } from "@/components/shared/stat-card";
 import { OffreCard } from "@/components/shared/offre-card";
@@ -170,6 +172,12 @@ export default function DashboardPage() {
           </div>
         </div>
       </section>
+
+      {/* ──────────────────────── Installation, puis notifications ────── */}
+      {/* Cet ordre n'est pas cosmétique : sur iPhone, la seconde dépend de la
+          première. */}
+      <InviteInstallation />
+      <InvitePush />
 
       {/* ───────────────────────────────────────── Complétion du profil */}
       {completion < 100 ? (
@@ -363,7 +371,7 @@ export default function DashboardPage() {
             description="De nouvelles offres sont publiées régulièrement. Revenez bientôt, ou activez les alertes depuis votre profil."
           />
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
             {recentes.data.map((offre, index) => (
               <OffreCard
                 key={offre.id}
