@@ -15,6 +15,7 @@
     "navigation": "Footer links",
     "toutesLesOffres": "All opportunities",
     "espaceMembre": "Member area",
+    "installer": "Install the app",
     "conditions": "Terms of use",
     "confidentialite": "Privacy",
     "porteDebut": "Project developed by",
@@ -26,7 +27,8 @@
     "offresTitre": "All opportunities",
     "offresDescription": "Jobs, training, scholarships, assignments and programmes published on Noken.",
     "cguTitre": "Terms of use",
-    "politiqueTitre": "Privacy policy"
+    "politiqueTitre": "Privacy policy",
+    "installerTitre": "Install the app"
   },
   "accueil": {
     "heros": {
@@ -380,5 +382,45 @@
     "piedMilieu": "page of your account. The contractual rules are set out in the",
     "piedLienCgu": "terms of use",
     "piedFin": "."
+  },
+  "installer": {
+    "titre": "Install Noken on your phone",
+    "texte": "An icon on your home screen, listings readable offline, and alerts as soon as an opportunity matches your profile.",
+    "badge": "Install",
+    "dejaInstallee": "Noken is already installed on this device",
+    "dejaTexte": "You can launch it from your home screen. Remember to turn on notifications if you haven't yet.",
+    "ouvrir": "Open the app",
+    "boutonInstaller": "Install the app",
+    "installEnCours": "Installing…",
+    "boutonAide": "See how",
+    "iosTitre": "On iPhone, in three taps",
+    "iosIntro": "Safari has no install button: it's done from the share menu.",
+    "iosEtape1": "Tap the Share icon at the bottom of the screen.",
+    "iosEtape2": "Scroll down and choose “Add to Home Screen”.",
+    "iosEtape3": "Confirm with “Add”. The icon appears right away.",
+    "autreTitre": "From your browser's menu",
+    "autreIntro": "Your browser doesn't offer one-tap installation yet. You can still do it by hand.",
+    "autreEtape1": "Open your browser's menu.",
+    "autreEtape2": "Choose “Install app” or “Add to Home screen”.",
+    "autreEtape3": "Confirm: the icon appears on your home screen.",
+    "integreTitre": "Open this link in your browser",
+    "integreTexte": "You're browsing from {application}. Its built-in browser can't install apps — you'll need Chrome or Safari.",
+    "integreChrome": "Open in Chrome",
+    "integreMenu": "Otherwise, tap the “…” menu at the top of the screen, then “Open in browser”.",
+    "copier": "Copy the address",
+    "copie": "Address copied",
+    "bureauTitre": "Scan to continue on your phone",
+    "bureauTexte": "Noken installs on mobile. Point your phone's camera at this code.",
+    "bureauAdresse": "Or type this address on your phone:",
+    "qrAlt": "QR code leading to the Noken install page",
+    "atoutEcranTitre": "On your home screen",
+    "atoutEcranTexte": "An icon, like any other app — no browser in the way.",
+    "atoutHorsLigneTitre": "Readable offline",
+    "atoutHorsLigneTexte": "Listings you've already opened stay readable when the network drops.",
+    "atoutAlertesTitre": "Alerts at the right moment",
+    "atoutAlertesTexte": "New listings, replies to your messages, approaching deadlines.",
+    "notifTitre": "What about notifications?",
+    "notifTexte": "Once installed, open the app and turn on notifications from the dashboard or the bell. On iPhone, installing is the prerequisite: Safari can't receive them otherwise.",
+    "retour": "Back to home"
   }
 }

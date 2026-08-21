@@ -82,6 +82,9 @@ export default async function PublicLayout({
             <Link href="/login" className="hover:text-foreground">
               {p("espaceMembre")}
             </Link>
+            <Link href="/installer" className="hover:text-foreground">
+              {p("installer")}
+            </Link>
             <Link href="/cgu" className="hover:text-foreground">
               {p("conditions")}
             </Link>

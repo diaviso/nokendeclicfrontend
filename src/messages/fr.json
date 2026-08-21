@@ -15,6 +15,7 @@
     "navigation": "Liens de pied de page",
     "toutesLesOffres": "Toutes les offres",
     "espaceMembre": "Espace membre",
+    "installer": "Installer l'application",
     "conditions": "Conditions d'utilisation",
     "confidentialite": "Confidentialité",
     "porteDebut": "Projet développé par",
@@ -26,7 +27,8 @@
     "offresTitre": "Toutes les opportunités",
     "offresDescription": "Emplois, formations, bourses, missions et programmes publiés sur Noken.",
     "cguTitre": "Conditions générales d'utilisation",
-    "politiqueTitre": "Politique de confidentialité"
+    "politiqueTitre": "Politique de confidentialité",
+    "installerTitre": "Installer l'application"
   },
   "accueil": {
     "heros": {
@@ -380,5 +382,45 @@
     "piedMilieu": "de votre espace. Les règles contractuelles figurent dans les",
     "piedLienCgu": "conditions générales d'utilisation",
     "piedFin": "."
+  },
+  "installer": {
+    "titre": "Installez Noken sur votre téléphone",
+    "texte": "Une icône sur votre écran d'accueil, les offres consultables hors connexion, et les alertes dès qu'une opportunité correspond à votre profil.",
+    "badge": "Installation",
+    "dejaInstallee": "Noken est déjà installée sur cet appareil",
+    "dejaTexte": "Vous pouvez la lancer depuis votre écran d'accueil. Pensez à activer les notifications si ce n'est pas encore fait.",
+    "ouvrir": "Ouvrir l'application",
+    "boutonInstaller": "Installer l'application",
+    "installEnCours": "Installation…",
+    "boutonAide": "Voir la marche à suivre",
+    "iosTitre": "Sur iPhone, en trois gestes",
+    "iosIntro": "Safari n'a pas de bouton d'installation : l'ajout se fait depuis le menu de partage.",
+    "iosEtape1": "Touchez l'icône Partager, en bas de l'écran.",
+    "iosEtape2": "Faites défiler et choisissez « Sur l'écran d'accueil ».",
+    "iosEtape3": "Confirmez avec « Ajouter ». L'icône apparaît aussitôt.",
+    "autreTitre": "Depuis le menu de votre navigateur",
+    "autreIntro": "Votre navigateur ne propose pas encore l'installation automatique. Elle reste possible à la main.",
+    "autreEtape1": "Ouvrez le menu de votre navigateur.",
+    "autreEtape2": "Choisissez « Installer l'application » ou « Ajouter à l'écran d'accueil ».",
+    "autreEtape3": "Confirmez : l'icône apparaît sur votre écran d'accueil.",
+    "integreTitre": "Ouvrez ce lien dans votre navigateur",
+    "integreTexte": "Vous naviguez depuis {application}. Son navigateur intégré ne sait pas installer d'application — il faut passer par Chrome ou Safari.",
+    "integreChrome": "Ouvrir dans Chrome",
+    "integreMenu": "Sinon, touchez le menu « … » en haut de l'écran, puis « Ouvrir dans le navigateur ».",
+    "copier": "Copier l'adresse",
+    "copie": "Adresse copiée",
+    "bureauTitre": "Scannez pour continuer sur votre téléphone",
+    "bureauTexte": "Noken s'installe sur mobile. Pointez l'appareil photo de votre téléphone vers ce code.",
+    "bureauAdresse": "Ou saisissez cette adresse dans votre téléphone :",
+    "qrAlt": "QR code menant à la page d'installation de Noken",
+    "atoutEcranTitre": "Sur votre écran d'accueil",
+    "atoutEcranTexte": "Une icône, comme n'importe quelle application — sans passer par le navigateur.",
+    "atoutHorsLigneTitre": "Consultable hors connexion",
+    "atoutHorsLigneTexte": "Les offres déjà ouvertes restent lisibles quand le réseau faiblit.",
+    "atoutAlertesTitre": "Les alertes au bon moment",
+    "atoutAlertesTexte": "Nouvelles offres, réponses à vos messages, échéances proches.",
+    "notifTitre": "Et les notifications ?",
+    "notifTexte": "Une fois l'application installée, ouvrez-la et activez les notifications depuis le tableau de bord ou la cloche. Sur iPhone, l'installation en est la condition : Safari ne sait pas les recevoir autrement.",
+    "retour": "Retour à l'accueil"
   }
 }
