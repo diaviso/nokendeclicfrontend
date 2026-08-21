@@ -122,7 +122,10 @@ export function CreerGroupe({ onCree }: { onCree: (groupeId: number) => void }) 
             />
           </div>
 
-          <div className="flex justify-end gap-2">
+          {/* Le pied colle au bas du dialogue, qui défile sur un petit écran :
+              sans cela, il fallait faire défiler tout le formulaire pour
+              retrouver le bouton de validation. */}
+          <div className="sticky bottom-0 -mx-4 -mb-4 flex justify-end gap-2 border-t bg-popover px-4 py-3">
             <Button
               type="button"
               variant="ghost"

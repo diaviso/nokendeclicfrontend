@@ -17,12 +17,19 @@ function ScrollArea({
       // automatique d'un élément vaut sa largeur de contenu. Sans cette
       // remise à zéro, une liste large fait déborder son conteneur au lieu de
       // défiler, et les libellés tronqués ne le sont jamais.
-      className={cn("relative min-w-0", className)}
+      className={cn("relative min-w-0 overflow-hidden", className)}
       {...props}
     >
       <ScrollAreaPrimitive.Viewport
         data-slot="scroll-area-viewport"
-        className="size-full rounded-[inherit] transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-1"
+        // `max-h-[inherit]` : la zone de défilement est haute de 100 % de sa
+        // racine. Quand celle-ci n'a qu'une hauteur *maximale* — le cas de
+        // presque tous les appels, `max-h-64` et compagnie — ce 100 % se
+        // résout en « auto », et la liste s'étalait sur toute sa longueur par
+        // dessus ce qui suivait au lieu de défiler : onze mille pixels de noms
+        // recouvraient les boutons du dialogue. En héritant de la hauteur
+        // maximale, le débordement redevient un défilement.
+        className="size-full max-h-[inherit] rounded-[inherit] transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-1"
       >
         {children}
       </ScrollAreaPrimitive.Viewport>

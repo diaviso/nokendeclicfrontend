@@ -60,7 +60,19 @@ function DialogContent({
           // soit la taille demandée. Avec `w-`, les deux propriétés cohabitent
           // sans se disputer : la largeur borne le mobile, la largeur maximale
           // borne le bureau.
-          "fixed top-1/2 left-1/2 z-50 grid w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl bg-popover p-4 text-sm text-popover-foreground ring-1 ring-foreground/10 duration-100 outline-none sm:max-w-sm data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+          //
+          // `grid-cols-1` vaut `minmax(0, 1fr)`, et c'est ce qui compte : sans
+          // colonne bornée, la largeur minimale automatique d'un élément de
+          // grille vaut son contenu, et un formulaire contenant une liste de
+          // noms débordait de 100 px hors du cadre. Le borner ici vaut pour
+          // tous les dialogues, plutôt que d'attendre de chaque appelant qu'il
+          // y pense.
+          //
+          // La hauteur est bornée de même, avec défilement interne : sur un
+          // petit écran, un dialogue plus haut que la fenêtre débordait par le
+          // haut et par le bas — étant centré — et ses boutons finissaient
+          // hors d'atteinte.
+          "fixed top-1/2 left-1/2 z-50 grid max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] grid-cols-1 -translate-x-1/2 -translate-y-1/2 gap-4 overflow-y-auto rounded-xl bg-popover p-4 text-sm text-popover-foreground ring-1 ring-foreground/10 duration-100 outline-none sm:max-w-sm data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
           className
         )}
         {...props}
