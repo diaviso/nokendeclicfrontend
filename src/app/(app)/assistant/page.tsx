@@ -222,13 +222,13 @@ export default function AssistantPage() {
   const empty = messages.length === 0;
 
   return (
-    <div className="-mx-4 -mt-5 flex h-[calc(100dvh-3.5rem)] sm:-mx-6 lg:-mx-8">
+    <div className="ecran-plein flex">
       {/* Liste des conversations — colonne fixe à partir de md */}
       <aside className="hidden w-64 shrink-0 border-r md:block">
         <ConversationList activeId={conversationId} onSelect={setConversationId} />
       </aside>
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <header className="flex h-12 shrink-0 items-center gap-2 border-b px-3">
           <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
             <SheetTrigger
@@ -264,7 +264,7 @@ export default function AssistantPage() {
           ) : null}
         </header>
 
-        <ScrollArea className="flex-1">
+        <ScrollArea className="min-h-0 flex-1">
           <div className="mx-auto max-w-3xl px-4 py-6">
             {empty ? (
               <div className="py-8 text-center">

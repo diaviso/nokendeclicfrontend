@@ -97,7 +97,7 @@ export default function FavorisPage() {
                 </span>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {urgents.map((offre, index) => (
                   <OffreCard
                     key={offre.id}
@@ -118,7 +118,7 @@ export default function FavorisPage() {
                 <h2 className="mb-4 text-lg font-bold">Le reste de ma sélection</h2>
               ) : null}
 
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {autres.map((offre, index) => (
                   <OffreCard
                     key={offre.id}

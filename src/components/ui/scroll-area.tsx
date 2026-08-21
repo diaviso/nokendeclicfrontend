@@ -13,7 +13,11 @@ function ScrollArea({
   return (
     <ScrollAreaPrimitive.Root
       data-slot="scroll-area"
-      className={cn("relative", className)}
+      // `min-w-0` : dans une grille ou une boîte flexible, la taille minimale
+      // automatique d'un élément vaut sa largeur de contenu. Sans cette
+      // remise à zéro, une liste large fait déborder son conteneur au lieu de
+      // défiler, et les libellés tronqués ne le sont jamais.
+      className={cn("relative min-w-0", className)}
       {...props}
     >
       <ScrollAreaPrimitive.Viewport

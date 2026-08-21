@@ -699,7 +699,7 @@ export function Landing({
               </div>
             </Reveal>
 
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
               {offres.map((offre, i) => (
                 <Reveal key={offre.id} delay={(i % 3) * 0.07}>
                   <OffreCard

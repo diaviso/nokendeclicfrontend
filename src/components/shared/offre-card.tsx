@@ -166,17 +166,23 @@ export function OffreCard({
           )}
         </h3>
 
+        {/* `min-w-0` sur chaque ligne et sur le texte : « truncate » impose
+            `white-space: nowrap`, et la largeur minimale automatique d'un
+            élément flexible vaut alors la phrase entière. Sans cette remise à
+            zéro, un nom d'organisme un peu long élargit la carte au lieu d'être
+            abrégé — invisible sur grand écran, où la grille fixe les colonnes,
+            mais la carte débordait du téléphone. */}
         <div className="mt-2 space-y-1 text-sm text-muted-foreground">
           {offre.entreprise ? (
-            <p className="flex items-center gap-1.5">
+            <p className="flex min-w-0 items-center gap-1.5">
               <Building2 className="size-3.5 shrink-0" aria-hidden />
-              <span className="truncate">{offre.entreprise}</span>
+              <span className="min-w-0 truncate">{offre.entreprise}</span>
             </p>
           ) : null}
           {offre.localisation ? (
-            <p className="flex items-center gap-1.5">
+            <p className="flex min-w-0 items-center gap-1.5">
               <MapPin className="size-3.5 shrink-0" aria-hidden />
-              <span className="truncate">{offre.localisation}</span>
+              <span className="min-w-0 truncate">{offre.localisation}</span>
             </p>
           ) : null}
         </div>

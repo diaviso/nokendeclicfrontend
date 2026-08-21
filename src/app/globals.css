@@ -249,6 +249,44 @@
 }
 
 @layer utilities {
+  /*
+   * Pages qui occupent tout l'écran sous la barre du haut : messagerie,
+   * assistant.
+   *
+   * Elles annulent les marges de `main` et s'arrêtent au-dessus de la
+   * navigation basse. Sans cette dernière soustraction, la hauteur valait
+   * `100dvh - 3.5rem` : le bas de la page tombait exactement derrière la barre
+   * fixe, et la zone de saisie devenait inatteignable au doigt.
+   */
+  .ecran-plein {
+    /* Hauteur de la barre basse : 4rem de contenu, sa bordure, et la marge
+       système des téléphones à barre gestuelle. */
+    --barre-basse: calc(4rem + 1px + env(safe-area-inset-bottom));
+
+    margin-inline: -1rem;
+    margin-top: -1.25rem;
+    /* Annule le `pb-20` de `main`, déjà remplacé par le calcul de hauteur. */
+    margin-bottom: -5rem;
+    height: calc(100dvh - 3.5rem - var(--barre-basse));
+  }
+
+  @media (width >= 40rem) {
+    .ecran-plein {
+      margin-inline: -1.5rem;
+    }
+  }
+
+  @media (width >= 64rem) {
+    /* À partir de `lg`, la navigation passe sur le côté : plus rien à
+       soustraire en bas. */
+    .ecran-plein {
+      --barre-basse: 0px;
+
+      margin-inline: -2rem;
+      margin-bottom: -2.5rem;
+    }
+  }
+
   /* Motif en pointillés des états vides, repris de la référence Cloudflare. */
   .dashed-frame {
     @apply rounded-lg border border-dashed border-border;

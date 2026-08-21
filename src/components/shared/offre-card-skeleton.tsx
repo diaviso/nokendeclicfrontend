@@ -29,7 +29,7 @@ export function OffreCardSkeleton() {
 /** Grille d'ossatures, au même gabarit que les grilles d'offres. */
 export function OffresGrilleSkeleton({ nombre = 6 }: { nombre?: number }) {
   return (
-    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
       {Array.from({ length: nombre }, (_, i) => (
         <OffreCardSkeleton key={i} />
       ))}
