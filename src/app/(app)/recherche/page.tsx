@@ -1,9 +1,9 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight, Loader2, Search, X } from "lucide-react";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { Loader2, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -43,7 +43,6 @@ function RechercheInner() {
     searchParams.get("localisation") ?? "",
   );
   const [echeance, setEcheance] = useState(searchParams.get("echeance") ?? "");
-  const [page, setPage] = useState(Number(searchParams.get("page")) || 1);
 
   const debouncedKeyword = useDebounced(keyword);
   const debouncedLocalisation = useDebounced(localisation);
@@ -56,7 +55,6 @@ function RechercheInner() {
       niveauExperience: (niveau || undefined) as NiveauExperience | undefined,
       localisation: debouncedLocalisation || undefined,
       echeance: (echeance || undefined) as OffresFilters["echeance"],
-      page,
       limit: PAGE_SIZE,
     }),
     [
@@ -66,7 +64,6 @@ function RechercheInner() {
       niveau,
       debouncedLocalisation,
       echeance,
-      page,
     ],
   );
 
@@ -81,15 +78,38 @@ function RechercheInner() {
       params.set("niveauExperience", filters.niveauExperience);
     if (filters.localisation) params.set("localisation", filters.localisation);
     if (filters.echeance) params.set("echeance", filters.echeance);
-    if (filters.page > 1) params.set("page", String(filters.page));
     const qs = params.toString();
     router.replace(qs ? `/recherche?${qs}` : "/recherche", { scroll: false });
   }, [filters, router]);
 
-  const { data, isLoading, isFetching } = useQuery({
+  // Changer un filtre reconstruit la liste depuis le début. Rester au milieu
+  // de l'ancienne position donnerait des résultats déjà défilés, et le
+  // déclencheur de chargement se rallumerait aussitôt.
+  const premierRendu = useRef(true);
+  useEffect(() => {
+    if (premierRendu.current) {
+      premierRendu.current = false;
+      return;
+    }
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [filters]);
+
+  // Défilement infini plutôt que pagination : sur téléphone, une pagination
+  // impose de viser un bouton en bas d'écran puis de remonter en haut de la
+  // page suivante. La liste se prolonge maintenant sous le pouce.
+  const {
+    data,
+    isLoading,
+    isFetching,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
     queryKey: ["offres", "search", filters],
-    queryFn: () => offresApi.list(filters),
-    placeholderData: (previous) => previous,
+    queryFn: ({ pageParam }) => offresApi.list({ ...filters, page: pageParam }),
+    initialPageParam: 1,
+    getNextPageParam: (derniere, toutes) =>
+      toutes.length < (derniere.totalPages ?? 1) ? toutes.length + 1 : undefined,
   });
 
   const { data: favorites } = useQuery({
@@ -127,11 +147,33 @@ function RechercheInner() {
     setSecteur("");
     setNiveau("");
     setLocalisation("");
-    setPage(1);
   }
 
-  const total = data?.total ?? 0;
-  const totalPages = data?.totalPages ?? 1;
+  const total = data?.pages[0]?.total ?? 0;
+  const offres = useMemo(
+    () => data?.pages.flatMap((lot) => lot.data) ?? [],
+    [data],
+  );
+
+  // La sentinelle déclenche le lot suivant avant d'être atteinte : la marge
+  // laisse le temps du réseau, et la liste paraît continue.
+  const sentinelle = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const cible = sentinelle.current;
+    if (!cible || !hasNextPage) return;
+
+    const observateur = new IntersectionObserver(
+      (entrees) => {
+        if (entrees[0]?.isIntersecting && !isFetchingNextPage) {
+          void fetchNextPage();
+        }
+      },
+      { rootMargin: "600px" },
+    );
+
+    observateur.observe(cible);
+    return () => observateur.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   return (
     <>
@@ -156,7 +198,6 @@ function RechercheInner() {
             type="button"
             onClick={() => {
               setTypeOffre("");
-              setPage(1);
             }}
             className={cn(
               "rounded-full border px-4 py-2 text-sm font-medium transition-all duration-200",
@@ -178,7 +219,6 @@ function RechercheInner() {
                 type="button"
                 onClick={() => {
                   setTypeOffre(actif ? "" : type.code);
-                  setPage(1);
                 }}
                 aria-pressed={actif}
                 className={cn(
@@ -216,7 +256,6 @@ function RechercheInner() {
               value={keyword}
               onChange={(e) => {
                 setKeyword(e.target.value);
-                setPage(1);
               }}
               placeholder="Métier, entreprise, mot-clé…"
               className="h-11 rounded-xl pl-11 text-base"
@@ -231,7 +270,6 @@ function RechercheInner() {
             value={localisation}
             onChange={(e) => {
               setLocalisation(e.target.value);
-              setPage(1);
             }}
             placeholder="Localisation"
             className="h-11 rounded-xl lg:w-44"
@@ -242,7 +280,6 @@ function RechercheInner() {
             value={secteur}
             onChange={(e) => {
               setSecteur(e.target.value);
-              setPage(1);
             }}
             aria-label="Secteur"
             className="h-11 rounded-xl border bg-transparent px-3 text-sm shadow-xs outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/50 lg:w-44"
@@ -259,7 +296,6 @@ function RechercheInner() {
             value={echeance}
             onChange={(e) => {
               setEcheance(e.target.value);
-              setPage(1);
             }}
             aria-label="État de l'échéance"
             className="h-11 rounded-xl border bg-transparent px-3 text-sm shadow-xs outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/50 lg:w-44"
@@ -273,7 +309,6 @@ function RechercheInner() {
             value={niveau}
             onChange={(e) => {
               setNiveau(e.target.value);
-              setPage(1);
             }}
             aria-label="Niveau d'expérience"
             className="h-11 rounded-xl border bg-transparent px-3 text-sm shadow-xs outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/50 lg:w-40"
@@ -322,7 +357,7 @@ function RechercheInner() {
 
       {isLoading ? (
         <OffresGrilleSkeleton nombre={9} />
-      ) : !data?.data.length ? (
+      ) : offres.length === 0 ? (
         <EmptyState
           icon={Search}
           couleur="var(--chart-2)"
@@ -336,8 +371,8 @@ function RechercheInner() {
         />
       ) : (
         <>
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {data.data.map((offre, index) => (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {offres.map((offre, index) => (
               <OffreCard
                 key={offre.id}
                 offre={offre}
@@ -354,44 +389,30 @@ function RechercheInner() {
             ))}
           </div>
 
-          {totalPages > 1 ? (
-            <nav
-              aria-label="Pagination"
-              className="mt-8 flex items-center justify-center gap-3"
-            >
+          {/* Sentinelle : invisible, elle sert de déclencheur au chargement. */}
+          <div ref={sentinelle} aria-hidden className="h-px" />
+
+          {hasNextPage ? (
+            <div className="mt-8 flex justify-center">
+              {/* Le bouton double la sentinelle : au clavier, ou si
+                  l'observateur ne se déclenche pas, la suite reste
+                  atteignable. */}
               <Button
                 variant="outline"
                 className="rounded-xl"
-                disabled={page <= 1}
-                onClick={() => {
-                  setPage((p) => Math.max(1, p - 1));
-                  window.scrollTo({ top: 0, behavior: "smooth" });
-                }}
+                disabled={isFetchingNextPage}
+                onClick={() => void fetchNextPage()}
               >
-                <ChevronLeft className="size-4" />
-                Précédent
+                {isFetchingNextPage ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : null}
+                {isFetchingNextPage ? "Chargement…" : "Voir la suite"}
               </Button>
-
-              <span className="rounded-xl border bg-card px-4 py-2 text-sm font-medium tabular-nums">
-                {page} <span className="text-muted-foreground">/ {totalPages}</span>
-              </span>
-
-              <Button
-                variant="outline"
-                className="rounded-xl"
-                disabled={page >= totalPages}
-                onClick={() => {
-                  // Retour en haut à chaque page : sans cela, la page suivante
-                  // s'ouvre au niveau de la pagination, donc sur la fin de la
-                  // liste, et il faut remonter pour lire les premiers résultats.
-                  setPage((p) => p + 1);
-                  window.scrollTo({ top: 0, behavior: "smooth" });
-                }}
-              >
-                Suivant
-                <ChevronRight className="size-4" />
-              </Button>
-            </nav>
+            </div>
+          ) : offres.length >= PAGE_SIZE ? (
+            <p className="mt-8 text-center text-sm text-muted-foreground">
+              Vous avez vu les {formatNumber(total)} résultats.
+            </p>
           ) : null}
         </>
       )}
