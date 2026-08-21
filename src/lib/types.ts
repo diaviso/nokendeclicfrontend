@@ -514,3 +514,84 @@ export interface Statistics {
   }[];
   thisMonth: { newUsers: number; newOffres: number; newRetours: number };
 }
+
+/* ---------------------------------------------- Groupes de discussion ----- */
+
+export type RoleGroupe = "ADMIN" | "MEMBRE";
+
+/** Personne telle qu'elle apparaît dans un groupe. */
+export interface ProfilGroupe {
+  id: number;
+  username: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  pictureUrl?: string | null;
+  role: Role;
+}
+
+export interface MessageGroupe {
+  id: number;
+  contenu: string;
+  createdAt: string;
+  groupeId: number;
+  /** Nul si le compte a été supprimé depuis. */
+  auteurId: number | null;
+  auteur: ProfilGroupe | null;
+}
+
+export interface MembreGroupe {
+  id: number;
+  userId: number;
+  role: RoleGroupe;
+  rejointLe: string;
+  user: ProfilGroupe;
+}
+
+export interface InvitationGroupe {
+  id: number;
+  groupeId: number;
+  userId: number;
+  statut: "EN_ATTENTE" | "ACCEPTEE" | "REFUSEE";
+  createdAt: string;
+  user: ProfilGroupe;
+}
+
+/** Ligne de la liste des groupes. */
+export interface GroupeResume {
+  id: number;
+  nom: string;
+  description?: string | null;
+  imageUrl?: string | null;
+  role: RoleGroupe;
+  nombreMembres: number;
+  dernierMessage: MessageGroupe | null;
+  nonLus: number;
+  updatedAt: string;
+}
+
+export interface GroupeDetail {
+  id: number;
+  nom: string;
+  description?: string | null;
+  imageUrl?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  creePar: ProfilGroupe | null;
+  membres: MembreGroupe[];
+  invitations: InvitationGroupe[];
+  monRole: RoleGroupe;
+}
+
+/** Invitation reçue, du point de vue de la personne invitée. */
+export interface InvitationRecue {
+  id: number;
+  createdAt: string;
+  groupe: {
+    id: number;
+    nom: string;
+    description?: string | null;
+    imageUrl?: string | null;
+    _count: { membres: number };
+  };
+  invitePar: ProfilGroupe | null;
+}

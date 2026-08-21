@@ -4,12 +4,18 @@ import type {
   ExtractedCV,
   Conversation,
   Feedback,
+  GroupeDetail,
+  GroupeResume,
+  InvitationRecue,
+  MessageGroupe,
+  ProfilGroupe,
   Notification,
   Offre,
   PaginatedResponse,
   PrivateConversationSummary,
   PrivateMessage,
   Retour,
+  RoleGroupe,
   Statistics,
   User,
 } from "../types";
@@ -252,6 +258,107 @@ export const messagingApi = {
   async unreadCount() {
     const { data } = await api.get<{ unreadCount: number }>(
       "/messaging/unread-count",
+    );
+    return data;
+  },
+  /** Retire la conversation de sa propre liste, pas de celle de l'autre. */
+  async supprimerConversation(conversationId: number) {
+    const { data } = await api.delete<{ message: string }>(
+      `/messaging/conversations/${conversationId}`,
+    );
+    return data;
+  },
+};
+
+/* ------------------------------------------------- Groupes de discussion -- */
+
+export const groupesApi = {
+  async liste() {
+    const { data } = await api.get<GroupeResume[]>("/groupes");
+    return data;
+  },
+  async detail(groupeId: number) {
+    const { data } = await api.get<GroupeDetail>(`/groupes/${groupeId}`);
+    return data;
+  },
+  async creer(corps: {
+    nom: string;
+    description?: string;
+    membres?: number[];
+  }) {
+    const { data } = await api.post<GroupeDetail>("/groupes", corps);
+    return data;
+  },
+  async modifier(
+    groupeId: number,
+    corps: { nom?: string; description?: string },
+  ) {
+    const { data } = await api.patch<GroupeDetail>(`/groupes/${groupeId}`, corps);
+    return data;
+  },
+  async supprimer(groupeId: number) {
+    const { data } = await api.delete<{ message: string }>(`/groupes/${groupeId}`);
+    return data;
+  },
+  async quitter(groupeId: number) {
+    const { data } = await api.post<{ message: string }>(
+      `/groupes/${groupeId}/quitter`,
+    );
+    return data;
+  },
+  async messages(groupeId: number, page = 1, limit = 50) {
+    const { data } = await api.get<MessageGroupe[]>(
+      `/groupes/${groupeId}/messages?page=${page}&limit=${limit}`,
+    );
+    return data;
+  },
+  async envoyer(groupeId: number, contenu: string) {
+    const { data } = await api.post<MessageGroupe>(
+      `/groupes/${groupeId}/messages`,
+      { contenu },
+    );
+    return data;
+  },
+  async supprimerMessage(groupeId: number, messageId: number) {
+    const { data } = await api.delete<{ message: string }>(
+      `/groupes/${groupeId}/messages/${messageId}`,
+    );
+    return data;
+  },
+  async inviter(groupeId: number, userIds: number[]) {
+    const { data } = await api.post<{ invites: number; message: string }>(
+      `/groupes/${groupeId}/invitations`,
+      { userIds },
+    );
+    return data;
+  },
+  async changerRole(groupeId: number, membreId: number, role: RoleGroupe) {
+    const { data } = await api.patch<{ message: string }>(
+      `/groupes/${groupeId}/membres/${membreId}`,
+      { role },
+    );
+    return data;
+  },
+  async retirerMembre(groupeId: number, membreId: number) {
+    const { data } = await api.delete<{ message: string }>(
+      `/groupes/${groupeId}/membres/${membreId}`,
+    );
+    return data;
+  },
+  /** Personnes que l'appelant a le droit d'inviter, hors membres actuels. */
+  async invitables(groupeId?: number) {
+    const { data } = await api.get<ProfilGroupe[]>(
+      groupeId ? `/groupes/invitables?groupeId=${groupeId}` : "/groupes/invitables",
+    );
+    return data;
+  },
+  async mesInvitations() {
+    const { data } = await api.get<InvitationRecue[]>("/groupes/invitations");
+    return data;
+  },
+  async repondre(invitationId: number, accepte: boolean) {
+    const { data } = await api.post<{ message: string; groupeId: number | null }>(
+      `/groupes/invitations/${invitationId}/${accepte ? "accepter" : "refuser"}`,
     );
     return data;
   },
