@@ -167,7 +167,17 @@ export function errorMessage(error: unknown, fallback = "Une erreur est survenue
       | { message?: string | string[] }
       | undefined;
     const message = data?.message;
-    if (Array.isArray(message)) return message[0] ?? fallback;
+    // Toutes les erreurs de validation, pas seulement la première. N'en
+    // montrer qu'une a longtemps trompé : à la création d'une offre, le
+    // serveur renvoyait « description trop longue » suivi de « description
+    // doit être une chaîne » — la seconde disait le vrai problème, et restait
+    // invisible. Trois lignes suffisent à lire ; au-delà on abrège.
+    if (Array.isArray(message)) {
+      if (message.length === 0) return fallback;
+      return message.length > 3
+        ? `${message.slice(0, 3).join(" · ")} (+${message.length - 3})`
+        : message.join(" · ");
+    }
     if (typeof message === "string") return message;
     if (error.code === "ECONNABORTED") return "Le serveur met trop de temps à répondre";
     if (!error.response) return "Impossible de joindre le serveur";
