@@ -9,6 +9,7 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
+  LabelList,
   Legend,
   Pie,
   PieChart,
@@ -172,6 +173,136 @@ const axe = {
   axisLine: false,
 } as const;
 
+/** Espace fine insécable : la ponctuation française devant « % ». */
+const FINE = " ";
+
+type Ligne = { nom: string; valeur: number; couleur?: string };
+type LignePart = Ligne & { part: number };
+
+/**
+ * Ajoute à chaque ligne sa part du total.
+ *
+ * Le total peut être fourni : plusieurs graphiques n'affichent que les
+ * premières catégories, et rapporter chaque valeur à la somme des seules
+ * lignes visibles gonflerait les parts jusqu'à faire 100 % d'un extrait. Le
+ * dénominateur doit rester l'ensemble mesuré.
+ */
+function avecParts(lignes: Ligne[], total?: number): LignePart[] {
+  const base = total ?? lignes.reduce((somme, ligne) => somme + ligne.valeur, 0);
+  return lignes.map((ligne) => ({
+    ...ligne,
+    part: base > 0 ? (ligne.valeur * 100) / base : 0,
+  }));
+}
+
+/**
+ * Une part se lit à la décimale près sous 10 %, à l'unité au-dessus.
+ *
+ * Arrondir « 0,4 % » à « 0 % » ferait disparaître une catégorie qui existe
+ * pourtant, et afficher « 43,7 % » n'apporte rien à la lecture.
+ */
+function formatPart(part: unknown): string {
+  const valeur = typeof part === "number" ? part : Number(part);
+  if (!Number.isFinite(valeur)) return "";
+  // Une catégorie qui existe ne doit pas s'afficher « 0 % » : la voir à zéro
+  // ferait conclure à son absence.
+  if (valeur > 0 && valeur < 0.05) return `< 0,1${FINE}%`;
+  if (valeur > 0 && valeur < 10) {
+    return `${valeur.toFixed(1).replace(".", ",").replace(",0", "")}${FINE}%`;
+  }
+  return `${Math.round(valeur)}${FINE}%`;
+}
+
+/**
+ * Infobulle commune : l'effectif, puis sa part.
+ *
+ * Recharts ne connaît pas le total de la série ; la part est donc lue sur la
+ * ligne elle-même, calculée en amont.
+ */
+const formatteurInfobulle = (
+  valeur: unknown,
+  nom: unknown,
+  element: unknown,
+): [string, string] => {
+  const nombre = typeof valeur === "number" ? valeur : Number(valeur);
+  const part = (element as { payload?: { part?: number } })?.payload?.part;
+  const libelle = Number.isFinite(nombre) ? formatNumber(nombre) : String(valeur);
+  return [
+    part === undefined ? libelle : `${libelle} — ${formatPart(part)}`,
+    String(nom ?? ""),
+  ];
+};
+
+/**
+ * Étiquette d'un secteur de camembert : le nom et sa part.
+ *
+ * Recharts type ce rappel de façon très large ; la ligne réelle est lue depuis
+ * `payload`, où le composant range la donnée d'origine.
+ */
+const etiquetteCamembert = (entree: unknown): string => {
+  const donnee = entree as {
+    name?: string;
+    payload?: { nom?: string; part?: number };
+  };
+  const nom = donnee.payload?.nom ?? donnee.name ?? "";
+  const part = donnee.payload?.part;
+  return part === undefined ? nom : `${nom} · ${formatPart(part)}`;
+};
+
+/**
+ * Étiquette au bout d'une barre horizontale : l'effectif, puis sa part.
+ *
+ * Dessinée à la main plutôt que par `formatter` : les deux nombres se lisent
+ * mieux avec des graisses différentes, l'effectif appuyé et la part en retrait.
+ */
+function etiquetteBarre(lignes: LignePart[]) {
+  return function Etiquette(entree: unknown) {
+    const { x, y, width, height, value, index } = entree as {
+      x?: number;
+      y?: number;
+      width?: number;
+      height?: number;
+      value?: number;
+      index?: number;
+    };
+
+    if (
+      x === undefined ||
+      y === undefined ||
+      width === undefined ||
+      height === undefined
+    ) {
+      return null;
+    }
+
+    // Recharts ne transmet pas la ligne d'origine au rendu d'étiquette, mais
+    // son rang : la part se relit donc dans le jeu de données.
+    const part = index === undefined ? undefined : lignes[index]?.part;
+
+    return (
+      <text
+        x={x + width + 8}
+        y={y + height / 2}
+        dominantBaseline="central"
+        fontSize={11}
+        fill="var(--muted-foreground)"
+      >
+        <tspan fontWeight={600} fill="var(--foreground)">
+          {formatNumber(value ?? 0)}
+        </tspan>
+        {part === undefined ? null : (
+          <tspan dx={6}>{formatPart(part)}</tspan>
+        )}
+      </text>
+    );
+  };
+}
+
+/** Sous-titre rappelant sur quoi les parts sont calculées. */
+function baseLisible(total: number, unite: string): string {
+  return `Parts calculées sur ${formatNumber(total)} ${unite}.`;
+}
+
 export default function StatistiquesPage() {
   const [mois, setMois] = useState<number>(12);
 
@@ -216,72 +347,121 @@ export default function StatistiquesPage() {
     libelle: moisCourt(ligne.mois),
   }));
 
-  const parRole = (Object.keys(ROLE_LABELS) as Role[])
-    .map((role) => ({
-      nom: ROLE_LABELS[role],
-      valeur: rapport.utilisateursParRole[role] ?? 0,
-      couleur: COULEURS_ROLE[role],
-    }))
-    .filter((ligne) => ligne.valeur > 0);
+  const parRole = avecParts(
+    (Object.keys(ROLE_LABELS) as Role[])
+      .map((role) => ({
+        nom: ROLE_LABELS[role],
+        valeur: rapport.utilisateursParRole[role] ?? 0,
+        couleur: COULEURS_ROLE[role],
+      }))
+      .filter((ligne) => ligne.valeur > 0),
+  );
+  const totalRoles = parRole.reduce((somme, ligne) => somme + ligne.valeur, 0);
 
-  const parStatut = Object.entries(rapport.offresParStatut).map(
-    ([statut, total]) => ({
+  const parStatut = avecParts(
+    Object.entries(rapport.offresParStatut).map(([statut, total]) => ({
       nom: STATUT_MODERATION_LABELS[statut] ?? statut,
       valeur: total,
       couleur: STATUT_MODERATION_COULEURS[statut] ?? "var(--muted-foreground)",
-    }),
+    })),
   );
 
-  const parType = Object.entries(rapport.offresParType)
-    .map(([code, total]) => {
-      const type = types.find((candidat) => candidat.code === code);
-      return {
-        nom: type?.libelle ?? code,
-        valeur: total,
-        couleur: type ? styleType(type).teinte : "var(--muted-foreground)",
-      };
-    })
-    .sort((a, b) => b.valeur - a.valeur);
+  const parType = avecParts(
+    Object.entries(rapport.offresParType)
+      .map(([code, total]) => {
+        const type = types.find((candidat) => candidat.code === code);
+        return {
+          nom: type?.libelle ?? code,
+          valeur: total,
+          couleur: type ? styleType(type).teinte : "var(--muted-foreground)",
+        };
+      })
+      .sort((a, b) => b.valeur - a.valeur),
+  );
+  const totalTypes = parType.reduce((somme, ligne) => somme + ligne.valeur, 0);
 
+  // « Non précisé » reste dans le graphique et donc au dénominateur : l'écarter
+  // ferait passer une minorité déclarée pour une majorité, alors que le
+  // silence des autres est justement l'information la plus utile ici.
   const parSexe = desagregation
-    ? [
-        { nom: "Femmes", valeur: desagregation.gender.femmes },
-        { nom: "Hommes", valeur: desagregation.gender.hommes },
-        { nom: "Autre", valeur: desagregation.gender.autres },
-        { nom: "Non précisé", valeur: desagregation.gender.nonPrecise },
-      ].filter((ligne) => ligne.valeur > 0)
+    ? avecParts(
+        [
+          { nom: "Femmes", valeur: desagregation.gender.femmes },
+          { nom: "Hommes", valeur: desagregation.gender.hommes },
+          { nom: "Autre", valeur: desagregation.gender.autres },
+          { nom: "Non précisé", valeur: desagregation.gender.nonPrecise },
+        ].filter((ligne) => ligne.valeur > 0),
+      )
     : [];
+  const totalSexe = parSexe.reduce((somme, ligne) => somme + ligne.valeur, 0);
 
+  // Ici au contraire, les dates de naissance manquantes sont exclues du
+  // graphique : les parts se rapportent donc aux seuls membres qui l'ont
+  // renseignée, ce que le sous-titre doit dire.
   const parAge = desagregation
-    ? Object.entries(desagregation.ageRanges)
-        .filter(([tranche]) => tranche !== "Non précisé")
-        .map(([tranche, total]) => ({ nom: tranche, valeur: total }))
+    ? avecParts(
+        Object.entries(desagregation.ageRanges)
+          .filter(([tranche]) => tranche !== "Non précisé")
+          .map(([tranche, total]) => ({ nom: tranche, valeur: total })),
+      )
     : [];
+  const totalAge = parAge.reduce((somme, ligne) => somme + ligne.valeur, 0);
 
   const parStatutPro = desagregation
-    ? Object.entries(desagregation.statutProfessionnel)
-        .map(([statut, total]) => ({
-          nom:
-            STATUT_PROFESSIONNEL_LABELS[statut as StatutProfessionnel] ?? statut,
-          valeur: total,
-          couleur:
-            STATUT_PROFESSIONNEL_CHART_COLORS[statut as StatutProfessionnel] ??
-            "var(--muted-foreground)",
-        }))
-        .sort((a, b) => b.valeur - a.valeur)
+    ? avecParts(
+        Object.entries(desagregation.statutProfessionnel)
+          .map(([statut, total]) => ({
+            nom:
+              STATUT_PROFESSIONNEL_LABELS[statut as StatutProfessionnel] ??
+              statut,
+            valeur: total,
+            couleur:
+              STATUT_PROFESSIONNEL_CHART_COLORS[
+                statut as StatutProfessionnel
+              ] ?? "var(--muted-foreground)",
+          }))
+          .sort((a, b) => b.valeur - a.valeur),
+      )
     : [];
+  const totalStatutPro = parStatutPro.reduce(
+    (somme, ligne) => somme + ligne.valeur,
+    0,
+  );
 
-  const parSecteur = (stats?.offresBySecteur ?? [])
-    .map((ligne) => ({
-      nom:
-        SECTEUR_LABELS[ligne.secteur as keyof typeof SECTEUR_LABELS] ??
-        ligne.secteur ??
-        "Non précisé",
-      valeur: ligne.count,
-    }))
-    .slice(0, 8);
+  // Le graphique n'affiche que les huit premiers secteurs, mais les parts se
+  // rapportent à l'ensemble : sinon les huit sommeraient à 100 % en ignorant
+  // tous les autres.
+  const secteursTous = stats?.offresBySecteur ?? [];
+  const totalSecteurs = secteursTous.reduce(
+    (somme, ligne) => somme + ligne.count,
+    0,
+  );
+  const parSecteur = avecParts(
+    secteursTous
+      .map((ligne) => ({
+        nom:
+          SECTEUR_LABELS[ligne.secteur as keyof typeof SECTEUR_LABELS] ??
+          ligne.secteur ??
+          "Non précisé",
+        valeur: ligne.count,
+      }))
+      .slice(0, 8),
+    totalSecteurs,
+  );
 
-  const departements = (desagregation?.departements ?? []).slice(0, 10);
+  // Même précaution que pour les secteurs : dix départements affichés, mais
+  // un dénominateur qui couvre tous les membres localisés.
+  const departementsTous = desagregation?.departements ?? [];
+  const totalDepartements = departementsTous.reduce(
+    (somme, ligne) => somme + ligne.count,
+    0,
+  );
+  const departements = avecParts(
+    departementsTous
+      .slice(0, 10)
+      .map((ligne) => ({ nom: ligne.departement, valeur: ligne.count })),
+    totalDepartements,
+  );
 
   const handicap = desagregation?.handicap;
   const partHandicap =
@@ -465,7 +645,7 @@ export default function StatistiquesPage() {
         <div className="grid gap-4 lg:grid-cols-2">
           <Bloc
             titre="Répartition des comptes"
-            sousTitre="Par rôle sur la plateforme."
+            sousTitre={`Par rôle. ${baseLisible(totalRoles, "comptes")}`}
           >
             <ResponsiveContainer width="100%" height={240}>
               <PieChart>
@@ -474,9 +654,12 @@ export default function StatistiquesPage() {
                   dataKey="valeur"
                   nameKey="nom"
                   innerRadius={54}
-                  outerRadius={88}
+                  outerRadius={80}
                   paddingAngle={2}
                   stroke="none"
+                  label={etiquetteCamembert}
+                  labelLine={{ stroke: "var(--border)" }}
+                  fontSize={12}
                 >
                   {parRole.map((ligne) => (
                     <Cell key={ligne.nom} fill={ligne.couleur} />
@@ -512,12 +695,22 @@ export default function StatistiquesPage() {
                   {parStatut.map((ligne) => (
                     <Cell key={ligne.nom} fill={ligne.couleur} />
                   ))}
+                  <LabelList
+                    dataKey="part"
+                    position="top"
+                    formatter={formatPart}
+                    fontSize={11}
+                    fill="var(--muted-foreground)"
+                  />
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
           </Bloc>
 
-          <Bloc titre="Offres par type" sousTitre="Toutes périodes confondues.">
+          <Bloc
+            titre="Offres par type"
+            sousTitre={`Toutes périodes confondues. ${baseLisible(totalTypes, "offres")}`}
+          >
             <ResponsiveContainer width="100%" height={Math.max(200, parType.length * 34)}>
               <BarChart
                 data={parType}
@@ -529,24 +722,37 @@ export default function StatistiquesPage() {
                   stroke="var(--border)"
                   horizontal={false}
                 />
-                <XAxis type="number" allowDecimals={false} {...axe} />
+                <XAxis
+                  type="number"
+                  allowDecimals={false}
+                  domain={[0, (max: number) => Math.ceil(max * 1.22)]}
+                  {...axe}
+                />
                 <YAxis
                   type="category"
                   dataKey="nom"
                   width={128}
                   {...axe}
                 />
-                <Tooltip {...infobulle} cursor={{ fill: "var(--muted)" }} />
+                <Tooltip
+                  {...infobulle}
+                  cursor={{ fill: "var(--muted)" }}
+                  formatter={formatteurInfobulle}
+                />
                 <Bar dataKey="valeur" name="Offres" radius={[0, 6, 6, 0]}>
                   {parType.map((ligne) => (
                     <Cell key={ligne.nom} fill={ligne.couleur} />
                   ))}
+                  <LabelList position="right" content={etiquetteBarre(parType)} />
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
           </Bloc>
 
-          <Bloc titre="Secteurs les plus représentés" sousTitre="Parmi les offres publiées.">
+          <Bloc
+            titre="Secteurs les plus représentés"
+            sousTitre={`Les huit premiers. ${baseLisible(totalSecteurs, "offres dont le secteur est renseigné")}`}
+          >
             <ResponsiveContainer width="100%" height={Math.max(200, parSecteur.length * 34)}>
               <BarChart
                 data={parSecteur}
@@ -558,20 +764,34 @@ export default function StatistiquesPage() {
                   stroke="var(--border)"
                   horizontal={false}
                 />
-                <XAxis type="number" allowDecimals={false} {...axe} />
+                <XAxis
+                  type="number"
+                  allowDecimals={false}
+                  domain={[0, (max: number) => Math.ceil(max * 1.22)]}
+                  {...axe}
+                />
                 <YAxis type="category" dataKey="nom" width={148} {...axe} />
-                <Tooltip {...infobulle} cursor={{ fill: "var(--muted)" }} />
+                <Tooltip
+                  {...infobulle}
+                  cursor={{ fill: "var(--muted)" }}
+                  formatter={formatteurInfobulle}
+                />
                 <Bar
                   dataKey="valeur"
                   name="Offres"
                   fill="var(--chart-3)"
                   radius={[0, 6, 6, 0]}
-                />
+                >
+                  <LabelList position="right" content={etiquetteBarre(parSecteur)} />
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           </Bloc>
 
-          <Bloc titre="Répartition par sexe" sousTitre="Déclaré à l'inscription.">
+          <Bloc
+            titre="Répartition par sexe"
+            sousTitre={`Déclaré à l'inscription. ${baseLisible(totalSexe, "comptes")}`}
+          >
             <ResponsiveContainer width="100%" height={240}>
               <PieChart>
                 <Pie
@@ -579,9 +799,12 @@ export default function StatistiquesPage() {
                   dataKey="valeur"
                   nameKey="nom"
                   innerRadius={54}
-                  outerRadius={88}
+                  outerRadius={80}
                   paddingAngle={2}
                   stroke="none"
+                  label={etiquetteCamembert}
+                  labelLine={{ stroke: "var(--border)" }}
+                  fontSize={12}
                 >
                   {parSexe.map((ligne, rang) => (
                     <Cell
@@ -601,7 +824,7 @@ export default function StatistiquesPage() {
 
           <Bloc
             titre="Tranches d'âge"
-            sousTitre="Membres ayant renseigné leur date de naissance."
+            sousTitre={`${baseLisible(totalAge, "membres ayant renseigné leur date de naissance")}`}
           >
             <ResponsiveContainer width="100%" height={240}>
               <BarChart
@@ -621,14 +844,22 @@ export default function StatistiquesPage() {
                   name="Membres"
                   fill="var(--chart-1)"
                   radius={[6, 6, 0, 0]}
-                />
+                >
+                  <LabelList
+                    dataKey="part"
+                    position="top"
+                    formatter={formatPart}
+                    fontSize={11}
+                    fill="var(--muted-foreground)"
+                  />
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           </Bloc>
 
           <Bloc
             titre="Statut professionnel"
-            sousTitre="Situation déclarée par les membres."
+            sousTitre={`Situation déclarée. ${baseLisible(totalStatutPro, "membres")}`}
           >
             <ResponsiveContainer
               width="100%"
@@ -644,13 +875,23 @@ export default function StatistiquesPage() {
                   stroke="var(--border)"
                   horizontal={false}
                 />
-                <XAxis type="number" allowDecimals={false} {...axe} />
+                <XAxis
+                  type="number"
+                  allowDecimals={false}
+                  domain={[0, (max: number) => Math.ceil(max * 1.22)]}
+                  {...axe}
+                />
                 <YAxis type="category" dataKey="nom" width={148} {...axe} />
-                <Tooltip {...infobulle} cursor={{ fill: "var(--muted)" }} />
+                <Tooltip
+                  {...infobulle}
+                  cursor={{ fill: "var(--muted)" }}
+                  formatter={formatteurInfobulle}
+                />
                 <Bar dataKey="valeur" name="Membres" radius={[0, 6, 6, 0]}>
                   {parStatutPro.map((ligne) => (
                     <Cell key={ligne.nom} fill={ligne.couleur} />
                   ))}
+                  <LabelList position="right" content={etiquetteBarre(parStatutPro)} />
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
@@ -714,16 +955,16 @@ export default function StatistiquesPage() {
             />
           </Bloc>
 
-          <Bloc titre="Départements" sousTitre="Les dix premiers.">
+          <Bloc
+            titre="Départements"
+            sousTitre={`Les dix premiers. ${baseLisible(totalDepartements, "membres localisés")}`}
+          >
             <ResponsiveContainer
               width="100%"
               height={Math.max(200, departements.length * 30)}
             >
               <BarChart
-                data={departements.map((ligne) => ({
-                  nom: ligne.departement,
-                  valeur: ligne.count,
-                }))}
+                data={departements}
                 layout="vertical"
                 margin={{ top: 4, right: 16, left: 8, bottom: 4 }}
               >
@@ -732,15 +973,26 @@ export default function StatistiquesPage() {
                   stroke="var(--border)"
                   horizontal={false}
                 />
-                <XAxis type="number" allowDecimals={false} {...axe} />
+                <XAxis
+                  type="number"
+                  allowDecimals={false}
+                  domain={[0, (max: number) => Math.ceil(max * 1.22)]}
+                  {...axe}
+                />
                 <YAxis type="category" dataKey="nom" width={128} {...axe} />
-                <Tooltip {...infobulle} cursor={{ fill: "var(--muted)" }} />
+                <Tooltip
+                  {...infobulle}
+                  cursor={{ fill: "var(--muted)" }}
+                  formatter={formatteurInfobulle}
+                />
                 <Bar
                   dataKey="valeur"
                   name="Membres"
                   fill="var(--chart-4)"
                   radius={[0, 6, 6, 0]}
-                />
+                >
+                  <LabelList position="right" content={etiquetteBarre(departements)} />
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           </Bloc>
