@@ -188,6 +188,23 @@
 }
 
 @layer base {
+  /*
+   * Options des listes déroulantes natives.
+   *
+   * `color-scheme` ne suffit pas partout : sous Windows, Chromium dessine la
+   * liste ouverte avec le fond de chaque `<option>`. Les champs du site ont un
+   * fond transparent, que l'option hérite ; il retombe alors sur le blanc du
+   * système, pendant que le texte garde la couleur claire du thème sombre —
+   * blanc sur blanc, seule l'option survolée restant lisible. Un fond et une
+   * couleur explicites, tirés des jetons, rendent la liste lisible dans les
+   * deux thèmes et sur tous les systèmes.
+   */
+  select option,
+  select optgroup {
+    background-color: var(--popover);
+    color: var(--popover-foreground);
+  }
+
   * {
     @apply border-border outline-ring/50;
   }
