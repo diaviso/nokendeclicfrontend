@@ -60,11 +60,20 @@ export function CreerGroupe({ onCree }: { onCree: (groupeId: number) => void }) 
 
   return (
     <Dialog open={ouvert} onOpenChange={setOuvert}>
+      {/* Icône seule : la colonne de la messagerie mesure 288 px, et deux
+          boutons libellés à côté du titre la faisaient déborder. C'est aussi
+          la convention des messageries, où ces actions sont des icônes en tête
+          de liste. */}
       <DialogTrigger
         render={
-          <Button size="sm" variant="outline">
+          <Button
+            size="icon"
+            variant="outline"
+            className="size-8 rounded-lg"
+            aria-label="Nouveau groupe"
+            title="Nouveau groupe"
+          >
             <UsersRound className="size-4" />
-            Groupe
           </Button>
         }
       />

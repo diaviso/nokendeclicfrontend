@@ -595,3 +595,34 @@ export interface InvitationRecue {
   };
   invitePar: ProfilGroupe | null;
 }
+
+/** Nom d'un auteur tel que la recherche le renvoie. */
+interface AuteurRecherche {
+  firstName?: string | null;
+  lastName?: string | null;
+  username: string;
+}
+
+/** Réponse de la recherche dans la messagerie. */
+export interface ResultatsRechercheMessagerie {
+  discussions: PrivateConversationSummary[];
+  messages: {
+    id: number;
+    content: string;
+    createdAt: string;
+    conversationId: number;
+    senderId: number;
+    sender: AuteurRecherche;
+    otherUser: PrivateConversationSummary["otherUser"] | null;
+  }[];
+  groupes: { id: number; nom: string }[];
+  messagesGroupe: {
+    id: number;
+    contenu: string;
+    createdAt: string;
+    groupeId: number;
+    auteur: AuteurRecherche | null;
+    groupe: { nom: string };
+  }[];
+  personnes: PrivateConversationSummary["otherUser"][];
+}

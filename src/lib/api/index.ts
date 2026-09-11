@@ -18,6 +18,7 @@ import type {
   RoleGroupe,
   Statistics,
   User,
+  ResultatsRechercheMessagerie,
 } from "../types";
 
 export * from "./client";
@@ -249,9 +250,19 @@ export const messagingApi = {
     }>(`/messaging/conversations/start/${userId}`);
     return data;
   },
-  async contacts() {
+  /** Sans recherche, les cinquante premiers ; avec, jusqu'à trente. */
+  async contacts(search?: string) {
     const { data } = await api.get<PrivateConversationSummary["otherUser"][]>(
       "/messaging/contacts",
+      { params: search ? { search } : undefined },
+    );
+    return data;
+  },
+  /** Discussions, messages, groupes et personnes correspondant à la requête. */
+  async rechercher(q: string) {
+    const { data } = await api.get<ResultatsRechercheMessagerie>(
+      "/messaging/recherche",
+      { params: { q } },
     );
     return data;
   },

@@ -10,11 +10,14 @@ import {
   MessageSquarePlus,
   MessagesSquare,
   MoreVertical,
+  Search,
   SendHorizontal,
   Trash2,
   UsersRound,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -46,10 +49,14 @@ import {
 } from "@/components/messagerie/invitations-groupes";
 import { errorMessage, fileUrl, groupesApi, messagingApi } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
+import { useDebounced } from "@/hooks/use-debounced";
 import { formatRelative, formatTime, fullName } from "@/lib/format";
 import { ROLE_BADGE, roleLabel } from "@/lib/enums";
 import { cn } from "@/lib/utils";
-import type { PrivateConversationSummary } from "@/lib/types";
+import type {
+  PrivateConversationSummary,
+  ResultatsRechercheMessagerie,
+} from "@/lib/types";
 
 /** Intervalle de rafraîchissement du fil actif. */
 const THREAD_POLL_MS = 15_000;
@@ -71,12 +78,23 @@ function NewConversationDialog({
   onStarted: (conversationId: number) => void;
 }) {
   const [open, setOpen] = useState(false);
+  const [saisie, setSaisie] = useState("");
+  const requete = useDebounced(saisie.trim());
   const queryClient = useQueryClient();
 
-  const { data: contacts = [], isLoading } = useQuery({
-    queryKey: ["messaging", "contacts"],
-    queryFn: messagingApi.contacts,
+  // La recherche part au serveur : pour l'administration, les interlocuteurs
+  // possibles dépassent sept cents comptes, et la liste d'un bloc sans champ
+  // de recherche rendait la plupart d'entre eux introuvables.
+  const {
+    data: contacts = [],
+    isLoading,
+    isFetching,
+  } = useQuery({
+    queryKey: ["messaging", "contacts", requete],
+    queryFn: () =>
+      messagingApi.contacts(requete.length >= 2 ? requete : undefined),
     enabled: open,
+    placeholderData: (precedent) => precedent,
   });
 
   const start = useMutation({
@@ -85,6 +103,7 @@ function NewConversationDialog({
       await queryClient.invalidateQueries({ queryKey: ["messaging", "conversations"] });
       onStarted(conversation.id);
       setOpen(false);
+      setSaisie("");
     },
     onError: (error) =>
       toast.error("Impossible de démarrer la conversation", {
@@ -93,12 +112,25 @@ function NewConversationDialog({
   });
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={(valeur) => {
+        setOpen(valeur);
+        if (!valeur) setSaisie("");
+      }}
+    >
+      {/* Icône seule, comme le bouton de groupe : libellés, les deux boutons
+          débordaient de la colonne de 288 px. */}
       <DialogTrigger
         render={
-          <Button size="sm" variant="outline">
+          <Button
+            size="icon"
+            variant="outline"
+            className="size-8 rounded-lg"
+            aria-label="Nouvelle conversation"
+            title="Nouvelle conversation"
+          >
             <MessageSquarePlus className="size-4" />
-            Nouvelle
           </Button>
         }
       />
@@ -106,9 +138,29 @@ function NewConversationDialog({
         <DialogHeader>
           <DialogTitle>Nouvelle conversation</DialogTitle>
           <DialogDescription>
-            Choisissez un interlocuteur pour démarrer un échange.
+            Cherchez la personne à qui vous voulez écrire.
           </DialogDescription>
         </DialogHeader>
+
+        <div className="relative">
+          <Search
+            className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+            aria-hidden
+          />
+          <Input
+            value={saisie}
+            onChange={(e) => setSaisie(e.target.value)}
+            placeholder="Nom, prénom…"
+            aria-label="Rechercher une personne"
+            className="pl-9 pr-9"
+          />
+          {isFetching && !isLoading ? (
+            <Loader2
+              className="absolute right-3 top-1/2 size-4 -translate-y-1/2 animate-spin text-muted-foreground"
+              aria-hidden
+            />
+          ) : null}
+        </div>
 
         {isLoading ? (
           <div className="grid place-items-center py-8">
@@ -116,40 +168,50 @@ function NewConversationDialog({
           </div>
         ) : contacts.length === 0 ? (
           <p className="py-6 text-center text-sm text-muted-foreground">
-            Aucun interlocuteur disponible.
+            {requete.length >= 2
+              ? `Personne ne correspond à « ${requete} ».`
+              : "Aucun interlocuteur disponible."}
           </p>
         ) : (
-          <ScrollArea className="max-h-72">
-            <ul className="space-y-1">
-              {contacts.map((contact) => (
-                <li key={contact.id}>
-                  <button
-                    onClick={() => start.mutate(contact.id)}
-                    disabled={start.isPending}
-                    className="flex w-full items-center gap-3 rounded-xl p-2.5 text-left transition-colors hover:bg-accent"
-                  >
-                    <Avatar className="size-8">
-                      <AvatarImage src={fileUrl(contact.pictureUrl)} alt="" />
-                      <AvatarFallback className="text-[11px]">
-                        {initials(contact)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-medium">
-                        {fullName(contact)}
-                      </span>
-                    </span>
-                    <Badge
-                      variant="outline"
-                      className={cn("h-5 shrink-0 px-1.5 text-[10px]", ROLE_BADGE[contact.role])}
+          <>
+            <ScrollArea className="max-h-72">
+              <ul className="space-y-1">
+                {contacts.map((contact) => (
+                  <li key={contact.id}>
+                    <button
+                      onClick={() => start.mutate(contact.id)}
+                      disabled={start.isPending}
+                      className="flex w-full items-center gap-3 rounded-xl p-2.5 text-left transition-colors hover:bg-accent"
                     >
-                      {roleLabel(contact.role)}
-                    </Badge>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </ScrollArea>
+                      <Avatar className="size-8 shrink-0">
+                        <AvatarImage src={fileUrl(contact.pictureUrl)} alt="" />
+                        <AvatarFallback className="text-[11px]">
+                          {initials(contact)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-medium">
+                          {fullName(contact)}
+                        </span>
+                      </span>
+                      <Badge
+                        variant="outline"
+                        className={cn("h-5 shrink-0 px-1.5 text-[10px]", ROLE_BADGE[contact.role])}
+                      >
+                        {roleLabel(contact.role)}
+                      </Badge>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </ScrollArea>
+            {requete.length < 2 && contacts.length >= 50 ? (
+              <p className="text-center text-xs text-muted-foreground">
+                Les cinquante premiers seulement : tapez un nom pour trouver
+                les autres.
+              </p>
+            ) : null}
+          </>
         )}
       </DialogContent>
     </Dialog>
@@ -316,6 +378,275 @@ function Thread({
   );
 }
 
+/** Extrait centré sur la première occurrence, le terme mis en évidence. */
+function Extrait({ texte, requete }: { texte: string; requete: string }) {
+  const position = texte.toLowerCase().indexOf(requete.toLowerCase());
+  if (position < 0) {
+    return <>{texte.length > 110 ? `${texte.slice(0, 110)}…` : texte}</>;
+  }
+  // Une fenêtre autour du terme plutôt que le début du message : dans un long
+  // message, l'occurrence cherchée serait sinon coupée par les points de
+  // suspension.
+  const debut = Math.max(0, position - 36);
+  const fin = Math.min(texte.length, position + requete.length + 70);
+  return (
+    <>
+      {debut > 0 ? "…" : ""}
+      {texte.slice(debut, position)}
+      <mark className="rounded-sm bg-primary/20 px-0.5 text-foreground">
+        {texte.slice(position, position + requete.length)}
+      </mark>
+      {texte.slice(position + requete.length, fin)}
+      {fin < texte.length ? "…" : ""}
+    </>
+  );
+}
+
+function TitreSection({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="px-3 pt-3 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+      {children}
+    </p>
+  );
+}
+
+/**
+ * Résultats de la recherche, par nature : discussions, groupes, messages,
+ * puis personnes à qui écrire pour la première fois.
+ */
+function ResultatsRecherche({
+  requete,
+  resultats,
+  chargement,
+  selection,
+  onOuvrir,
+  onDemarrer,
+  demarrageEnCours,
+}: {
+  requete: string;
+  resultats: ResultatsRechercheMessagerie | undefined;
+  chargement: boolean;
+  selection: Selection;
+  onOuvrir: (selection: Selection) => void;
+  onDemarrer: (userId: number) => void;
+  demarrageEnCours: boolean;
+}) {
+  if (chargement || !resultats) {
+    return (
+      <div className="grid place-items-center py-10">
+        <Loader2 className="size-5 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  const { discussions, groupes, messages, messagesGroupe, personnes } = resultats;
+
+  // Une personne avec qui une discussion existe déjà figure sous
+  // « Discussions » : la reproposer sous « Démarrer » ferait croire à deux
+  // fils distincts avec elle.
+  const dejaEnDiscussion = new Set(discussions.map((d) => d.otherUser.id));
+  const nouvelles = personnes.filter((personne) => !dejaEnDiscussion.has(personne.id));
+
+  const total =
+    discussions.length +
+    groupes.length +
+    messages.length +
+    messagesGroupe.length +
+    nouvelles.length;
+
+  if (total === 0) {
+    return (
+      <p className="px-4 py-10 text-center text-sm text-muted-foreground">
+        Rien ne correspond à « {requete} ».
+      </p>
+    );
+  }
+
+  const actif = (genre: "prive" | "groupe", id: number) =>
+    selection?.genre === genre && selection.id === id;
+  const ligne =
+    "flex w-full gap-3 rounded-xl p-2.5 text-left transition-colors";
+
+  return (
+    <div className="pb-2">
+      {discussions.length > 0 ? (
+        <>
+          <TitreSection>Discussions</TitreSection>
+          <ul className="p-2 pt-1">
+            {discussions.map((discussion) => (
+              <li key={`d-${discussion.id}`}>
+                <button
+                  onClick={() => onOuvrir({ genre: "prive", id: discussion.id })}
+                  className={cn(
+                    ligne,
+                    "items-center",
+                    actif("prive", discussion.id) ? "bg-accent" : "hover:bg-accent/60",
+                  )}
+                >
+                  <Avatar className="size-9 shrink-0">
+                    <AvatarImage src={fileUrl(discussion.otherUser.pictureUrl)} alt="" />
+                    <AvatarFallback className="text-[11px]">
+                      {initials(discussion.otherUser)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-semibold">
+                      {fullName(discussion.otherUser)}
+                    </span>
+                    <span className="block truncate text-xs text-muted-foreground">
+                      {discussion.lastMessage?.content ?? "Aucun message"}
+                    </span>
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </>
+      ) : null}
+
+      {groupes.length > 0 ? (
+        <>
+          <TitreSection>Groupes</TitreSection>
+          <ul className="p-2 pt-1">
+            {groupes.map((groupe) => (
+              <li key={`g-${groupe.id}`}>
+                <button
+                  onClick={() => onOuvrir({ genre: "groupe", id: groupe.id })}
+                  className={cn(
+                    ligne,
+                    "items-center",
+                    actif("groupe", groupe.id) ? "bg-accent" : "hover:bg-accent/60",
+                  )}
+                >
+                  <span className="grid size-9 shrink-0 place-items-center rounded-full bg-primary/10">
+                    <UsersRound className="size-4 text-primary" aria-hidden />
+                  </span>
+                  <span className="min-w-0 flex-1 truncate text-sm font-semibold">
+                    {groupe.nom}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </>
+      ) : null}
+
+      {messages.length > 0 ? (
+        <>
+          <TitreSection>Messages</TitreSection>
+          <ul className="p-2 pt-1">
+            {messages.map((message) => (
+              <li key={`m-${message.id}`}>
+                <button
+                  onClick={() =>
+                    onOuvrir({ genre: "prive", id: message.conversationId })
+                  }
+                  className={cn(
+                    ligne,
+                    "items-start",
+                    actif("prive", message.conversationId)
+                      ? "bg-accent"
+                      : "hover:bg-accent/60",
+                  )}
+                >
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-baseline justify-between gap-2">
+                      <span className="truncate text-sm font-semibold">
+                        {message.otherUser ? fullName(message.otherUser) : "Discussion"}
+                      </span>
+                      <span className="shrink-0 text-[11px] text-muted-foreground">
+                        {formatRelative(message.createdAt)}
+                      </span>
+                    </span>
+                    <span className="mt-0.5 block text-xs leading-relaxed text-muted-foreground [overflow-wrap:anywhere]">
+                      <span className="font-medium text-foreground/80">
+                        {fullName(message.sender)} :{" "}
+                      </span>
+                      <Extrait texte={message.content} requete={requete} />
+                    </span>
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </>
+      ) : null}
+
+      {messagesGroupe.length > 0 ? (
+        <>
+          <TitreSection>Messages de groupe</TitreSection>
+          <ul className="p-2 pt-1">
+            {messagesGroupe.map((message) => (
+              <li key={`mg-${message.id}`}>
+                <button
+                  onClick={() => onOuvrir({ genre: "groupe", id: message.groupeId })}
+                  className={cn(
+                    ligne,
+                    "items-start",
+                    actif("groupe", message.groupeId)
+                      ? "bg-accent"
+                      : "hover:bg-accent/60",
+                  )}
+                >
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-baseline justify-between gap-2">
+                      <span className="truncate text-sm font-semibold">
+                        {message.groupe.nom}
+                      </span>
+                      <span className="shrink-0 text-[11px] text-muted-foreground">
+                        {formatRelative(message.createdAt)}
+                      </span>
+                    </span>
+                    <span className="mt-0.5 block text-xs leading-relaxed text-muted-foreground [overflow-wrap:anywhere]">
+                      <span className="font-medium text-foreground/80">
+                        {message.auteur ? fullName(message.auteur) : "Compte supprimé"} :{" "}
+                      </span>
+                      <Extrait texte={message.contenu} requete={requete} />
+                    </span>
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </>
+      ) : null}
+
+      {nouvelles.length > 0 ? (
+        <>
+          <TitreSection>Démarrer une conversation</TitreSection>
+          <ul className="p-2 pt-1">
+            {nouvelles.map((personne) => (
+              <li key={`p-${personne.id}`}>
+                <button
+                  onClick={() => onDemarrer(personne.id)}
+                  disabled={demarrageEnCours}
+                  className={cn(ligne, "items-center hover:bg-accent/60")}
+                >
+                  <Avatar className="size-9 shrink-0">
+                    <AvatarImage src={fileUrl(personne.pictureUrl)} alt="" />
+                    <AvatarFallback className="text-[11px]">
+                      {initials(personne)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="min-w-0 flex-1 truncate text-sm font-medium">
+                    {fullName(personne)}
+                  </span>
+                  <Badge
+                    variant="outline"
+                    className={cn("h-5 shrink-0 px-1.5 text-[10px]", ROLE_BADGE[personne.role])}
+                  >
+                    {roleLabel(personne.role)}
+                  </Badge>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </>
+      ) : null}
+    </div>
+  );
+}
+
 function Messagerie() {
   // Les notifications pointent vers « /messagerie?groupe=12 » : sans lecture de
   // ce paramètre, le lien ramènerait sur la liste sans ouvrir la discussion
@@ -333,6 +664,31 @@ function Messagerie() {
   const [aSupprimer, setASupprimer] =
     useState<PrivateConversationSummary | null>(null);
   const queryClient = useQueryClient();
+
+  // Recherche dans la messagerie. Deux caractères au moins : en deçà, tout
+  // correspondrait, et la réponse ne dirait rien.
+  const [recherche, setRecherche] = useState("");
+  const requete = useDebounced(recherche.trim());
+  const enRecherche = requete.length >= 2;
+
+  const { data: resultats, isFetching: rechercheEnCours } = useQuery({
+    queryKey: ["messaging", "recherche", requete],
+    queryFn: () => messagingApi.rechercher(requete),
+    enabled: enRecherche,
+    placeholderData: (precedent) => precedent,
+  });
+
+  const demarrer = useMutation({
+    mutationFn: (userId: number) => messagingApi.start(userId),
+    onSuccess: async (conversation) => {
+      await queryClient.invalidateQueries({ queryKey: ["messaging", "conversations"] });
+      setSelection({ genre: "prive", id: conversation.id });
+    },
+    onError: (error) =>
+      toast.error("Impossible de démarrer la conversation", {
+        description: errorMessage(error),
+      }),
+  });
 
   const { data: conversations = [], isLoading } = useQuery({
     queryKey: ["messaging", "conversations"],
@@ -394,7 +750,7 @@ function Messagerie() {
       >
         <header className="flex h-14 shrink-0 items-center justify-between gap-2 border-b px-3">
           <h1 className="text-base font-bold">Messagerie</h1>
-          <div className="flex items-center gap-1.5">
+          <div className="flex shrink-0 items-center gap-1.5">
             <CreerGroupe
               onCree={(id) => setSelection({ genre: "groupe", id })}
             />
@@ -404,12 +760,45 @@ function Messagerie() {
           </div>
         </header>
 
+        <div className="relative shrink-0 border-b px-3 py-2">
+          <Search
+            className="pointer-events-none absolute left-5.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+            aria-hidden
+          />
+          <Input
+            value={recherche}
+            onChange={(e) => setRecherche(e.target.value)}
+            placeholder="Personne, groupe, message…"
+            aria-label="Rechercher dans la messagerie"
+            className="h-9 rounded-lg pl-8 pr-8"
+          />
+          {recherche ? (
+            <button
+              onClick={() => setRecherche("")}
+              aria-label="Effacer la recherche"
+              className="absolute right-5 top-1/2 -translate-y-1/2 rounded p-0.5 text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <X className="size-4" />
+            </button>
+          ) : null}
+        </div>
+
         <InvitationsGroupes
           onRejoint={(id) => setSelection({ genre: "groupe", id })}
         />
 
         <ScrollArea className="min-h-0 flex-1">
-          {isLoading || groupesEnCours ? (
+          {enRecherche ? (
+            <ResultatsRecherche
+              requete={requete}
+              resultats={resultats}
+              chargement={rechercheEnCours && !resultats}
+              selection={selection}
+              onOuvrir={setSelection}
+              onDemarrer={(userId) => demarrer.mutate(userId)}
+              demarrageEnCours={demarrer.isPending}
+            />
+          ) : isLoading || groupesEnCours ? (
             <div className="grid place-items-center py-10">
               <Loader2 className="size-5 animate-spin text-muted-foreground" />
             </div>
