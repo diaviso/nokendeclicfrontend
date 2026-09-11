@@ -485,7 +485,14 @@ export const adminApi = {
     );
     return data;
   },
-  async users(params: { page?: number; limit?: number; search?: string } = {}) {
+  async users(
+    params: {
+      page?: number;
+      limit?: number;
+      search?: string;
+      role?: "ADMIN" | "MEMBRE" | "PARTENAIRE";
+    } = {},
+  ) {
     const qs = new URLSearchParams(
       Object.entries(params)
         .filter(([, v]) => v !== undefined && v !== "")
@@ -494,6 +501,13 @@ export const adminApi = {
     const { data } = await api.get<{
       data: User[];
       meta: { total: number; page: number; limit: number; totalPages: number };
+      /** Sur toute la recherche, filtre de rôle non compris. */
+      comptes?: {
+        ADMIN: number;
+        MEMBRE: number;
+        PARTENAIRE: number;
+        desactives: number;
+      };
     }>(`/api/admin/users${qs ? `?${qs}` : ""}`);
     return data;
   },

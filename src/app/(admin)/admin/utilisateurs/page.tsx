@@ -10,7 +10,6 @@ import {
   ChevronRight,
   MoreHorizontal,
   ShieldCheck,
-  UserCog,
   Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -66,8 +65,14 @@ export default function AdminUsersPage() {
   const rechercheDifferee = useDebounced(search);
 
   const { data, isLoading, isFetching } = useQuery({
-    queryKey: ["admin", "users", { search: rechercheDifferee, page }],
-    queryFn: () => adminApi.users({ search: rechercheDifferee, page, limit: 20 }),
+    queryKey: ["admin", "users", { search: rechercheDifferee, page, role }],
+    queryFn: () =>
+      adminApi.users({
+        search: rechercheDifferee,
+        page,
+        limit: 20,
+        role: role || undefined,
+      }),
     placeholderData: (precedent) => precedent,
   });
 
@@ -98,24 +103,16 @@ export default function AdminUsersPage() {
   const meta = data?.meta;
   const pageUtilisateurs = useMemo(() => data?.data ?? [], [data]);
 
-  // Le filtre de rôle porte sur la page affichée, et non sur l'ensemble : le
-  // backend ne l'accepte pas en paramètre. Le libellé le dit explicitement,
-  // sinon un compte absent de la page en cours passerait pour inexistant.
-  const utilisateurs = role
-    ? pageUtilisateurs.filter((utilisateur) => utilisateur.role === role)
-    : pageUtilisateurs;
+  // Le filtre de rôle est appliqué par le serveur, sur tous les comptes. Il
+  // l'était auparavant ici, sur les vingt lignes de la page affichée : les
+  // administrateurs, inscrits en premier, se trouvaient en dernières pages et
+  // la console en annonçait zéro.
+  const utilisateurs = pageUtilisateurs;
 
-  const comptesParRole = useMemo(
-    () =>
-      pageUtilisateurs.reduce(
-        (acc, utilisateur) => {
-          acc[utilisateur.role] = (acc[utilisateur.role] ?? 0) + 1;
-          return acc;
-        },
-        {} as Record<Role, number>,
-      ),
-    [pageUtilisateurs],
-  );
+  // Compteurs de l'ensemble (recherche comprise, filtre de rôle non compris),
+  // fournis par le serveur — plus ceux de la seule page.
+  const comptesParRole: Partial<Record<Role, number>> = data?.comptes ?? {};
+  const desactives = data?.comptes?.desactives ?? 0;
 
   const colonnes: ColonneConsole<User>[] = [
     {
@@ -291,13 +288,13 @@ export default function AdminUsersPage() {
             ? [
                 { label: "comptes", valeur: meta.total, teinte: "var(--chart-2)" },
                 {
-                  label: "administrateurs sur cette page",
+                  label: (comptesParRole.ADMIN ?? 0) > 1 ? "administrateurs" : "administrateur",
                   valeur: comptesParRole.ADMIN ?? 0,
                   teinte: "var(--destructive)",
                 },
                 {
-                  label: "désactivés sur cette page",
-                  valeur: pageUtilisateurs.filter((u) => !u.isActive).length,
+                  label: desactives > 1 ? "désactivés" : "désactivé",
+                  valeur: desactives,
                 },
               ]
             : undefined
@@ -323,7 +320,12 @@ export default function AdminUsersPage() {
         <ConsoleFiltre<FiltreRole>
           label="Filtrer par rôle"
           valeur={role}
-          onChange={setRole}
+          onChange={(valeur) => {
+            // Même raison que pour la recherche : la page 30 d'un filtre qui
+            // n'en compte qu'une n'existe pas.
+            setRole(valeur);
+            setPage(1);
+          }}
           options={[
             { valeur: "", libelle: "Tous" },
             ...(Object.keys(ROLE_LABELS) as Role[]).map((valeur) => ({
@@ -335,14 +337,6 @@ export default function AdminUsersPage() {
           ]}
         />
       </ConsoleToolbar>
-
-      {role ? (
-        <p className="mb-3 flex items-center gap-1.5 px-1 text-xs text-muted-foreground">
-          <UserCog className="size-3.5" aria-hidden />
-          Le filtre de rôle s&apos;applique aux {pageUtilisateurs.length} comptes
-          de cette page. Utilisez la recherche pour balayer l&apos;ensemble.
-        </p>
-      ) : null}
 
       <ConsoleTable
         lignes={utilisateurs}
@@ -370,7 +364,7 @@ export default function AdminUsersPage() {
               rechercheDifferee
                 ? "Essayez une autre orthographe, ou recherchez sur l'adresse email."
                 : role
-                  ? "Aucun compte de ce rôle sur la page affichée."
+                  ? "Aucun compte n'a ce rôle sur la plateforme."
                   : "Les comptes apparaîtront ici dès la première inscription."
             }
           />
