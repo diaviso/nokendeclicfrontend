@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
 import {
   Area,
   AreaChart,
@@ -22,6 +23,8 @@ import {
   Accessibility,
   BarChart3,
   Briefcase,
+  Download,
+  FileSpreadsheet,
   FileText,
   Loader2,
   Printer,
@@ -29,9 +32,21 @@ import {
   Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { CarteRegions } from "@/components/admin/carte-regions";
 import { ConsoleHeader } from "@/components/admin/console-header";
-import { adminApi, typesOffresApi } from "@/lib/api";
+import {
+  adminApi,
+  errorMessage,
+  exportsApi,
+  typesOffresApi,
+  type ExportExcel,
+} from "@/lib/api";
 import {
   ROLE_LABELS,
   SECTEUR_LABELS,
@@ -43,6 +58,36 @@ import { formatNumber } from "@/lib/format";
 import type { Role, StatutProfessionnel } from "@/lib/types";
 
 const TEINTE = "var(--chart-1)";
+
+/**
+ * Exports proposés depuis cette page.
+ *
+ * Le rapport suit la période choisie en haut de page ; les listes, elles,
+ * sont complètes — un export d'utilisateurs limité à douze mois laisserait
+ * de côté les plus anciens inscrits.
+ */
+const EXPORTS: { nature: ExportExcel; libelle: string; detail: string }[] = [
+  {
+    nature: "rapport",
+    libelle: "Rapport statistique",
+    detail: "Les indicateurs de cette page, une feuille chacun, sur la période choisie",
+  },
+  {
+    nature: "utilisateurs",
+    libelle: "Utilisateurs",
+    detail: "Profil, contact et activité de chaque compte",
+  },
+  {
+    nature: "offres",
+    libelle: "Offres",
+    detail: "Fiche complète et engagement de chaque offre",
+  },
+  {
+    nature: "questions-assistant",
+    libelle: "Questions à l'assistant IA",
+    detail: "Toutes les questions posées, avec leur auteur et leurs thèmes",
+  },
+];
 
 const PERIODES = [
   { mois: 6, libelle: "6 mois" },
@@ -305,6 +350,43 @@ function baseLisible(total: number, unite: string): string {
 
 export default function StatistiquesPage() {
   const [mois, setMois] = useState<number>(12);
+  const [exportEnCours, setExportEnCours] = useState<ExportExcel | null>(null);
+
+  /**
+   * Télécharge un export. Le fichier arrive du serveur en binaire et est remis
+   * au navigateur sous son nom définitif : aucune page intermédiaire, et rien
+   * n'est conservé côté client une fois le téléchargement lancé.
+   */
+  async function exporter(nature: ExportExcel) {
+    setExportEnCours(nature);
+    try {
+      const fichier = await exportsApi.telecharger(
+        nature,
+        nature === "rapport" ? { mois } : undefined,
+      );
+      const nom = nature === "rapport" ? `rapport-${mois}-mois` : nature;
+      const url = URL.createObjectURL(fichier);
+      const lien = document.createElement("a");
+      lien.href = url;
+      lien.download = `noken-${nom}-${new Date().toISOString().slice(0, 10)}.xlsx`;
+      document.body.appendChild(lien);
+      lien.click();
+      lien.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      toast.success("Export prêt", {
+        description: "Le fichier Excel a été téléchargé.",
+      });
+    } catch (erreur) {
+      toast.error("Export impossible", {
+        description:
+          erreur instanceof Error && !("isAxiosError" in erreur)
+            ? erreur.message
+            : errorMessage(erreur),
+      });
+    } finally {
+      setExportEnCours(null);
+    }
+  }
 
   const { data: rapport, isLoading } = useQuery({
     queryKey: ["admin", "rapport", mois],
@@ -517,6 +599,47 @@ export default function StatistiquesPage() {
                   </button>
                 ))}
               </div>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  render={
+                    <Button
+                      variant="outline"
+                      className="rounded-xl"
+                      disabled={exportEnCours !== null}
+                    >
+                      {exportEnCours ? (
+                        <Loader2 className="size-4 animate-spin" />
+                      ) : (
+                        <Download className="size-4" />
+                      )}
+                      {exportEnCours ? "Préparation…" : "Exporter en Excel"}
+                    </Button>
+                  }
+                />
+                <DropdownMenuContent align="end" className="w-80">
+                  {EXPORTS.map((choix) => (
+                    <DropdownMenuItem
+                      key={choix.nature}
+                      onClick={() => void exporter(choix.nature)}
+                      className="flex items-start gap-2.5 py-2"
+                    >
+                      <FileSpreadsheet
+                        className="mt-0.5 size-4 shrink-0 text-muted-foreground"
+                        aria-hidden
+                      />
+                      <span className="min-w-0">
+                        <span className="block text-sm font-medium">
+                          {choix.libelle}
+                        </span>
+                        <span className="block text-xs text-muted-foreground">
+                          {choix.detail}
+                        </span>
+                      </span>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
 
               <Button className="rounded-xl" onClick={() => window.print()}>
                 <Printer className="size-4" />

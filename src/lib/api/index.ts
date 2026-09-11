@@ -654,3 +654,39 @@ export const agentsIaApi = {
     return data;
   },
 };
+
+/** Exports Excel de la console : le classeur est construit par le serveur. */
+export type ExportExcel =
+  | "utilisateurs"
+  | "offres"
+  | "rapport"
+  | "questions-assistant";
+
+export const exportsApi = {
+  async telecharger(
+    nature: ExportExcel,
+    params?: Record<string, number>,
+  ): Promise<Blob> {
+    try {
+      const { data } = await api.get<Blob>(`/api/admin/exports/${nature}`, {
+        params,
+        responseType: "blob",
+      });
+      return data;
+    } catch (erreur) {
+      // Une réponse attendue en binaire arrive en Blob même quand c’est une
+      // erreur JSON : sans cette lecture, le message du serveur serait perdu.
+      const corps = (erreur as { response?: { data?: unknown } })?.response?.data;
+      if (corps instanceof Blob) {
+        try {
+          const detail = JSON.parse(await corps.text()) as { message?: string | string[] };
+          const message = Array.isArray(detail.message) ? detail.message.join(" · ") : detail.message;
+          if (message) throw new Error(message);
+        } catch (lecture) {
+          if (lecture instanceof Error && lecture.message) throw lecture;
+        }
+      }
+      throw erreur;
+    }
+  },
+};
