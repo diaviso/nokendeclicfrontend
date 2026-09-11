@@ -19,6 +19,7 @@ import type {
   Statistics,
   User,
   ResultatsRechercheMessagerie,
+  StatistiquesAgentsIA,
 } from "../types";
 
 export * from "./client";
@@ -642,3 +643,14 @@ export async function envoyerImageContenu(fichier: File) {
   );
   return data;
 }
+
+/** Statistiques d'usage des agents IA, pour la console d'administration. */
+export const agentsIaApi = {
+  /** @param jours taille de la période ; 0 pour tout l'historique. */
+  async statistiques(jours: number) {
+    const { data } = await api.get<StatistiquesAgentsIA>("/api/admin/agents-ia", {
+      params: { jours },
+    });
+    return data;
+  },
+};

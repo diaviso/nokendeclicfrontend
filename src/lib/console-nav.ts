@@ -1,5 +1,6 @@
 import {
   BarChart3,
+  Bot,
   Briefcase,
   Gauge,
   Layers,
@@ -39,6 +40,12 @@ export const CONSOLE_NAV: ConsoleNavItem[] = [
     href: "/admin/statistiques",
     icon: BarChart3,
     teinte: "var(--chart-1)",
+  },
+  {
+    label: "Agents IA",
+    href: "/admin/agents-ia",
+    icon: Bot,
+    teinte: "var(--chart-2)",
   },
   {
     label: "Utilisateurs",

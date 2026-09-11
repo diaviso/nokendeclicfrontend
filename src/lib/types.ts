@@ -626,3 +626,123 @@ export interface ResultatsRechercheMessagerie {
   }[];
   personnes: PrivateConversationSummary["otherUser"][];
 }
+
+/** Personne citée dans les statistiques des agents IA. */
+export interface UtilisateurAgentIA {
+  id: number;
+  firstName?: string | null;
+  lastName?: string | null;
+  username: string;
+  pictureUrl?: string | null;
+  role: Role;
+}
+
+/** Réponse de `GET /api/admin/agents-ia`. */
+export interface StatistiquesAgentsIA {
+  periode: {
+    jours: number;
+    debut: string | null;
+    fin: string;
+    granularite: "jour" | "semaine";
+  };
+  assistant: {
+    indicateurs: {
+      questions: number;
+      conversations: number;
+      utilisateurs: number;
+      nouveaux: number;
+      fideles: number;
+      questionsParUtilisateur: number;
+      utilisateursTotal: number;
+      comptesTotal: number;
+      adoption: number;
+      echecs: number;
+      sansReponse: number;
+    };
+    tendance: { questions: number | null; utilisateurs: number | null };
+    activite: { date: string; questions: number; utilisateurs: number }[];
+    heatmap: number[][];
+    themes: { cle: string; libelle: string; questions: number; part: number }[];
+    lieux: { lieu: string; mentions: number }[];
+    mots: { mot: string; occurrences: number }[];
+    questionsFrequentes: {
+      texte: string;
+      occurrences: number;
+      utilisateurs: number;
+      derniere: string;
+      suggestion: boolean;
+    }[];
+    suggestions: { texte: string; occurrences: number; utilisateurs: number }[];
+    classement: {
+      user: UtilisateurAgentIA;
+      questions: number;
+      conversations: number;
+      joursActifs: number;
+      premiere: string;
+      derniere: string;
+      profil: { statutProfessionnel: string | null; region: string | null };
+    }[];
+    engagement: { tranche: string; utilisateurs: number }[];
+    profil: {
+      dimension: "statut" | "sexe" | "age" | "region" | "role";
+      libelle: string;
+      lignes: {
+        valeur: string;
+        assistant: number;
+        partAssistant: number;
+        membres: number;
+        partMembres: number;
+      }[];
+    }[];
+    dernieres: {
+      id: number;
+      date: string;
+      contenu: string;
+      user: UtilisateurAgentIA | null;
+      conversationId: string;
+      themes: string[];
+      reponse: string | null;
+      reponseEnEchec: boolean;
+    }[];
+    longueurs: { question: number; reponse: number };
+  };
+  extracteur: {
+    mesureDepuis: string | null;
+    indicateurs: {
+      extractions: number;
+      utilisateurs: number;
+      reussies: number;
+      /** Sans erreur, mais rien d'exploitable : un formulaire vide. */
+      vides: number;
+      tauxReussite: number;
+      cvTotal: number;
+      membresAvecCv: number;
+    };
+    activite: { date: string; extractions: number }[];
+    parType: { type: string; extractions: number; reussies: number }[];
+    parMode: { mode: string; extractions: number }[];
+    richesse: { experiences: number; formations: number; competences: number } | null;
+    echecs: { erreur: string; occurrences: number }[];
+    classement: {
+      user: UtilisateurAgentIA;
+      extractions: number;
+      reussies: number;
+      derniere: string;
+    }[];
+    dernieres: {
+      id: number;
+      date: string;
+      user: UtilisateurAgentIA | null;
+      type: string;
+      tailleKo: number;
+      mode: string;
+      succes: boolean;
+      /** Sans erreur, mais rien n'a été tiré du document. */
+      vide: boolean;
+      erreur: string | null;
+      experiences: number;
+      formations: number;
+      competences: number;
+    }[];
+  };
+}
