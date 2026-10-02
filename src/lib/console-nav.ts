@@ -3,6 +3,7 @@ import {
   Bot,
   Briefcase,
   Gauge,
+  Images,
   Layers,
   MessageCircle,
   ShieldCheck,
@@ -64,6 +65,12 @@ export const CONSOLE_NAV: ConsoleNavItem[] = [
     href: "/admin/moderation",
     icon: ShieldCheck,
     teinte: "var(--warning)",
+  },
+  {
+    label: "Médiathèque",
+    href: "/admin/mediatheque",
+    icon: Images,
+    teinte: "var(--chart-5)",
   },
   {
     label: "Types d'offres",

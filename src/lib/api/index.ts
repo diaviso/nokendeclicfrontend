@@ -29,6 +29,7 @@ export * from "./types-offres";
 export * from "./profils";
 export * from "./partenaire";
 export * from "./chatbot-flux";
+export * from "./medias";
 
 /**
  * Métadonnées de pagination du backend.

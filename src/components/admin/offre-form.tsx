@@ -23,6 +23,7 @@ import {
   TYPE_EMPLOI_LABELS,
 } from "@/lib/enums";
 import type {
+  Media,
   NiveauExperience,
   Offre,
   Secteur,
@@ -224,7 +225,9 @@ function OffreFormInner({
   const queryClient = useQueryClient();
   const isEdit = Boolean(offre);
 
-  const [imageEnAttente, setImageEnAttente] = useState<File | null>(null);
+  // Couverture choisie à la création. Sur une offre existante, elle est
+  // appliquée tout de suite par `OffreMedias` et n'attend pas l'enregistrement.
+  const [couverture, setCouverture] = useState<Media | null>(null);
   const [documentEnAttente, setDocumentEnAttente] = useState<File | null>(null);
 
   const typeRef = useRef<TypeOffreDef | undefined>(typeInitial);
@@ -327,25 +330,18 @@ function OffreFormInner({
         localisation: values.localisation || undefined,
         url: values.url || undefined,
         dateLimite: values.dateLimite || undefined,
+        ...(!offre && couverture ? { imageId: couverture.id } : {}),
       };
 
       const enregistree = offre
         ? await offresApi.update(offre.id, payload as Partial<Offre>)
         : await offresApi.create(payload as Partial<Offre>);
 
-      // À la création seulement : les routes d'envoi exigent l'identifiant de
-      // l'offre. Un échec d'envoi ne doit pas faire échouer la création — elle
-      // est déjà enregistrée — mais doit être signalé.
+      // À la création seulement : la route d'envoi du document exige
+      // l'identifiant de l'offre. Un échec d'envoi ne doit pas faire échouer la
+      // création — elle est déjà enregistrée — mais doit être signalé. La
+      // couverture, elle, est partie avec l'offre.
       if (!offre) {
-        if (imageEnAttente) {
-          try {
-            await offresApi.uploadImage(enregistree.id, imageEnAttente);
-          } catch (error) {
-            toast.error("Offre créée, mais la couverture n'a pas pu être envoyée", {
-              description: errorMessage(error),
-            });
-          }
-        }
         if (documentEnAttente) {
           try {
             await offresApi.uploadDocument(enregistree.id, documentEnAttente);
@@ -382,6 +378,24 @@ function OffreFormInner({
     onError: (error) =>
       toast.error("Enregistrement impossible", { description: errorMessage(error) }),
   });
+
+  // Le texte alternatif se range sous la couverture qu'il décrit.
+  const champAlt = (
+    <Field label="Texte alternatif de la couverture" htmlFor="imageAlt">
+      <Input
+        id="imageAlt"
+        placeholder="Ce que montre l'image"
+        {...form.register("imageAlt")}
+      />
+    </Field>
+  );
+
+  /** Reprend la description de l'image choisie, si l'offre n'en a pas. */
+  function reprendreAlt(media: Media | null) {
+    if (media?.alt && !form.getValues("imageAlt")?.trim()) {
+      form.setValue("imageAlt", media.alt, { shouldDirty: true });
+    }
+  }
 
   // Le compteur porte sur le texte, pas sur le balisage : « <p><strong>x</strong></p> »
   // ne fait qu'un mot.
@@ -598,13 +612,6 @@ function OffreFormInner({
             {...form.register("emailCandidature")}
           />
         </Field>
-        <Field label="Texte alternatif de la couverture" htmlFor="imageAlt">
-          <Input
-            id="imageAlt"
-            placeholder="Ce que montre l'image"
-            {...form.register("imageAlt")}
-          />
-        </Field>
         <Field
           label="Marche à suivre"
           htmlFor="instructionsCandidature"
@@ -685,12 +692,21 @@ function OffreFormInner({
       <ChampsDynamiques type={typeSelectionne} form={form} />
 
       {offre ? (
-        <OffreMedias offre={offre} />
+        <OffreMedias
+          offre={offre}
+          champAlt={champAlt}
+          onCouvertureChoisie={reprendreAlt}
+        />
       ) : (
         <MediasEnAttente
+          couverture={couverture}
+          onCouverture={(media) => {
+            setCouverture(media);
+            reprendreAlt(media);
+          }}
           document={documentEnAttente}
-          onImage={setImageEnAttente}
           onDocument={setDocumentEnAttente}
+          champAlt={champAlt}
         />
       )}
 

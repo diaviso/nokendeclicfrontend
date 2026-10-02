@@ -200,6 +200,8 @@ export interface Offre {
   /** Valeurs des champs propres au type, indexées par code de champ. */
   champs?: Record<string, unknown>;
   imageUrl?: string | null;
+  /** Image de la médiathèque utilisée en couverture. */
+  imageId?: number | null;
   typeEmploi?: TypeEmploi | null;
   secteur?: Secteur | null;
   niveauExperience?: NiveauExperience | null;
@@ -745,4 +747,34 @@ export interface StatistiquesAgentsIA {
       competences: number;
     }[];
   };
+}
+
+/** Image de la médiathèque : une couverture réutilisable d'une offre à l'autre. */
+export interface Media {
+  id: number;
+  url: string;
+  nom: string;
+  alt?: string | null;
+  largeur?: number | null;
+  hauteur?: number | null;
+  /** Poids en octets, tel que stocké après recompression. */
+  taille?: number | null;
+  typeMime?: string | null;
+  /** Visible des partenaires (banque commune). */
+  commune: boolean;
+  createdAt: string;
+  auteurId?: number | null;
+  /** Nom de la personne qui l'a déposée. */
+  auteur?: string | null;
+  /** Nombre d'offres qui l'affichent en couverture. */
+  utilisations: number;
+  /** Le demandeur peut la renommer ou la supprimer. */
+  modifiable: boolean;
+}
+
+export interface PageMedias {
+  elements: Media[];
+  total: number;
+  page: number;
+  pages: number;
 }
