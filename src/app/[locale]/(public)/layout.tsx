@@ -75,7 +75,13 @@ export default async function PublicLayout({
               </a>
             </p>
           </div>
-          <nav aria-label={p("navigation")} className="flex gap-4">
+          {/* Cinq liens ne tiennent pas sur une ligne de téléphone : sans retour à
+              la ligne, le dernier dépassait de l'écran et toute la page
+              défilait de côté. */}
+          <nav
+            aria-label={p("navigation")}
+            className="flex flex-wrap gap-x-4 gap-y-2"
+          >
             <Link href="/offres" className="hover:text-foreground">
               {p("toutesLesOffres")}
             </Link>

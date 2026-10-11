@@ -236,7 +236,7 @@ export function ConsoleShell({ children }: { children: React.ReactNode }) {
         />
       </header>
 
-      <main className="mx-auto max-w-[100rem] px-4 pb-16 pt-6 sm:px-6 print:max-w-none print:p-0">
+      <main id="contenu" className="mx-auto max-w-[100rem] px-4 pb-16 pt-6 sm:px-6 print:max-w-none print:p-0">
         {children}
       </main>
 

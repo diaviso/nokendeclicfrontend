@@ -102,8 +102,13 @@
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.21 0.006 285);
 
-  /* Bleu de marque Noken — #0090FF, relevé sur le logo */
-  --primary: oklch(0.649 0.193 252);
+  /* Bleu de marque Noken — #0090FF, relevé sur le logo — assombri en #0072CE
+     pour ce qui porte du texte. Le blanc sur #0090FF ne contraste qu'à 3,3:1,
+     sous le seuil de 4,5:1 qu'exige un texte courant (WCAG AA) : boutons et
+     liens étaient difficiles à lire en plein soleil, sur un écran de téléphone.
+     #0072CE atteint 4,9:1 et reste le même bleu ; la teinte vive est gardée
+     là où elle ne porte pas de texte (graphiques, barre d'état). */
+  --primary: oklch(0.55 0.166 252);
   --primary-foreground: oklch(1 0 0);
 
   --secondary: oklch(0.97 0.002 285);
@@ -120,7 +125,7 @@
 
   --border: oklch(0.918 0.003 285);
   --input: oklch(0.918 0.003 285);
-  --ring: oklch(0.649 0.193 252);
+  --ring: oklch(0.55 0.166 252);
 
   /* Palette graphique : le bleu de marque d'abord, puis des teintes distinguables
      y compris en vision déficiente (pas deux rouges/verts adjacents). */
@@ -134,12 +139,12 @@
 
   --sidebar: oklch(0.988 0.002 285);
   --sidebar-foreground: oklch(0.21 0.006 285);
-  --sidebar-primary: oklch(0.649 0.193 252);
+  --sidebar-primary: oklch(0.55 0.166 252);
   --sidebar-primary-foreground: oklch(1 0 0);
   --sidebar-accent: oklch(0.955 0.003 285);
   --sidebar-accent-foreground: oklch(0.21 0.006 285);
   --sidebar-border: oklch(0.918 0.003 285);
-  --sidebar-ring: oklch(0.649 0.193 252);
+  --sidebar-ring: oklch(0.55 0.166 252);
 }
 
 .dark {
@@ -619,6 +624,27 @@
   .entree {
     animation: noken-entree 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
     animation-delay: calc(var(--i, 0) * 55ms);
+  }
+
+  /*
+   * Héros de l'accueil : la même entrée, jouée par le navigateur dès le
+   * premier affichage. Courte et sans attente du JavaScript — l'apparition
+   * pilotée par script laissait le haut de page vide le temps du chargement.
+   */
+  .anim-heros > * {
+    animation: noken-entree 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .anim-heros > :nth-child(2) {
+    animation-delay: 50ms;
+  }
+  .anim-heros > :nth-child(3) {
+    animation-delay: 100ms;
+  }
+  .anim-heros > :nth-child(n + 4) {
+    animation-delay: 150ms;
+  }
+  .anim-heros-visuel {
+    animation: noken-entree 0.6s 120ms cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 }
 

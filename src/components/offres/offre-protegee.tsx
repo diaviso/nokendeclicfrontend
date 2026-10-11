@@ -2,10 +2,12 @@
 
 import { useQuery } from "@tanstack/react-query";
 import {
+  CalendarClock,
   ExternalLink,
   FileText,
   Loader2,
   LockKeyhole,
+  Mail,
   Paperclip,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -14,6 +16,7 @@ import { Link } from "@/i18n/navigation";
 import { offresApi, tokenStore } from "@/lib/api";
 import { champsRenseignes, formatValeurChamp } from "@/lib/type-offre";
 import { formatSalaryRange } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import type { Offre } from "@/lib/types";
 
 /**
@@ -252,5 +255,95 @@ export function ActionsOffre({ apercu }: { apercu: Offre }) {
         </Button>
       ) : null}
     </>
+  );
+}
+
+/**
+ * Barre de candidature du téléphone : l'échéance et l'action, fixées en bas
+ * d'écran. Sur grand écran, la colonne latérale joue ce rôle.
+ *
+ * Elle partage la requête de `ActionsOffre` (même clé) : aucun appel de plus.
+ */
+export function BarreCandidature({
+  apercu,
+  restants,
+}: {
+  apercu: Offre;
+  /** Jours avant la date limite ; `null` sans date limite. */
+  restants: number | null;
+}) {
+  const t = useTranslations("offre");
+  const { aUneSession, data: offre } = useOffreComplete(apercu.id);
+
+  let action: React.ReactNode = null;
+  if (!aUneSession) {
+    action = (
+      <Button
+        className="shrink-0 rounded-xl"
+        render={<Link href={`/login?next=/offres/${apercu.id}`} />}
+      >
+        <LockKeyhole className="size-4" />
+        {t("connexionPourPostuler")}
+      </Button>
+    );
+  } else if (offre?.url) {
+    action = (
+      <Button
+        className="shrink-0 rounded-xl"
+        render={<a href={offre.url} target="_blank" rel="noopener noreferrer" />}
+      >
+        {t("postuler")}
+        <ExternalLink className="size-4" />
+      </Button>
+    );
+  } else if (offre?.emailCandidature) {
+    action = (
+      <Button
+        className="shrink-0 rounded-xl"
+        render={<a href={`mailto:${offre.emailCandidature}`} />}
+      >
+        <Mail className="size-4" />
+        {t("candidaterEmail")}
+      </Button>
+    );
+  }
+
+  // Ni échéance ni action : la barre n'aurait rien à dire.
+  if (restants === null && !action) return null;
+
+  const echeance =
+    restants === null
+      ? null
+      : restants < 0
+        ? t("echeanceDepassee")
+        : restants === 0
+          ? t("dernierJourPourPostuler")
+          : t("joursRestants", { n: restants });
+
+  return (
+    <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[0_-8px_24px_-12px_rgb(0_0_0/0.25)] backdrop-blur lg:hidden">
+      <div className="mx-auto flex max-w-5xl items-center gap-3">
+        <p
+          className={cn(
+            "flex min-w-0 flex-1 items-center gap-2 text-sm font-semibold",
+            restants === null || restants < 0
+              ? "text-muted-foreground"
+              : restants <= 2
+                ? "text-red-600 dark:text-red-400"
+                : restants <= 7
+                  ? "text-amber-700 dark:text-amber-300"
+                  : "text-emerald-700 dark:text-emerald-300",
+          )}
+        >
+          {echeance ? (
+            <>
+              <CalendarClock className="size-4 shrink-0" aria-hidden />
+              <span className="truncate">{echeance}</span>
+            </>
+          ) : null}
+        </p>
+        {action}
+      </div>
+    </div>
   );
 }

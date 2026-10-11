@@ -262,6 +262,14 @@ export function Landing({
 }) {
   const t = useTranslations("accueil");
   const nbTypes = comptes.length;
+  // Un type sans aucune offre n'a rien à faire en vitrine : « 0 Concours »
+  // dans le héros, ou une recherche fréquente qui ne ramène rien, signalent
+  // un catalogue vide là où il ne l'est pas.
+  const comptesGarnis = comptes.filter((compte) => compte.total > 0);
+  // La ponctuation qui ouvre la fin du titre (« , au bon endroit ») reste
+  // collée au mot accentué : sinon la ligne suivante commence par une virgule.
+  const [, ponctuationTitre = "", finTitre = ""] =
+    /^([,;:.!?]?)\s*(.*)$/.exec(t("heros.titreFin")) ?? [];
 
   return (
     <>
@@ -271,8 +279,13 @@ export function Landing({
 
         <div className="relative mx-auto max-w-6xl px-4 pb-20 pt-16 sm:px-6 sm:pb-28 sm:pt-24">
           <div className="grid items-center gap-14 lg:grid-cols-[1.05fr_1fr]">
-            <div className="text-center lg:text-left">
-              <Reveal>
+            {/* Rien ici n'attend le JavaScript : ce bloc est la première
+                chose qu'on voit, et l'animer depuis une opacité nulle le
+                laissait vide plusieurs secondes sur une connexion lente —
+                c'est aussi lui que Google mesure pour le référencement. Une
+                apparition en CSS, jouée dès le premier affichage, suffit. */}
+            <div className="anim-heros text-center lg:text-left">
+              <div>
                 <span className="inline-flex items-center gap-2 rounded-full border bg-background/80 px-3.5 py-1.5 text-sm text-muted-foreground backdrop-blur">
                   <span className="relative flex size-2">
                     <span className="anim-pulse-ring absolute inline-flex size-2 rounded-full border border-primary" />
@@ -280,26 +293,29 @@ export function Landing({
                   </span>
                   {t("heros.badge")}
                 </span>
-              </Reveal>
+              </div>
 
-              <Reveal delay={0.08}>
+              <div>
                 <h1 className="mt-6 text-balance text-4xl font-extrabold leading-[1.05] sm:text-5xl lg:text-6xl">
                   {t("heros.titreDebut")}{" "}
-                  <span className="text-gradient">{t("heros.titreAccent")}</span>
-                  <br className="hidden sm:block" /> {t("heros.titreFin")}
+                  <span className="whitespace-nowrap">
+                    <span className="text-gradient">{t("heros.titreAccent")}</span>
+                    {ponctuationTitre}
+                  </span>
+                  <br className="hidden sm:block" /> {finTitre}
                 </h1>
-              </Reveal>
+              </div>
 
-              <Reveal delay={0.16}>
+              <div>
                 <p className="mx-auto mt-6 max-w-xl text-pretty text-lg leading-relaxed text-muted-foreground lg:mx-0 lg:text-xl">
                   {t("heros.sousTitre")}{" "}
                   {total > 0
                     ? t("heros.compteur", { total: formatNumber(total) })
                     : ""}
                 </p>
-              </Reveal>
+              </div>
 
-              <Reveal delay={0.24}>
+              <div>
                 <form
                   action="/recherche"
                   className="mx-auto mt-8 flex max-w-xl flex-col gap-2.5 sm:flex-row lg:mx-0"
@@ -325,14 +341,14 @@ export function Landing({
                     <ArrowRight className="size-4.5" />
                   </Button>
                 </form>
-              </Reveal>
+              </div>
 
-              <Reveal delay={0.32}>
+              <div>
                 <div className="mt-5 flex flex-wrap items-center justify-center gap-2 lg:justify-start">
                   <span className="text-sm text-muted-foreground">
                     {t("heros.recherchesFrequentes")}
                   </span>
-                  {comptes.slice(0, 4).map(({ type }) => (
+                  {comptesGarnis.slice(0, 4).map(({ type }) => (
                     <Link
                       key={type.id}
                       href={`/recherche?typeOffre=${type.code}`}
@@ -342,12 +358,12 @@ export function Landing({
                     </Link>
                   ))}
                 </div>
-              </Reveal>
+              </div>
             </div>
 
-            <Reveal delay={0.2} y={40}>
-              <VisuelHeros comptes={comptes} />
-            </Reveal>
+            <div className="anim-heros-visuel">
+              <VisuelHeros comptes={comptesGarnis} />
+            </div>
           </div>
         </div>
       </section>
@@ -1045,8 +1061,10 @@ export function Landing({
           <Reveal>
             <h2 className="text-balance text-4xl font-extrabold sm:text-5xl">
               {t("appel.titreDebut")}{" "}
-              <span className="text-gradient">{t("appel.titreAccent")}</span>
-              {t("appel.titreFin")}
+              <span className="whitespace-nowrap">
+                <span className="text-gradient">{t("appel.titreAccent")}</span>
+                {t("appel.titreFin")}
+              </span>
             </h2>
           </Reveal>
           <Reveal delay={0.1}>

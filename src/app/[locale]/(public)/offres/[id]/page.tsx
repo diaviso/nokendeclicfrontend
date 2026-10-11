@@ -11,6 +11,7 @@ import {
   FileText,
   Heart,
   MapPin,
+  Maximize2,
   Paperclip,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -32,6 +33,7 @@ import {
 } from "@/components/offres/offre-interactions";
 import {
   ActionsOffre,
+  BarreCandidature,
   CorpsOffre,
 } from "@/components/offres/offre-protegee";
 import { OffreCard } from "@/components/shared/offre-card";
@@ -216,7 +218,7 @@ export default async function OffreDetailPage(props: {
     <>
       <JobPostingSchema offre={offre} />
 
-      <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+      <div className="mx-auto max-w-5xl px-4 pt-8 pb-28 sm:px-6 lg:pb-8">
         <Button
           variant="ghost"
           size="sm"
@@ -230,21 +232,70 @@ export default async function OffreDetailPage(props: {
         <div className="grid gap-6 lg:grid-cols-[1fr_21rem]">
           <div className="min-w-0">
             <header className="overflow-hidden rounded-2xl border bg-card shadow-sm">
-              {/* Bandeau : la photographie de couverture quand elle existe,
-                  sinon un dégradé construit à partir de la couleur du type. Le
-                  titre est posé dessus, sur un voile sombre — sans ce voile, sa
-                  lisibilité dépendrait de la zone de l'image située derrière. */}
+              {/* Avec une couverture, l'image est montrée entière et le titre
+                  passe dessous. La plupart des couvertures sont des affiches
+                  pleines de texte : recadrées en bandeau, elles n'en gardaient
+                  que des fragments illisibles, et le titre blanc posé dessus
+                  se perdait dans le texte clair de l'affiche. Le fond flou
+                  remplit le cadre sans déformer l'image. */}
+              {offre.imageUrl ? (
+                <>
+                  <a
+                    href={offre.imageUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Voir l'image en grand"
+                    className="group relative block h-56 w-full overflow-hidden bg-muted sm:h-72"
+                  >
+                    <Image
+                      src={offre.imageUrl}
+                      alt=""
+                      fill
+                      priority
+                      sizes="(max-width: 1024px) 100vw, 720px"
+                      className="scale-110 object-cover opacity-50 blur-2xl"
+                      aria-hidden
+                    />
+                    <Image
+                      src={offre.imageUrl}
+                      alt={offre.imageAlt ?? ""}
+                      fill
+                      priority
+                      sizes="(max-width: 1024px) 100vw, 720px"
+                      className="object-contain drop-shadow-xl"
+                    />
+                    <span className="absolute right-3 bottom-3 inline-flex items-center gap-1.5 rounded-full bg-background/90 px-2.5 py-1 text-xs font-medium opacity-90 shadow-sm backdrop-blur transition-opacity group-hover:opacity-100">
+                      <Maximize2 className="size-3.5" aria-hidden />
+                      Agrandir
+                    </span>
+                  </a>
+                  <div className="px-5 pt-5">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <Badge
+                        variant="outline"
+                        className="h-6 gap-1.5 px-2.5 text-[11px] font-bold"
+                      >
+                        <Icon className="size-3" style={{ color: style.teinte }} aria-hidden />
+                        {style.libelle}
+                      </Badge>
+                      {offre.typeEmploi ? (
+                        <Badge variant="secondary" className="h-6 px-2.5 text-[11px] font-medium">
+                          {typeEmploiLabel(offre.typeEmploi)}
+                        </Badge>
+                      ) : null}
+                      {offre.estCloturee ? (
+                        <Badge variant="secondary" className="h-6 px-2.5 text-[11px] font-medium">
+                          Clôturée
+                        </Badge>
+                      ) : null}
+                    </div>
+                    <h1 className="mt-2.5 text-balance text-2xl font-extrabold leading-tight tracking-tight sm:text-3xl">
+                      {offre.titre}
+                    </h1>
+                  </div>
+                </>
+              ) : (
               <div className="relative h-44 w-full sm:h-56">
-                {offre.imageUrl ? (
-                  <Image
-                    src={offre.imageUrl}
-                    alt=""
-                    fill
-                    priority
-                    sizes="(max-width: 1024px) 100vw, 720px"
-                    className="object-cover"
-                  />
-                ) : (
                   <div
                     className="absolute inset-0"
                     style={{
@@ -265,7 +316,6 @@ export default async function OffreDetailPage(props: {
                       aria-hidden
                     />
                   </div>
-                )}
 
                 <span
                   className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent"
@@ -295,6 +345,7 @@ export default async function OffreDetailPage(props: {
                   </h1>
                 </div>
               </div>
+              )}
 
               <div className="p-5">
                 <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
@@ -505,6 +556,11 @@ export default async function OffreDetailPage(props: {
           </section>
         ) : null}
       </div>
+
+      {/* Sur téléphone, la colonne latérale passe sous tout le contenu : la
+          date limite et le bouton pour postuler n'apparaissaient qu'après les
+          commentaires. Ils restent ici à portée de pouce. */}
+      <BarreCandidature apercu={offre} restants={remaining} />
     </>
   );
 }

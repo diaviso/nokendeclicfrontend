@@ -11,8 +11,9 @@ import type { Offre } from "@/lib/types";
 /**
  * Carte d'offre.
  *
- * Chaque carte s'ouvre sur un bandeau coloré : la photo de couverture lorsque
- * l'offre en a une, sinon un dégradé construit à partir de la couleur du type.
+ * Chaque carte s'ouvre sur un bandeau coloré : la couverture lorsque l'offre en
+ * a une, montrée entière, sinon un dégradé construit à partir de la couleur du
+ * type.
  * Sans lui, une grille de cartes n'était qu'une succession de rectangles blancs
  * — rien n'accrochait l'œil et le type, pourtant l'information de tri
  * principale, se réduisait à une pastille de quelques pixels.
@@ -86,38 +87,59 @@ export function OffreCard({
 
       {/* ────────────────────────────────────────────────── Bandeau */}
       <div className="relative h-28 shrink-0 overflow-hidden">
+        {/* Le dégradé du type est toujours posé : sous une couverture, c'est
+            lui qu'on voit pendant le chargement, plutôt qu'un rectangle noir. */}
+        <div
+          className="absolute inset-0 transition-transform duration-500 group-hover:scale-105"
+          style={{
+            background: `linear-gradient(135deg, color-mix(in oklch, ${style.teinte} 92%, black 8%) 0%, color-mix(in oklch, ${style.teinte} 62%, white 26%) 100%)`,
+          }}
+        >
+          {offre.imageUrl ? null : (
+            <>
+              {/* Trame et icône en filigrane : de quoi habiller le bandeau
+                  sans suggérer un contenu qui n'existe pas. */}
+              <span
+                className="absolute inset-0 opacity-25"
+                style={{
+                  backgroundImage:
+                    "radial-gradient(rgba(255,255,255,0.65) 1px, transparent 1px)",
+                  backgroundSize: "14px 14px",
+                }}
+                aria-hidden
+              />
+              <Icon
+                className="absolute -bottom-3 -right-3 size-24 text-white/25 transition-transform duration-500 group-hover:-rotate-6"
+                aria-hidden
+              />
+            </>
+          )}
+        </div>
+
+        {/* La couverture est montrée entière, sur un fond flou tiré
+            d'elle-même. Ce sont le plus souvent des affiches : recadrées en
+            bandeau, il n'en restait que des bouts de texte illisibles. Les deux
+            images partagent la même source et les mêmes tailles — le navigateur
+            ne la télécharge qu'une fois. */}
         {offre.imageUrl ? (
-          <Image
-            src={offre.imageUrl}
-            alt=""
-            fill
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 380px"
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
-          />
-        ) : (
-          <div
-            className="absolute inset-0 transition-transform duration-500 group-hover:scale-105"
-            style={{
-              background: `linear-gradient(135deg, color-mix(in oklch, ${style.teinte} 92%, black 8%) 0%, color-mix(in oklch, ${style.teinte} 62%, white 26%) 100%)`,
-            }}
-          >
-            {/* Trame et icône en filigrane : de quoi habiller le bandeau sans
-                suggérer un contenu qui n'existe pas. */}
-            <span
-              className="absolute inset-0 opacity-25"
-              style={{
-                backgroundImage:
-                  "radial-gradient(rgba(255,255,255,0.65) 1px, transparent 1px)",
-                backgroundSize: "14px 14px",
-              }}
+          <>
+            <Image
+              src={offre.imageUrl}
+              alt=""
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 380px"
+              className="scale-110 object-cover opacity-70 blur-xl"
               aria-hidden
             />
-            <Icon
-              className="absolute -bottom-3 -right-3 size-24 text-white/25 transition-transform duration-500 group-hover:-rotate-6"
-              aria-hidden
+            <Image
+              src={offre.imageUrl}
+              alt=""
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 380px"
+              className="object-contain drop-shadow-md transition-transform duration-500 group-hover:scale-105"
             />
-          </div>
-        )}
+          </>
+        ) : null}
 
         {/* Voile bas : assure la lisibilité des pastilles posées dessus. */}
         <span

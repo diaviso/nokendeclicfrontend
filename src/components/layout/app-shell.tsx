@@ -82,7 +82,7 @@ export function AppShell({
           <Topbar />
         </div>
         {/* pb-20 laisse la place à la navigation basse mobile */}
-        <main className="px-4 pb-20 pt-5 sm:px-6 lg:px-8 lg:pb-10 print:p-0">
+        <main id="contenu" className="px-4 pb-20 pt-5 sm:px-6 lg:px-8 lg:pb-10 print:p-0">
           {children}
         </main>
       </div>

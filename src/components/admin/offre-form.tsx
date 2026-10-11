@@ -130,6 +130,56 @@ function schemaPour(type?: TypeOffreDef | null) {
   return baseSchema.extend({ champs: z.object(champs) });
 }
 
+/**
+ * Sigles courants dans les annonces, gardés en capitales quand un titre est
+ * remis en minuscules. Les autres restent à vérifier par l'auteur.
+ */
+const SIGLES = new Set(
+  (
+    "CDI CDD CV ONG BTS DUT LMD MBA PHD RH IT TIC SIG IA PME UCAD UGB UASZ UADB " +
+    "UAM ISEP ENA EPT ESP UNICEF PNUD USAID FAO OMS BAD BCEAO UEMOA CEDEAO " +
+    "ANPEJ DER FONGIP ONFP SENELEC SONATEL SDE ONU UE M1 M2 L1 L2 L3 BAC"
+  ).split(" "),
+);
+
+/** Noms de lieux qui reprennent leur majuscule. */
+const LIEUX = new Set(
+  (
+    "sénégal dakar thiès ziguinchor casamance kolda sédhiou kaolack tambacounda " +
+    "kédougou matam louga fatick kaffrine diourbel touba mbour rufisque pikine " +
+    "guédiawaye bignona oussouye afrique france"
+  ).split(" "),
+);
+
+/** Titre écrit en capitales : plus des trois quarts de ses lettres. */
+function estEnMajuscules(texte: string): boolean {
+  const lettres = texte.match(/\p{L}/gu) ?? [];
+  if (lettres.length < 8) return false;
+  const capitales = lettres.filter(
+    (l) => l === l.toUpperCase() && l !== l.toLowerCase(),
+  ).length;
+  return capitales / lettres.length > 0.75;
+}
+
+/** « STAGE EN GESTION – UCAD » → « Stage en gestion – UCAD ». */
+function enMinuscules(texte: string): string {
+  const bas = texte
+    .split(/(\s+)/)
+    .map((mot) => {
+      const nu = mot.replace(/[^\p{L}\p{N}]/gu, "");
+      if (SIGLES.has(nu.toUpperCase())) return mot.toUpperCase();
+      const minuscule = mot.toLowerCase();
+      return LIEUX.has(nu.toLowerCase())
+        ? minuscule.replace(/\p{L}/u, (l) => l.toUpperCase())
+        : minuscule;
+    })
+    .join("");
+  // Majuscule en tête de titre et après une fin de phrase.
+  return bas.replace(/(^\s*|[.!?:|–—-]\s+)(\p{Ll})/gu, (_, avant: string, lettre: string) =>
+    avant + lettre.toUpperCase(),
+  );
+}
+
 const selectClass =
   "h-9 w-full rounded-md border bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:ring-2 focus-visible:ring-ring/50";
 
@@ -269,6 +319,7 @@ function OffreFormInner({
   });
 
   const typeOffreId = form.watch("typeOffreId");
+  const titreSaisi = form.watch("titre");
   const typeSelectionne =
     types.find((t) => String(t.id) === typeOffreId) ??
     (String(typeInitial.id) === typeOffreId ? typeInitial : undefined);
@@ -419,6 +470,27 @@ function OffreFormInner({
           error={form.formState.errors.titre?.message}
         >
           <Input id="titre" {...form.register("titre")} />
+          {/* Beaucoup d'annonces arrivent recopiées d'une affiche, tout en
+              capitales : elles se lisent mal et paraissent crier au milieu
+              des autres dans le catalogue. */}
+          {estEnMajuscules(titreSaisi ?? "") ? (
+            <p className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-amber-700 dark:text-amber-300">
+              Titre en majuscules : il sera plus lisible en minuscules.
+              <button
+                type="button"
+                className="font-semibold underline underline-offset-2 hover:no-underline"
+                onClick={() =>
+                  form.setValue("titre", enMinuscules(titreSaisi), {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  })
+                }
+              >
+                Mettre en minuscules
+              </button>
+              <span className="text-muted-foreground">(vérifiez ensuite les sigles)</span>
+            </p>
+          ) : null}
         </Field>
 
         <Field

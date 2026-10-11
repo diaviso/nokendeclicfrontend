@@ -31,7 +31,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { EmptyState } from "@/components/shared/empty-state";
 import {
   EmojiPicker,
   insererAuCurseur,
@@ -348,11 +347,14 @@ function Commentaires({ offreId }: { offreId: number }) {
           <Loader2 className="size-5 animate-spin text-muted-foreground" />
         </div>
       ) : commentaires.length === 0 ? (
-        <EmptyState
-          icon={MessageSquare}
-          title="Aucun commentaire"
-          description="Soyez la première personne à réagir à cette offre."
-        />
+        // Une ligne suffit : en grand format, l'absence de commentaires
+        // occupait un demi-écran de téléphone, au-dessus des informations
+        // utiles de l'offre.
+        <p className="flex items-center gap-2 rounded-xl border border-dashed px-4 py-3 text-sm text-muted-foreground">
+          <MessageSquare className="size-4 shrink-0" aria-hidden />
+          Aucun commentaire pour l&apos;instant. Soyez la première personne à
+          réagir.
+        </p>
       ) : (
         <ul className="divide-y">
           {commentaires.map((commentaire) => {

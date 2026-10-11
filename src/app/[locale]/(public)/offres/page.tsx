@@ -8,10 +8,12 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { OffreCard } from "@/components/shared/offre-card";
 import { EmptyState } from "@/components/shared/empty-state";
+import { FiltresRepliables } from "@/components/shared/filtres-repliables";
+import { styleType } from "@/lib/type-offre";
+import { cn } from "@/lib/utils";
 import { offresServerApi } from "@/lib/api/offres";
 import { typesOffresServerApi } from "@/lib/api/types-offres";
 import { NIVEAU_EXPERIENCE_LABELS, SECTEUR_LABELS } from "@/lib/enums";
-import { formatNumber } from "@/lib/format";
 import type {
   NiveauExperience,
   Offre,
@@ -102,8 +104,9 @@ export default async function OffresPage(props: {
   const total = result?.total ?? 0;
   const totalPages = result?.totalPages ?? 1;
 
+  // Le type n'y figure pas : les pastilles au-dessus montrent déjà lequel est
+  // retenu.
   const activeFilters = [
-    typeDemande && { label: typeDemande.libelle, key: "typeOffre" },
     filters.secteur && {
       label: SECTEUR_LABELS[filters.secteur],
       key: "secteur",
@@ -114,6 +117,8 @@ export default async function OffresPage(props: {
     },
     filters.localisation && { label: filters.localisation, key: "localisation" },
   ].filter(Boolean) as { label: string; key: string }[];
+  const nombreCriteres = [filters.localisation, filters.echeance, filters.secteur]
+    .filter(Boolean).length;
 
   /** Conserve les filtres courants en changeant une seule clé. */
   function urlWith(patch: Record<string, string | number | undefined>) {
@@ -137,6 +142,56 @@ export default async function OffresPage(props: {
         </p>
       </header>
 
+      {/* Types en pastilles, à un geste : c'est le filtre le plus utilisé. Sur
+          téléphone, la rangée défile horizontalement au lieu de s'empiler
+          sur trois lignes. */}
+      {types.length ? (
+        <nav
+          aria-label={t("typeOpportunite")}
+          className="no-scrollbar -mx-4 mb-3 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0"
+        >
+          <Link
+            href={urlWith({ typeOffre: undefined, page: undefined })}
+            aria-current={typeDemande ? undefined : "page"}
+            className={cn(
+              "inline-flex shrink-0 items-center rounded-full border px-4 py-1.5 text-sm font-medium transition-colors",
+              typeDemande
+                ? "bg-card text-muted-foreground hover:text-foreground"
+                : "border-foreground/15 bg-foreground text-background",
+            )}
+          >
+            {t("tous")}
+          </Link>
+          {types.map((type) => {
+            const style = styleType(type);
+            const Icone = style.icone;
+            const actif = typeDemande?.code === type.code;
+            return (
+              <Link
+                key={type.id}
+                href={urlWith({
+                  typeOffre: actif ? undefined : type.code,
+                  page: undefined,
+                })}
+                aria-current={actif ? "page" : undefined}
+                className={cn(
+                  "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-4 py-1.5 text-sm font-medium transition-colors",
+                  actif ? "text-white shadow-sm" : "bg-card text-muted-foreground hover:text-foreground",
+                )}
+                style={actif ? { background: style.teinte, borderColor: style.teinte } : undefined}
+              >
+                <Icone
+                  className="size-4"
+                  style={actif ? undefined : { color: style.teinte }}
+                  aria-hidden
+                />
+                {type.libelle}
+              </Link>
+            );
+          })}
+        </nav>
+      ) : null}
+
       {/* Formulaire GET : fonctionne sans JavaScript, indexable, et les filtres
           restent dans l'URL — partageables et mis en cache par Next. */}
       <form
@@ -144,21 +199,41 @@ export default async function OffresPage(props: {
         action="/offres"
         className="mb-6 rounded-lg border bg-card p-3"
       >
-        <div className="flex flex-col gap-2 lg:flex-row">
-          <div className="relative flex-1">
-            <Search
-              className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
-              aria-hidden
-            />
-            <Input
-              name="keyword"
-              defaultValue={sp.keyword ?? ""}
-              placeholder={t("champMotCle")}
-              className="pl-9"
-              aria-label={t("motCle")}
-            />
-          </div>
+        {/* Le type choisi par les pastilles est conservé à la recherche. */}
+        {typeDemande ? (
+          <input type="hidden" name="typeOffre" value={typeDemande.code} />
+        ) : null}
 
+        <FiltresRepliables
+          libelle={t("filtres")}
+          actifs={nombreCriteres}
+          recherche={
+            <>
+              <Search
+                className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+                aria-hidden
+              />
+              <Input
+                name="keyword"
+                type="search"
+                defaultValue={sp.keyword ?? ""}
+                placeholder={t("champMotCle")}
+                className="pl-9"
+                aria-label={t("motCle")}
+              />
+            </>
+          }
+          actions={
+            <Button
+              type="submit"
+              size="icon"
+              className="shrink-0 lg:hidden"
+              aria-label={t("rechercher")}
+            >
+              <Search className="size-4" />
+            </Button>
+          }
+        >
           <Input
             name="localisation"
             defaultValue={sp.localisation ?? ""}
@@ -166,20 +241,6 @@ export default async function OffresPage(props: {
             className="lg:w-48"
             aria-label={t("localisation")}
           />
-
-          <select
-            name="typeOffre"
-            defaultValue={sp.typeOffre ?? ""}
-            aria-label={t("typeOpportunite")}
-            className="h-9 rounded-md border bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:ring-2 focus-visible:ring-ring/50 lg:w-44"
-          >
-            <option value="">{t("tousLesTypes")}</option>
-            {types.map((type) => (
-              <option key={type.id} value={type.code}>
-                {type.libelle}
-              </option>
-            ))}
-          </select>
 
           <select
             name="echeance"
@@ -210,7 +271,7 @@ export default async function OffresPage(props: {
             <SlidersHorizontal className="size-4" />
             {t("filtrer")}
           </Button>
-        </div>
+        </FiltresRepliables>
 
         {activeFilters.length > 0 ? (
           <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t pt-3">

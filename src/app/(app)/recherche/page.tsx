@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/shared/page-header";
 import { OffreCard } from "@/components/shared/offre-card";
 import { OffresGrilleSkeleton } from "@/components/shared/offre-card-skeleton";
+import { FiltresRepliables } from "@/components/shared/filtres-repliables";
 import { EmptyState } from "@/components/shared/empty-state";
 import { FavoriteButton } from "@/components/shared/favorite-button";
 import { favoritesApi, offresApi, typesOffresApi } from "@/lib/api";
@@ -191,16 +192,17 @@ function RechercheInner() {
 
       {/* Filtres rapides par type : une rangée de pastilles colorées avant les
           listes déroulantes. C'est le filtre le plus utilisé, et il mérite
-          d'être atteignable en un geste plutôt que caché dans un menu. */}
+          d'être atteignable en un geste plutôt que caché dans un menu. Sur
+          téléphone, la rangée défile horizontalement au lieu de s'empiler. */}
       {types.length ? (
-        <div className="mb-4 flex flex-wrap gap-2">
+        <div className="no-scrollbar -mx-4 mb-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
           <button
             type="button"
             onClick={() => {
               setTypeOffre("");
             }}
             className={cn(
-              "rounded-full border px-4 py-2 text-sm font-medium transition-all duration-200",
+              "shrink-0 rounded-full border px-4 py-2 text-sm font-medium transition-all duration-200",
               typeOffre === ""
                 ? "border-foreground/15 bg-foreground text-background"
                 : "bg-card text-muted-foreground hover:border-foreground/25 hover:text-foreground",
@@ -222,7 +224,7 @@ function RechercheInner() {
                 }}
                 aria-pressed={actif}
                 className={cn(
-                  "inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-all duration-200",
+                  "inline-flex shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-all duration-200",
                   actif
                     ? "text-white shadow-sm"
                     : "bg-card text-muted-foreground hover:-translate-y-0.5 hover:text-foreground",
@@ -246,26 +248,31 @@ function RechercheInner() {
       ) : null}
 
       <div className="mb-6 rounded-2xl border bg-card p-3 shadow-sm">
-        <div className="flex flex-col gap-2 lg:flex-row">
-          <div className="relative flex-1">
-            <Search
-              className="pointer-events-none absolute left-3.5 top-1/2 size-4.5 -translate-y-1/2 text-muted-foreground"
-              aria-hidden
-            />
-            <Input
-              value={keyword}
-              onChange={(e) => {
-                setKeyword(e.target.value);
-              }}
-              placeholder="Métier, entreprise, mot-clé…"
-              className="h-11 rounded-xl pl-11 text-base"
-              aria-label="Rechercher"
-            />
-            {isFetching && !isLoading ? (
-              <Loader2 className="absolute right-3.5 top-1/2 size-4 -translate-y-1/2 animate-spin text-primary" />
-            ) : null}
-          </div>
-
+        <FiltresRepliables
+          libelle="Filtres"
+          hauteur="h-11"
+          actifs={[localisation, secteur, echeance, niveau].filter(Boolean).length}
+          recherche={
+            <>
+              <Search
+                className="pointer-events-none absolute left-3.5 top-1/2 size-4.5 -translate-y-1/2 text-muted-foreground"
+                aria-hidden
+              />
+              <Input
+                value={keyword}
+                onChange={(e) => {
+                  setKeyword(e.target.value);
+                }}
+                placeholder="Métier, entreprise, mot-clé…"
+                className="h-11 rounded-xl pl-11 text-base"
+                aria-label="Rechercher"
+              />
+              {isFetching && !isLoading ? (
+                <Loader2 className="absolute right-3.5 top-1/2 size-4 -translate-y-1/2 animate-spin text-primary" />
+              ) : null}
+            </>
+          }
+        >
           <Input
             value={localisation}
             onChange={(e) => {
@@ -322,7 +329,7 @@ function RechercheInner() {
               ),
             )}
           </select>
-        </div>
+        </FiltresRepliables>
 
         {activeFilters.length > 0 ? (
           <div className="mt-3 flex flex-wrap items-center gap-2 border-t pt-3">

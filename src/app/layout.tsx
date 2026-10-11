@@ -43,6 +43,19 @@ export const metadata: Metadata = {
     capable: true,
     title: "Noken",
     statusBarStyle: "default",
+    // Sans écran de démarrage, l'application installée sur iPhone s'ouvrait
+    // sur un écran blanc nu le temps du chargement. iOS exige une image par
+    // taille d'écran, désignée par une requête média exacte.
+    startupImage: (
+      [
+        [440, 956, 3], [430, 932, 3], [428, 926, 3], [414, 896, 3],
+        [402, 874, 3], [393, 852, 3], [390, 844, 3], [375, 812, 3],
+        [414, 736, 3], [414, 896, 2], [375, 667, 2],
+      ] as const
+    ).map(([largeur, hauteur, densite]) => ({
+      url: `/demarrage/apple-${largeur * densite}x${hauteur * densite}.png`,
+      media: `(device-width: ${largeur}px) and (device-height: ${hauteur}px) and (-webkit-device-pixel-ratio: ${densite}) and (orientation: portrait)`,
+    })),
   },
   openGraph: {
     type: "website",
