@@ -240,7 +240,7 @@ export function ConsoleShell({ children }: { children: React.ReactNode }) {
         {children}
       </main>
 
-      <footer className="mx-auto max-w-[100rem] px-4 pb-8 sm:px-6">
+      <footer className="mx-auto max-w-[100rem] px-4 pb-8 sm:px-6 print:hidden">
         <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
           Console d&apos;administration — les actions menées ici s&apos;appliquent
           à l&apos;ensemble de la plateforme.

@@ -22,7 +22,9 @@ import { cn } from "@/lib/utils";
 function ResetPasswordInner() {
   const t = useTranslations("motdepasse");
   const router = useRouter();
-  const token = useSearchParams().get("token") ?? "";
+  const parametres = useSearchParams();
+  const token = parametres.get("token") ?? "";
+  const invitation = parametres.get("invitation") === "1";
 
   const [state, setState] = useState<"checking" | "valid" | "invalid">(
     token ? "checking" : "invalid",
@@ -99,9 +101,13 @@ function ResetPasswordInner() {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold tracking-tight">{t("nouveauTitre")}</h1>
+      <h1 className="text-3xl font-bold tracking-tight">
+        {invitation ? "Activez votre compte" : t("nouveauTitre")}
+      </h1>
       <p className="mt-2 text-base text-muted-foreground">
-        Choisissez un mot de passe robuste, différent des précédents.
+        {invitation
+          ? "Choisissez votre mot de passe pour accéder à Noken."
+          : "Choisissez un mot de passe robuste, différent des précédents."}
       </p>
 
       <form method="post" onSubmit={form.handleSubmit(onSubmit)} className="mt-7 space-y-4" noValidate>
@@ -170,7 +176,7 @@ function ResetPasswordInner() {
 
         <Button type="submit" className="w-full" disabled={submitting}>
           {submitting ? <Loader2 className="size-4 animate-spin" /> : null}
-          Enregistrer le nouveau mot de passe
+          {invitation ? "Activer mon compte" : "Enregistrer le nouveau mot de passe"}
         </Button>
       </form>
     </div>

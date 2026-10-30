@@ -44,12 +44,14 @@ export const ARTICLES_EN: ArticleLegal[] = [
       {
         liste: [
           "opportunities saved to favourites, opportunities liked, alerts created;",
+          "opportunities you view while signed in, with the date and time of each view;",
           "first-hand accounts and comments you publish;",
           "messages exchanged through the internal messaging;",
           "exchanges with the assistant, kept so that you can resume a conversation;",
           "reports sent to the team.",
         ],
       },
+      "Your account may have been created by the Noken team from a list drawn up by the organisation Declic, for example after a field session: name, telephone, email address, age, sex, status, disability status, region and department. This account remains inactive until you activate it yourself from the invitation you received and accept the terms of use. You may ask for it to be corrected or deleted at any time.",
       "Technical data: server logs record incoming requests, with a timestamp and a correlation identifier, for security and diagnostic purposes.",
       "The Platform uses no third-party audience measurement tool and carries out no advertising tracking.",
     ],
@@ -62,6 +64,8 @@ export const ARTICLES_EN: ArticleLegal[] = [
         liste: [
           "Creating and managing your account, authenticating you, securing access — necessary to provide the service you request.",
           "Displaying opportunities, managing your favourites and your alerts — necessary to provide the service.",
+          "Sending you platform announcements (opportunities, events, information), by notification and, where applicable, by email, possibly targeted by role, status, location, sex or age group — legitimate interest in informing the people concerned by an action. Every email includes an unsubscribe link.",
+          "Tracking views of opportunities, person by person, to measure their reach and report on it — legitimate interest in monitoring the action carried out. This tracking is restricted to Noken's administration and is not shared with the organisations publishing the offers.",
           "Putting you in touch with partner organisations when you make your curriculum vitae visible — on the basis of your consent, which you may withdraw at any time (article 4).",
           "Sending you service messages: address verification, password reset, notifications, deadline reminders — necessary to provide the service.",
           "Improving the recommendations offered to you and operating the assistant — legitimate interest in providing a useful service.",
@@ -69,7 +73,7 @@ export const ARTICLES_EN: ArticleLegal[] = [
           "Preventing fraud, abusive publications and security incidents — legitimate interest in protecting users.",
         ],
       },
-      "Optional information — sex, date of birth, disability status — serves statistical monitoring only. It is never disclosed to partners, never used at an individual level, and in no way conditions access to the service.",
+      "Optional information — sex, date of birth, disability status — serves statistical monitoring. Sex and age group may also be used to target an announcement from the administration (a scholarship reserved for young women, for example). Disability status is never used to target a message. This information is never disclosed to partners, and in no way conditions access to the service.",
     ],
   },
   {
@@ -112,6 +116,7 @@ export const ARTICLES_EN: ArticleLegal[] = [
           "Private messages and exchanges with the assistant: kept for as long as the account exists; you may delete a conversation at any time.",
           "Comments and first-hand accounts: kept for as long as they remain published; you may delete them.",
           "Uploaded files: deleted at the same time as the item they are attached to.",
+          "Opportunity viewing history: 24 months, then erased.",
           "Technical logs: kept for a limited period, for security and diagnostic purposes.",
           "Aggregate statistics: kept without time limit, since they no longer identify anyone.",
         ],

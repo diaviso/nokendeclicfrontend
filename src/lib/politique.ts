@@ -11,12 +11,12 @@ import type { ArticleLegal } from "./legal-types";
 import { ARTICLES_FR } from "./politique-contenu/fr";
 import { ARTICLES_EN } from "./politique-contenu/en";
 
-export const POLITIQUE_VERSION = "1.0";
+export const POLITIQUE_VERSION = "1.1";
 
 /** Date de dernière mise à jour, écrite dans la langue de lecture. */
 export const POLITIQUE_MISE_A_JOUR: Record<string, string> = {
-  fr: "19 août 2026",
-  en: "19 August 2026",
+  fr: "30 octobre 2026",
+  en: "30 October 2026",
 };
 
 /** Articles dans la langue demandée ; le français sert de repli. */

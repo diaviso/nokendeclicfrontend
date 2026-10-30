@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -8,7 +9,9 @@ import {
   Ban,
   CheckCircle2,
   ChevronRight,
+  FileUp,
   MoreHorizontal,
+  QrCode,
   ShieldCheck,
   Users,
 } from "lucide-react";
@@ -283,6 +286,26 @@ export default function AdminUsersPage() {
         icon={Users}
         teinte="var(--chart-2)"
         description="Rôles, accès et fiches détaillées des comptes inscrits sur la plateforme."
+        actions={
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              className="rounded-xl"
+              render={<Link href="/admin/utilisateurs/affiche-qr" />}
+            >
+              <QrCode className="size-4" />
+              Affiche QR
+            </Button>
+            <Button
+              variant="outline"
+              className="rounded-xl"
+              render={<Link href="/admin/utilisateurs/import" />}
+            >
+              <FileUp className="size-4" />
+              Importer depuis Excel
+            </Button>
+          </div>
+        }
         mesures={
           meta
             ? [

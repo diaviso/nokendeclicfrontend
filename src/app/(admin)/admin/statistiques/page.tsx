@@ -87,6 +87,11 @@ const EXPORTS: { nature: ExportExcel; libelle: string; detail: string }[] = [
     libelle: "Questions à l'assistant IA",
     detail: "Toutes les questions posées, avec leur auteur et leurs thèmes",
   },
+  {
+    nature: "consultations",
+    libelle: "Consultations des offres",
+    detail: "Qui a consulté quoi et quand, personnes uniques et répétitions",
+  },
 ];
 
 const PERIODES = [

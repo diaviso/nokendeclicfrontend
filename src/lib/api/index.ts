@@ -30,6 +30,7 @@ export * from "./profils";
 export * from "./partenaire";
 export * from "./chatbot-flux";
 export * from "./medias";
+export * from "./demandes";
 
 /**
  * Métadonnées de pagination du backend.
@@ -661,7 +662,8 @@ export type ExportExcel =
   | "utilisateurs"
   | "offres"
   | "rapport"
-  | "questions-assistant";
+  | "questions-assistant"
+  | "consultations";
 
 export const exportsApi = {
   async telecharger(
