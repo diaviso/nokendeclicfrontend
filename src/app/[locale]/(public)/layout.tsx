@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Logo } from "@/components/layout/logo";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { PublicActions } from "@/components/layout/public-actions";
@@ -8,7 +8,12 @@ import { Link } from "@/i18n/navigation";
 
 export default async function PublicLayout({
   children,
-}: Readonly<{ children: React.ReactNode }>) {
+  params,
+}: Readonly<{ children: React.ReactNode; params: Promise<{ locale: string }> }>) {
+  // Chaque gabarit et chaque page fixent la langue : ils sont rendus
+  // séparément, et sans cet appel next-intl la chercherait dans les en-têtes,
+  // ce qui rendrait la page dynamique.
+  setRequestLocale((await params).locale);
   const t = await getTranslations("entete");
   const p = await getTranslations("pied");
 

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getLocale, getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { DocumentLegal } from "@/components/legal/document-legal";
 import { Link } from "@/i18n/navigation";
 import { alternatesPour } from "@/i18n/metadonnees";
@@ -19,8 +19,15 @@ export async function generateMetadata({
   };
 }
 
-export default async function CguPage() {
-  const locale = await getLocale();
+export default async function CguPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  // Langue reçue de l'adresse, et non lue dans les en-têtes : la page reste
+  // statique.
+  const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations("cgu");
 
   return (

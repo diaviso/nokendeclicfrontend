@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { notFound } from "next/navigation";
 import {
@@ -47,6 +47,16 @@ import type { Offre } from "@/lib/types";
 
 export const revalidate = 300;
 
+/**
+ * Aucune offre n'est construite d'avance : chacune est rendue à la première
+ * visite, puis servie depuis le cache et régénérée au plus toutes les cinq
+ * minutes. Sans cette déclaration, Next.js traite la route comme dynamique et
+ * la recalcule à chaque visite.
+ */
+export function generateStaticParams() {
+  return [];
+}
+
 async function getOffre(id: string): Promise<Offre | null> {
   const numericId = Number(id);
   if (!Number.isInteger(numericId) || numericId < 1) return null;
@@ -62,13 +72,13 @@ async function getOffre(id: string): Promise<Offre | null> {
  * un lien partagé sur WhatsApp s'affichait sans titre ni aperçu.
  */
 export async function generateMetadata(props: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ id: string; locale: string }>;
 }): Promise<Metadata> {
-  const { id } = await props.params;
+  const { id, locale } = await props.params;
   const offre = await getOffre(id);
 
   if (!offre) {
-    const tMeta = await getTranslations("offre");
+    const tMeta = await getTranslations({ locale, namespace: "offre" });
     return { title: tMeta("introuvable") };
   }
 
@@ -194,10 +204,11 @@ async function getSimilaires(offre: Offre): Promise<Offre[]> {
 }
 
 export default async function OffreDetailPage(props: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ id: string; locale: string }>;
 }) {
+  const { id, locale } = await props.params;
+  setRequestLocale(locale);
   const t = await getTranslations("offre");
-  const { id } = await props.params;
   const offre = await getOffre(id);
 
   if (!offre) notFound();

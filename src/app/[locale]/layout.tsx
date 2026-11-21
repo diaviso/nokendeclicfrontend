@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 import { hasLocale } from "next-intl";
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
+import { FournisseurIntl, FUSEAU } from "@/components/i18n/fournisseur-intl";
+import { LangueDocument } from "@/components/i18n/langue-document";
 import { alternatesPour, localeOpenGraph } from "@/i18n/metadonnees";
 import { routing } from "@/i18n/routing";
 import type { Metadata } from "next";
@@ -63,7 +65,18 @@ export default async function LocaleLayout({
   // lecture de traduction bascule la page en rendu dynamique.
   setRequestLocale(locale);
 
-  // Le fournisseur côté client est posé par le gabarit racine : il couvre
-  // aussi les composants partagés avec l'espace membre.
-  return children;
+  // Le gabarit racine fournit déjà le français, à tout le site. Il ne connaît
+  // pas la langue de la page — la lire l'aurait rendu dynamique — : les pages
+  // dans une autre langue posent donc ici leur propre fournisseur, qui prime
+  // sur le sien pour les composants client qu'elles contiennent.
+  if (locale === routing.defaultLocale) return children;
+
+  const messages = await getMessages({ locale });
+
+  return (
+    <FournisseurIntl locale={locale} messages={messages} timeZone={FUSEAU}>
+      <LangueDocument locale={locale} />
+      {children}
+    </FournisseurIntl>
+  );
 }

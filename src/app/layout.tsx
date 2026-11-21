@@ -1,8 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
-import { NextIntlClientProvider } from "next-intl";
-import { getLocale, getMessages, getTranslations } from "next-intl/server";
+import { getMessages, getTranslations } from "next-intl/server";
+import { FournisseurIntl, FUSEAU } from "@/components/i18n/fournisseur-intl";
 import { Providers } from "@/components/providers";
+import { routing } from "@/i18n/routing";
 import { SITE_URL } from "@/lib/site";
 import "./globals.css";
 
@@ -89,16 +90,23 @@ export const viewport: Viewport = {
 export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  // La langue est lue ici plutôt que reçue en paramètre : ce gabarit est au
-  // dessus du segment `[locale]`, et il couvre aussi les pages non traduites,
-  // qui retombent alors sur la langue par défaut.
-  const locale = await getLocale();
-  const t = await getTranslations("commun");
+  // La langue est fixée ici, et non lue dans la requête.
+  //
+  // Ce gabarit est au-dessus du segment `[locale]` : il ne connaît pas la
+  // langue de la page. La lire dans les en-têtes (`getLocale()`) rendait
+  // dynamique la totalité du site, espace membre et console compris — chaque
+  // visite relançait un rendu serveur, jusqu'à épuiser le quota de calcul
+  // Vercel. Le français, langue par défaut, convient aux pages non traduites ;
+  // les pages anglaises posent leur propre fournisseur dans `[locale]/layout`.
+  //
+  // Les appels ci-dessous passent la langue explicitement : sans elle,
+  // next-intl la chercherait dans les en-têtes.
+  const locale = routing.defaultLocale;
+  const t = await getTranslations({ locale, namespace: "commun" });
   // Les traductions sont fournies à toute l'application, et non aux seules
   // pages traduites : des composants partagés — le bouton de partage, les
-  // commentaires — vivent des deux côtés de la frontière. Hors des routes
-  // `[locale]`, la langue retombe sur le français, ce qui leur suffit.
-  const messages = await getMessages();
+  // commentaires — vivent des deux côtés de la frontière.
+  const messages = await getMessages({ locale });
 
   return (
     // Les variables de police sont déclarées sur <html> et non sur <body> :
@@ -118,9 +126,9 @@ export default async function RootLayout({
         >
           {t("allerAuContenu")}
         </a>
-        <NextIntlClientProvider locale={locale} messages={messages}>
+        <FournisseurIntl locale={locale} messages={messages} timeZone={FUSEAU}>
           <Providers>{children}</Providers>
-        </NextIntlClientProvider>
+        </FournisseurIntl>
       </body>
     </html>
   );

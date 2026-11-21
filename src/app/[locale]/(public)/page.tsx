@@ -1,3 +1,4 @@
+import { setRequestLocale } from "next-intl/server";
 import { offresServerApi } from "@/lib/api/offres";
 import { partenaireServerApi } from "@/lib/api/partenaire";
 import { typesOffresServerApi } from "@/lib/api/types-offres";
@@ -53,7 +54,12 @@ async function getData(): Promise<{
   }
 }
 
-export default async function HomePage() {
+export default async function HomePage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  setRequestLocale((await params).locale);
   const { offres, total, comptes, partenaires } = await getData();
 
   return (

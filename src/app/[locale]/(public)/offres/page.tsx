@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { alternatesPour } from "@/i18n/metadonnees";
 import { Link } from "@/i18n/navigation";
 import { Search, SlidersHorizontal } from "lucide-react";
@@ -60,8 +60,12 @@ function pick<T extends string>(
 }
 
 export default async function OffresPage(props: {
+  params: Promise<{ locale: string }>;
   searchParams: Promise<Search>;
 }) {
+  // La page reste rendue à la demande — elle dépend des filtres de l'adresse —
+  // mais la langue, elle, vient de l'adresse et non des en-têtes.
+  setRequestLocale((await props.params).locale);
   const sp = await props.searchParams;
   const t = await getTranslations("offres");
 
