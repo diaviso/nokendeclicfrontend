@@ -11,6 +11,7 @@ import {
   MessageSquare,
   Pencil,
   Plus,
+  Star,
   Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -120,6 +121,17 @@ function CarteOffre({ offre, index }: { offre: Offre; index: number }) {
                 >
                   <Eye className="size-4" />
                   Voir
+                </Button>
+              ) : null}
+              {statut === "PUBLIEE" ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="rounded-lg"
+                  render={<Link href={`/offres/${offre.id}#bilan`} />}
+                >
+                  <Star className="size-4" />
+                  Bilan
                 </Button>
               ) : null}
               <Button

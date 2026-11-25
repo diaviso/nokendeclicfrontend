@@ -122,12 +122,26 @@ export const retoursApi = {
     const { data } = await api.get<Retour[]>(`/api/retours/offre/${offreId}`);
     return data;
   },
-  async create(payload: { offreId: number; contenu: string }) {
+  async create(payload: {
+    offreId: number;
+    contenu: string;
+    candidaturesRecues?: number;
+    recrutes?: number;
+  }) {
     const { data } = await api.post<Retour>("/api/retours", payload);
     return data;
   },
   async remove(id: number) {
     const { data } = await api.delete(`/api/retours/${id}`);
+    return data;
+  },
+  /** Tous les retours, membres et structures : console seulement. */
+  async tous() {
+    const { data } = await api.get<Retour[]>("/api/retours");
+    return data;
+  },
+  async repondre(id: number, contenu: string) {
+    const { data } = await api.put(`/api/retours/${id}/reply`, { contenu });
     return data;
   },
 };

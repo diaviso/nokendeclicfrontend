@@ -2,9 +2,10 @@
 
 import { use, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowLeft, Download, Eye, Loader2 } from "lucide-react";
+import { ArrowLeft, ChevronRight, Download, Eye, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ConsoleHeader } from "@/components/admin/console-header";
 import { ConsoleTable, type ColonneConsole } from "@/components/admin/console-table";
@@ -29,6 +30,7 @@ export default function DetailConsultationsPage({
 }) {
   const { id } = use(params);
   const offreId = Number(id);
+  const router = useRouter();
   const [periode, setPeriode] = useState<Periode>("0");
   const [page, setPage] = useState(1);
   const [exportEnCours, setExportEnCours] = useState(false);
@@ -64,7 +66,14 @@ export default function DetailConsultationsPage({
       entete: "Personne",
       cellule: (p) => (
         <div className="min-w-0">
-          <p className="truncate font-medium">{fullName(p)}</p>
+          <Link
+            href={`/admin/utilisateurs/${p.id}`}
+            className="flex items-center gap-1 truncate font-medium text-primary hover:underline"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {fullName(p)}
+            <ChevronRight className="size-3.5 shrink-0" aria-hidden />
+          </Link>
           <p className="truncate text-xs text-muted-foreground">
             {p.email}
             {p.telephone ? ` · ${p.telephone}` : ""}
@@ -101,7 +110,7 @@ export default function DetailConsultationsPage({
         p.nombre === 1 ? (
           formatDateTime(p.derniere)
         ) : (
-          <details>
+          <details onClick={(e) => e.stopPropagation()}>
             <summary className="cursor-pointer">
               Dernière : {formatDateTime(p.derniere)}
             </summary>
@@ -187,6 +196,7 @@ export default function DetailConsultationsPage({
           colonnes={colonnes}
           cle={(p) => p.id}
           chargement={isLoading}
+          onLigneClick={(p) => router.push(`/admin/utilisateurs/${p.id}`)}
           vide={
             <p className="p-8 text-center text-sm text-muted-foreground">
               Aucune personne connectée n&apos;a encore consulté cette offre sur

@@ -16,7 +16,12 @@ import { Switch } from "@/components/ui/switch";
 import { EditeurRiche } from "@/components/editeur/editeur-riche";
 import { ChampsDynamiques } from "@/components/admin/champs-dynamiques";
 import { MediasEnAttente, OffreMedias } from "@/components/admin/offre-medias";
-import { errorMessage, offresApi, typesOffresApi } from "@/lib/api";
+import {
+  errorMessage,
+  offresApi,
+  typesOffresApi,
+  partenaireApi,
+} from "@/lib/api";
 import {
   NIVEAU_EXPERIENCE_LABELS,
   SECTEUR_LABELS,
@@ -275,6 +280,18 @@ function OffreFormInner({
   const queryClient = useQueryClient();
   const isEdit = Boolean(offre);
 
+  // Rattachement à une structure : choisi dans la console seulement. Un
+  // partenaire publie toujours au nom de sa structure, le serveur s'en charge.
+  const estConsole = racine.startsWith("/admin");
+  const [partenaireId, setPartenaireId] = useState(
+    offre?.partenaireId ? String(offre.partenaireId) : "",
+  );
+  const { data: structures = [] } = useQuery({
+    queryKey: ["admin", "vitrine"],
+    queryFn: partenaireApi.listerPourAdministration,
+    enabled: estConsole,
+  });
+
   // Couverture choisie à la création. Sur une offre existante, elle est
   // appliquée tout de suite par `OffreMedias` et n'attend pas l'enregistrement.
   const [couverture, setCouverture] = useState<Media | null>(null);
@@ -378,6 +395,9 @@ function OffreFormInner({
         secteur: values.secteur || undefined,
         niveauExperience: values.niveauExperience || undefined,
         entreprise: values.entreprise || undefined,
+        ...(estConsole
+          ? { partenaireId: partenaireId ? Number(partenaireId) : null }
+          : {}),
         localisation: values.localisation || undefined,
         url: values.url || undefined,
         dateLimite: values.dateLimite || undefined,
@@ -534,6 +554,36 @@ function OffreFormInner({
         <Field label="Entreprise / organisme" htmlFor="entreprise">
           <Input id="entreprise" {...form.register("entreprise")} />
         </Field>
+
+        {estConsole ? (
+          <Field label="Structure partenaire" htmlFor="partenaireId">
+            <select
+              id="partenaireId"
+              className={selectClass}
+              value={partenaireId}
+              onChange={(e) => {
+                const choix = e.target.value;
+                setPartenaireId(choix);
+                // Le nom affiché sur l'offre suit la structure choisie, tant
+                // qu'aucun autre n'a été saisi.
+                const structure = structures.find((x) => String(x.id) === choix);
+                if (structure && !form.getValues("entreprise")) {
+                  form.setValue("entreprise", structure.nom, { shouldDirty: true });
+                }
+              }}
+            >
+              <option value="">Aucune</option>
+              {structures.map((structure) => (
+                <option key={structure.id} value={structure.id}>
+                  {structure.nom}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-xs text-muted-foreground">
+              L&apos;offre rejoint le catalogue de la structure, sur sa vitrine.
+            </p>
+          </Field>
+        ) : null}
 
         <Field label="Localisation" htmlFor="localisation">
           <Input

@@ -208,6 +208,9 @@ export interface Offre {
   tags: string[];
   localisation?: string | null;
   entreprise?: string | null;
+  /** Structure partenaire au nom de laquelle l'offre est publiée. */
+  partenaireId?: number | null;
+  partenaire?: { id: number; nom: string; logoUrl?: string | null } | null;
   salaireMin?: number | null;
   salaireMax?: number | null;
   devise?: string | null;
@@ -266,6 +269,10 @@ export interface OffresFilters {
   tag?: string;
   keyword?: string;
   localisation?: string;
+  /** Catalogue d'une structure partenaire. */
+  partenaireId?: number;
+  /** Offres des structures d'un type de partenaire (slug). */
+  typePartenaire?: string;
   /**
    * État de l'échéance. « ouverte » retient aussi les offres sans date limite —
    * candidature spontanée, programme permanent.
@@ -406,11 +413,18 @@ export interface Retour {
   id: number;
   contenu: string;
   datePublication: string;
+  /** Bilan chiffré d'une structure sur son propre recrutement. */
+  candidaturesRecues?: number | null;
+  recrutes?: number | null;
   auteur: {
     id: number;
     username: string;
+    firstName?: string | null;
+    lastName?: string | null;
     email?: string;
     pictureUrl?: string | null;
+    role?: Role;
+    entreprise?: { id: number; nom: string } | null;
   };
   offre?: {
     id: number;

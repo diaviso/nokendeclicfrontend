@@ -4,8 +4,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
-import { isActive, visibleSections, type NavItem } from "@/lib/navigation";
-import { messagingApi, notificationsApi } from "@/lib/api";
+import { Handshake } from "lucide-react";
+import {
+  isActive,
+  visibleSections,
+  type NavItem,
+  type NavSection,
+} from "@/lib/navigation";
+import { messagingApi, notificationsApi, partenaireApi } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
 
 function Compteur({ count }: { count: number }) {
@@ -31,7 +37,27 @@ function Compteur({ count }: { count: number }) {
 export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
   const { user } = useAuth();
+  const { data: typesPartenaires = [] } = useQuery({
+    queryKey: ["partenaires", "types"],
+    queryFn: partenaireApi.types,
+    staleTime: 10 * 60_000,
+  });
+
+  // Un type de partenaire créé dans la console devient une entrée du menu, sans
+  // déploiement : la liste est lue sur le serveur, placée après « Explorer ».
   const sections = visibleSections(user?.role);
+  if (typesPartenaires.length > 0) {
+    const partenaires: NavSection = {
+      label: "Partenaires",
+      items: typesPartenaires.map((type) => ({
+        label: type.nom,
+        href: `/partenaires?type=${encodeURIComponent(type.slug)}`,
+        icon: Handshake,
+      })),
+    };
+    const apres = sections.findIndex((section) => section.label === "Explorer");
+    sections.splice(apres >= 0 ? apres + 1 : sections.length, 0, partenaires);
+  }
 
   const { data: unreadMessages } = useQuery({
     queryKey: ["messaging", "unread"],

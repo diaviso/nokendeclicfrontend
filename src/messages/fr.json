@@ -8,7 +8,8 @@
     "navigation": "Navigation publique",
     "offres": "Offres",
     "formations": "Formations",
-    "bourses": "Bourses"
+    "bourses": "Bourses",
+    "partenaires": "Partenaires"
   },
   "pied": {
     "droits": "© {annee} Noken — Emploi, formations et bourses au Sénégal.",
@@ -18,8 +19,11 @@
     "installer": "Installer l'application",
     "conditions": "Conditions d'utilisation",
     "confidentialite": "Confidentialité",
-    "porteDebut": "Projet développé par",
-    "porteLien": "Declic"
+    "porteDebut": "Plateforme Noken développée par",
+    "porteLien": "DECLIC",
+    "soutienDebut": "et soutenue par la",
+    "soutienLien": "GIZ",
+    "annuaire": "Partenaires"
   },
   "meta": {
     "accueilTitre": "Noken — Emploi, formations et bourses au Sénégal",
@@ -200,7 +204,7 @@
     "appel": {
       "titreDebut": "Prêt à saisir votre",
       "titreAccent": "prochaine chance",
-      "titreFin": "\u202f?",
+      "titreFin": " ?",
       "texte": "Créez votre compte gratuitement. Vous y retrouverez vos favoris, votre CV et vos alertes, sur téléphone comme sur ordinateur.",
       "creer": "Créer mon compte",
       "dejaCompte": "J'ai déjà un compte"
@@ -237,7 +241,8 @@
     "texte": "Entreprises, institutions et organisations qui publient leurs opportunités directement sur Noken.",
     "appelDebut": "Votre structure recrute au Sénégal ?",
     "appelLien": "Devenez partenaire",
-    "appelFin": "et publiez vos offres directement."
+    "appelFin": "et publiez vos offres directement.",
+    "voirTous": "Voir tous nos partenaires"
   },
   "offres": {
     "titre": "Toutes les opportunités",
@@ -265,7 +270,9 @@
     "echeance": "Échéance",
     "toutesEcheances": "Toutes les échéances",
     "echeanceOuverte": "Encore ouvertes",
-    "echeanceDepassee": "Échéance dépassée"
+    "echeanceDepassee": "Échéance dépassée",
+    "partenaire": "Partenaire",
+    "tousPartenaires": "Tous les partenaires"
   },
   "cgu": {
     "accueil": "Accueil",
@@ -429,5 +436,21 @@
     "notifTitre": "Et les notifications ?",
     "notifTexte": "Une fois l'application installée, ouvrez-la et activez les notifications depuis le tableau de bord ou la cloche. Sur iPhone, l'installation en est la condition : Safari ne sait pas les recevoir autrement.",
     "retour": "Retour à l'accueil"
+  },
+  "annuaire": {
+    "titre": "Nos partenaires",
+    "surtitre": "Annuaire",
+    "description": "Les structures qui publient des opportunités sur Noken. Ouvrez une vitrine pour découvrir la structure et toutes ses offres.",
+    "tous": "Tous",
+    "vide": "Aucun partenaire dans cette catégorie pour l'instant.",
+    "offres": "{n, plural, =0 {Aucune offre en ligne} one {# offre en ligne} other {# offres en ligne}}",
+    "voirVitrine": "Voir la vitrine",
+    "siteWeb": "Site web",
+    "publications": "Opportunités publiées",
+    "aucunePublication": "Cette structure n'a pas d'opportunité en ligne pour le moment.",
+    "toutesSesOffres": "Rechercher parmi ses offres",
+    "retour": "Tous les partenaires",
+    "introuvable": "Partenaire introuvable",
+    "filtrer": "Filtrer par type de partenaire"
   }
 }

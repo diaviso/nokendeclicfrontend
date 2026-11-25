@@ -8,7 +8,8 @@
     "navigation": "Public navigation",
     "offres": "Opportunities",
     "formations": "Training",
-    "bourses": "Scholarships"
+    "bourses": "Scholarships",
+    "partenaires": "Partners"
   },
   "pied": {
     "droits": "© {annee} Noken — Jobs, training and scholarships in Senegal.",
@@ -18,8 +19,11 @@
     "installer": "Install the app",
     "conditions": "Terms of use",
     "confidentialite": "Privacy",
-    "porteDebut": "Project developed by",
-    "porteLien": "Declic"
+    "porteDebut": "Noken platform developed by",
+    "porteLien": "DECLIC",
+    "soutienDebut": "with the support of",
+    "soutienLien": "GIZ",
+    "annuaire": "Partners"
   },
   "meta": {
     "accueilTitre": "Noken — Jobs, training and scholarships in Senegal",
@@ -237,7 +241,8 @@
     "texte": "Companies, institutions and organisations publishing their opportunities directly on Noken.",
     "appelDebut": "Does your organisation recruit in Senegal?",
     "appelLien": "Become a partner",
-    "appelFin": "and publish your opportunities directly."
+    "appelFin": "and publish your opportunities directly.",
+    "voirTous": "See all our partners"
   },
   "offres": {
     "titre": "All opportunities",
@@ -265,7 +270,9 @@
     "echeance": "Deadline",
     "toutesEcheances": "Any deadline",
     "echeanceOuverte": "Still open",
-    "echeanceDepassee": "Deadline passed"
+    "echeanceDepassee": "Deadline passed",
+    "partenaire": "Partner",
+    "tousPartenaires": "All partners"
   },
   "cgu": {
     "accueil": "Home",
@@ -429,5 +436,21 @@
     "notifTitre": "What about notifications?",
     "notifTexte": "Once installed, open the app and turn on notifications from the dashboard or the bell. On iPhone, installing is the prerequisite: Safari can't receive them otherwise.",
     "retour": "Back to home"
+  },
+  "annuaire": {
+    "titre": "Our partners",
+    "surtitre": "Directory",
+    "description": "The organisations publishing opportunities on Noken. Open a showcase to discover the organisation and all its offers.",
+    "tous": "All",
+    "vide": "No partner in this category yet.",
+    "offres": "{n, plural, =0 {No open offer} one {# open offer} other {# open offers}}",
+    "voirVitrine": "View showcase",
+    "siteWeb": "Website",
+    "publications": "Published opportunities",
+    "aucunePublication": "This organisation has no open opportunity at the moment.",
+    "toutesSesOffres": "Search its offers",
+    "retour": "All partners",
+    "introuvable": "Partner not found",
+    "filtrer": "Filter by partner type"
   }
 }

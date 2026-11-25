@@ -29,6 +29,7 @@ import { REGION_NAMES, departementsFor } from "@/lib/senegal";
 import { formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { Sexe, StatutProfessionnel } from "@/lib/types";
+import { completionProfil } from "@/lib/profil";
 
 function Section({
   title,
@@ -82,32 +83,7 @@ const selectClass =
   "h-9 w-full rounded-md border bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:ring-2 focus-visible:ring-ring/50";
 
 
-/** Champs qui rendent un profil exploitable pour les recommandations. */
-const CHAMPS_PROFIL = [
-  "firstName",
-  "lastName",
-  "telephone",
-  "dateNaissance",
-  "sexe",
-  "region",
-  "departement",
-  "commune",
-  "statutProfessionnel",
-] as const;
 
-function completionProfil(user: { [k: string]: unknown } | null | undefined): number {
-  if (!user) return 0;
-  const remplis = CHAMPS_PROFIL.filter((champ) => {
-    const valeur = user[champ];
-    return (
-      valeur !== null &&
-      valeur !== undefined &&
-      valeur !== "" &&
-      valeur !== "NON_PRECISE"
-    );
-  }).length;
-  return Math.round((remplis / CHAMPS_PROFIL.length) * 100);
-}
 
 export default function ProfilPage() {
   const { user, refresh } = useAuth();
@@ -212,7 +188,7 @@ export default function ProfilPage() {
     }
   }
 
-  const completion = completionProfil(user as unknown as Record<string, unknown>);
+  const completion = completionProfil(user);
   const initials = `${user?.firstName?.[0] ?? user?.username?.[0] ?? "?"}${user?.lastName?.[0] ?? ""}`.toUpperCase();
 
   return (

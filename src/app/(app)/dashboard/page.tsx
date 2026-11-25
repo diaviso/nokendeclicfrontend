@@ -25,33 +25,9 @@ import { styleType } from "@/lib/type-offre";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 import type { User } from "@/lib/types";
+import { completionProfil } from "@/lib/profil";
 
-/** Champs qui rendent un profil exploitable pour les recommandations. */
-const CHAMPS_PROFIL: (keyof User)[] = [
-  "firstName",
-  "lastName",
-  "telephone",
-  "dateNaissance",
-  "sexe",
-  "region",
-  "departement",
-  "commune",
-  "statutProfessionnel",
-];
 
-function completionProfil(user: User | null): number {
-  if (!user) return 0;
-  const remplis = CHAMPS_PROFIL.filter((champ) => {
-    const valeur = user[champ];
-    return (
-      valeur !== null &&
-      valeur !== undefined &&
-      valeur !== "" &&
-      valeur !== "NON_PRECISE"
-    );
-  }).length;
-  return Math.round((remplis / CHAMPS_PROFIL.length) * 100);
-}
 
 /** Salutation selon l'heure locale : le tableau de bord s'ouvre sur une adresse, pas sur un titre. */
 function salutation(): string {

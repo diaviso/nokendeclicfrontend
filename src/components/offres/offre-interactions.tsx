@@ -19,6 +19,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Popover,
@@ -36,7 +38,13 @@ import {
   insererAuCurseur,
 } from "@/components/shared/emoji-picker";
 import { celebrer } from "@/components/shared/celebration";
-import { errorMessage, likesApi, offresApi, retoursApi } from "@/lib/api";
+import {
+  errorMessage,
+  likesApi,
+  offresApi,
+  partenaireApi,
+  retoursApi,
+} from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
 import { absoluteUrl } from "@/lib/site";
 import { formatRelative } from "@/lib/format";
@@ -472,12 +480,29 @@ function ExplicationRetour() {
   );
 }
 
-function MonRetour({ offreId }: { offreId: number }) {
+function MonRetour({
+  offreId,
+  partenaireId,
+}: {
+  offreId: number;
+  partenaireId?: number | null;
+}) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [contenu, setContenu] = useState("");
+  const [candidatures, setCandidatures] = useState("");
+  const [recrutes, setRecrutes] = useState("");
   const [ouvert, setOuvert] = useState(false);
   const champ = useRef<HTMLTextAreaElement>(null);
+
+  // Une structure sur sa propre offre ne raconte pas une candidature : elle
+  // fait le bilan de son recrutement. Le serveur refait la vérification.
+  const { data: entreprise } = useQuery({
+    queryKey: ["partenaire", "entreprise"],
+    queryFn: partenaireApi.monEntreprise,
+    enabled: user?.role === "PARTENAIRE" && Boolean(partenaireId),
+  });
+  const bilan = Boolean(partenaireId) && entreprise?.id === partenaireId;
 
   const { data: retours = [] } = useQuery({
     queryKey: ["retours", "offre", offreId],
@@ -487,9 +512,20 @@ function MonRetour({ offreId }: { offreId: number }) {
 
   const publier = useMutation({
     mutationFn: () =>
-      retoursApi.create({ offreId, contenu: contenu.trim() }),
+      retoursApi.create({
+        offreId,
+        contenu: contenu.trim(),
+        ...(bilan
+          ? {
+              candidaturesRecues: candidatures ? Number(candidatures) : undefined,
+              recrutes: recrutes ? Number(recrutes) : undefined,
+            }
+          : {}),
+      }),
     onSuccess: async () => {
       setContenu("");
+      setCandidatures("");
+      setRecrutes("");
       setOuvert(false);
       await queryClient.invalidateQueries({ queryKey: ["retours"] });
       celebrer();
@@ -514,15 +550,19 @@ function MonRetour({ offreId }: { offreId: number }) {
   if (!user) return null;
 
   return (
-    <section className="mt-4 rounded-lg border bg-card p-5">
+    <section
+      id={bilan ? "bilan" : "retour"}
+      className="mt-4 scroll-mt-20 rounded-lg border bg-card p-5"
+    >
       <h2 className="mb-1 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
         <Star className="size-4" aria-hidden />
-        Mon retour d&apos;expérience
-        <ExplicationRetour />
+        {bilan ? "Bilan de recrutement" : <>Mon retour d&apos;expérience</>}
+        {bilan ? null : <ExplicationRetour />}
       </h2>
       <p className="mb-4 text-sm text-muted-foreground">
-        Visible uniquement par vous et par l&apos;équipe Noken. Il ne sera jamais
-        publié sur cette page.
+        {bilan
+          ? "Combien de candidatures cette offre vous a-t-elle apportées, combien de personnes avez-vous recrutées, et qu'en retenez-vous ? Visible uniquement par vous et par l'équipe Noken."
+          : "Visible uniquement par vous et par l'équipe Noken. Il ne sera jamais publié sur cette page."}
       </p>
 
       {retours.length > 0 ? (
@@ -530,9 +570,24 @@ function MonRetour({ offreId }: { offreId: number }) {
           {retours.map((retour) => (
             <li key={retour.id} className="rounded-xl border bg-muted/25 p-4">
               <div className="flex items-start justify-between gap-3">
-                <p className="min-w-0 whitespace-pre-wrap text-sm leading-relaxed">
-                  {retour.contenu}
-                </p>
+                <div className="min-w-0">
+                  {retour.candidaturesRecues != null || retour.recrutes != null ? (
+                    <p className="mb-1.5 text-xs font-semibold text-muted-foreground">
+                      {retour.candidaturesRecues != null
+                        ? `${retour.candidaturesRecues} candidature(s) reçue(s)`
+                        : null}
+                      {retour.candidaturesRecues != null && retour.recrutes != null
+                        ? " · "
+                        : null}
+                      {retour.recrutes != null
+                        ? `${retour.recrutes} personne(s) recrutée(s)`
+                        : null}
+                    </p>
+                  ) : null}
+                  <p className="whitespace-pre-wrap text-sm leading-relaxed">
+                    {retour.contenu}
+                  </p>
+                </div>
                 <Button
                   variant="ghost"
                   size="icon"
@@ -577,6 +632,34 @@ function MonRetour({ offreId }: { offreId: number }) {
             if (contenu.trim().length >= 2) publier.mutate();
           }}
         >
+          {bilan ? (
+            <div className="mb-3 grid grid-cols-2 gap-3">
+              <div>
+                <Label htmlFor={`candidatures-${offreId}`}>Candidatures reçues</Label>
+                <Input
+                  id={`candidatures-${offreId}`}
+                  type="number"
+                  min={0}
+                  inputMode="numeric"
+                  className="mt-1.5"
+                  value={candidatures}
+                  onChange={(event) => setCandidatures(event.target.value)}
+                />
+              </div>
+              <div>
+                <Label htmlFor={`recrutes-${offreId}`}>Personnes recrutées</Label>
+                <Input
+                  id={`recrutes-${offreId}`}
+                  type="number"
+                  min={0}
+                  inputMode="numeric"
+                  className="mt-1.5"
+                  value={recrutes}
+                  onChange={(event) => setRecrutes(event.target.value)}
+                />
+              </div>
+            </div>
+          ) : null}
           <Textarea
             ref={champ}
             value={contenu}
@@ -584,8 +667,12 @@ function MonRetour({ offreId }: { offreId: number }) {
             rows={4}
             maxLength={2000}
             autoFocus
-            placeholder="Avez-vous candidaté ? Avez-vous eu une réponse ? L'annonce correspondait-elle à la réalité ?"
-            aria-label="Votre retour d'expérience"
+            placeholder={
+              bilan
+                ? "Les profils reçus correspondaient-ils au poste ? Le recrutement s'est-il bien passé ?"
+                : "Avez-vous candidaté ? Avez-vous eu une réponse ? L'annonce correspondait-elle à la réalité ?"
+            }
+            aria-label={bilan ? "Votre bilan de recrutement" : "Votre retour d'expérience"}
           />
           <div className="mt-2 flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
@@ -637,7 +724,11 @@ function MonRetour({ offreId }: { offreId: number }) {
           onClick={() => setOuvert(true)}
         >
           <Star className="size-4" />
-          {retours.length > 0 ? "Ajouter un retour" : "Partager mon retour"}
+          {bilan
+            ? "Faire le bilan du recrutement"
+            : retours.length > 0
+              ? "Ajouter un retour"
+              : "Partager mon retour"}
         </Button>
       )}
     </section>
@@ -649,11 +740,13 @@ export function OffreInteractions({
   titre,
   resume,
   likesInitial,
+  partenaireId,
 }: {
   offreId: number;
   titre: string;
   resume: string;
   likesInitial: number;
+  partenaireId?: number | null;
 }) {
   // L'URL de partage est construite à partir de l'adresse publique configurée,
   // et non de `window.location` : elle est ainsi identique au rendu serveur et
@@ -667,7 +760,7 @@ export function OffreInteractions({
         <BoutonPartage titre={titre} resume={resume} url={url} />
       </div>
 
-      <MonRetour offreId={offreId} />
+      <MonRetour offreId={offreId} partenaireId={partenaireId} />
       <Commentaires offreId={offreId} />
     </>
   );

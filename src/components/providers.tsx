@@ -9,6 +9,7 @@ import { ServiceWorkerManager } from "@/components/pwa/service-worker";
 import { InstallPrompt } from "@/components/pwa/install-prompt";
 import { OfflineBanner } from "@/components/pwa/offline-banner";
 import { Confettis } from "@/components/shared/celebration";
+import { RappelProfil } from "@/components/shared/rappel-profil";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   // Instancié dans un état pour ne pas partager le cache entre requêtes côté
@@ -47,6 +48,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
           <ServiceWorkerManager />
           <InstallPrompt />
           <Confettis />
+          <RappelProfil />
           <Toaster position="top-right" richColors closeButton />
         </AuthProvider>
       </ThemeProvider>

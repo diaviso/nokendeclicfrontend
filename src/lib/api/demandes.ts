@@ -128,6 +128,8 @@ export interface Annonce {
   emailsPrevus: number;
   emailsEnvoyes: number;
   emailsEchecs: number;
+  /** Cause du dernier échec d'envoi, en clair. */
+  derniereErreur?: string | null;
   statut: "EN_COURS" | "TERMINEE" | "INTERROMPUE";
   auteur?: string | null;
   createdAt: string;

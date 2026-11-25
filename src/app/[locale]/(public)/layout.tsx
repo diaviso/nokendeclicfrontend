@@ -45,6 +45,12 @@ export default async function PublicLayout({
             >
               {t("bourses")}
             </Link>
+            <Link
+              href="/partenaires"
+              className="rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+            >
+              {t("partenaires")}
+            </Link>
           </nav>
 
           <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
@@ -63,22 +69,33 @@ export default async function PublicLayout({
       </main>
 
       <footer className="border-t">
+        {/* Porteur et bailleur du projet : une mention pleine largeur, lisible
+            sans chercher, et non une ligne grise noyée parmi les liens. */}
+        <div className="border-b bg-primary/5">
+          <p className="mx-auto max-w-6xl px-4 py-4 text-center text-sm font-medium text-foreground sm:px-6 sm:text-base">
+            {p("porteDebut")}{" "}
+            <a
+              href="https://www.declicsud.org"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-bold text-primary underline-offset-4 hover:underline"
+            >
+              {p("porteLien")}
+            </a>{" "}
+            {p("soutienDebut")}{" "}
+            <a
+              href="https://www.giz.de"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-bold text-primary underline-offset-4 hover:underline"
+            >
+              {p("soutienLien")}
+            </a>
+          </p>
+        </div>
         <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-8 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <div className="space-y-1">
             <p>{p("droits", { annee: new Date().getFullYear() })}</p>
-            {/* Declic est la structure porteuse, pas le nom du produit : sa
-                place est ici, avec un lien vers son propre site. */}
-            <p>
-              {p("porteDebut")}{" "}
-              <a
-                href="https://www.declicsud.org"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-medium text-foreground underline-offset-4 hover:underline"
-              >
-                {p("porteLien")}
-              </a>
-            </p>
           </div>
           {/* Cinq liens ne tiennent pas sur une ligne de téléphone : sans retour à
               la ligne, le dernier dépassait de l'écran et toute la page
@@ -89,6 +106,9 @@ export default async function PublicLayout({
           >
             <Link href="/offres" className="hover:text-foreground">
               {p("toutesLesOffres")}
+            </Link>
+            <Link href="/partenaires" className="hover:text-foreground">
+              {p("annuaire")}
             </Link>
             <Link href="/login" className="hover:text-foreground">
               {p("espaceMembre")}

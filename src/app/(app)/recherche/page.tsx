@@ -13,7 +13,12 @@ import { OffresGrilleSkeleton } from "@/components/shared/offre-card-skeleton";
 import { FiltresRepliables } from "@/components/shared/filtres-repliables";
 import { EmptyState } from "@/components/shared/empty-state";
 import { FavoriteButton } from "@/components/shared/favorite-button";
-import { favoritesApi, offresApi, typesOffresApi } from "@/lib/api";
+import {
+  favoritesApi,
+  offresApi,
+  partenaireApi,
+  typesOffresApi,
+} from "@/lib/api";
 import { NIVEAU_EXPERIENCE_LABELS, SECTEUR_LABELS } from "@/lib/enums";
 import { styleType } from "@/lib/type-offre";
 import { cn } from "@/lib/utils";
@@ -44,6 +49,12 @@ function RechercheInner() {
     searchParams.get("localisation") ?? "",
   );
   const [echeance, setEcheance] = useState(searchParams.get("echeance") ?? "");
+  const [partenaireId, setPartenaireId] = useState(
+    searchParams.get("partenaireId") ?? "",
+  );
+  const [typePartenaire, setTypePartenaire] = useState(
+    searchParams.get("typePartenaire") ?? "",
+  );
 
   const debouncedKeyword = useDebounced(keyword);
   const debouncedLocalisation = useDebounced(localisation);
@@ -56,6 +67,8 @@ function RechercheInner() {
       niveauExperience: (niveau || undefined) as NiveauExperience | undefined,
       localisation: debouncedLocalisation || undefined,
       echeance: (echeance || undefined) as OffresFilters["echeance"],
+      partenaireId: partenaireId ? Number(partenaireId) : undefined,
+      typePartenaire: typePartenaire || undefined,
       limit: PAGE_SIZE,
     }),
     [
@@ -65,6 +78,8 @@ function RechercheInner() {
       niveau,
       debouncedLocalisation,
       echeance,
+      partenaireId,
+      typePartenaire,
     ],
   );
 
@@ -79,6 +94,8 @@ function RechercheInner() {
       params.set("niveauExperience", filters.niveauExperience);
     if (filters.localisation) params.set("localisation", filters.localisation);
     if (filters.echeance) params.set("echeance", filters.echeance);
+    if (filters.partenaireId) params.set("partenaireId", String(filters.partenaireId));
+    if (filters.typePartenaire) params.set("typePartenaire", filters.typePartenaire);
     const qs = params.toString();
     router.replace(qs ? `/recherche?${qs}` : "/recherche", { scroll: false });
   }, [filters, router]);
@@ -124,6 +141,18 @@ function RechercheInner() {
     staleTime: 5 * 60 * 1000,
   });
 
+  // Structures et types de l'annuaire, pour chercher par partenaire.
+  const { data: partenaires = [] } = useQuery({
+    queryKey: ["partenaires", "annuaire"],
+    queryFn: () => partenaireApi.annuaire(),
+    staleTime: 10 * 60 * 1000,
+  });
+  const { data: typesPartenaires = [] } = useQuery({
+    queryKey: ["partenaires", "types"],
+    queryFn: partenaireApi.types,
+    staleTime: 10 * 60 * 1000,
+  });
+
   const favoriteIds = useMemo(
     () => new Set((favorites ?? []).map((f) => f.offre.id)),
     [favorites],
@@ -140,6 +169,15 @@ function RechercheInner() {
       clear: () => setNiveau(""),
     },
     localisation && { label: localisation, clear: () => setLocalisation("") },
+    partenaireId && {
+      label: partenaires.find((p) => String(p.id) === partenaireId)?.nom ?? "Partenaire",
+      clear: () => setPartenaireId(""),
+    },
+    typePartenaire && {
+      label:
+        typesPartenaires.find((t) => t.slug === typePartenaire)?.nom ?? typePartenaire,
+      clear: () => setTypePartenaire(""),
+    },
   ].filter(Boolean) as { label: string; clear: () => void }[];
 
   function resetAll() {
@@ -148,6 +186,8 @@ function RechercheInner() {
     setSecteur("");
     setNiveau("");
     setLocalisation("");
+    setPartenaireId("");
+    setTypePartenaire("");
   }
 
   const total = data?.pages[0]?.total ?? 0;
@@ -251,7 +291,11 @@ function RechercheInner() {
         <FiltresRepliables
           libelle="Filtres"
           hauteur="h-11"
-          actifs={[localisation, secteur, echeance, niveau].filter(Boolean).length}
+          actifs={
+            [localisation, secteur, echeance, niveau, partenaireId, typePartenaire].filter(
+              Boolean,
+            ).length
+          }
           recherche={
             <>
               <Search
@@ -329,6 +373,47 @@ function RechercheInner() {
               ),
             )}
           </select>
+
+          {typesPartenaires.length ? (
+            <select
+              value={typePartenaire}
+              onChange={(e) => {
+                setTypePartenaire(e.target.value);
+                setPartenaireId("");
+              }}
+              aria-label="Type de partenaire"
+              className="h-11 rounded-xl border bg-transparent px-3 text-sm shadow-xs outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/50 lg:w-44"
+            >
+              <option value="">Tous les types de partenaires</option>
+              {typesPartenaires.map((t) => (
+                <option key={t.id} value={t.slug}>
+                  {t.nom}
+                </option>
+              ))}
+            </select>
+          ) : null}
+
+          {partenaires.length ? (
+            <select
+              value={partenaireId}
+              onChange={(e) => {
+                setPartenaireId(e.target.value);
+              }}
+              aria-label="Partenaire"
+              className="h-11 rounded-xl border bg-transparent px-3 text-sm shadow-xs outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/50 lg:w-44"
+            >
+              <option value="">Tous les partenaires</option>
+              {partenaires
+                .filter(
+                  (p) => !typePartenaire || p.typePartenaire?.slug === typePartenaire,
+                )
+                .map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.nom}
+                  </option>
+                ))}
+            </select>
+          ) : null}
         </FiltresRepliables>
 
         {activeFilters.length > 0 ? (

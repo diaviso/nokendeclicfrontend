@@ -65,6 +65,7 @@ export function OffreCard({
 
   return (
     <article
+      data-rappel-profil
       className={cn(
         // `h-full` est nécessaire même dans une grille : sans hauteur explicite,
         // la carte s'arrête à son contenu et le `mt-auto` du pied n'a rien à
@@ -195,10 +196,12 @@ export function OffreCard({
             abrégé — invisible sur grand écran, où la grille fixe les colonnes,
             mais la carte débordait du téléphone. */}
         <div className="mt-2 space-y-1 text-sm text-muted-foreground">
-          {offre.entreprise ? (
+          {offre.entreprise || offre.partenaire ? (
             <p className="flex min-w-0 items-center gap-1.5">
               <Building2 className="size-3.5 shrink-0" aria-hidden />
-              <span className="min-w-0 truncate">{offre.entreprise}</span>
+              <span className="min-w-0 truncate">
+                {offre.entreprise || offre.partenaire?.nom}
+              </span>
             </p>
           ) : null}
           {offre.localisation ? (

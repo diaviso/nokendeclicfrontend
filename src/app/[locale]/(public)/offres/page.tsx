@@ -13,6 +13,10 @@ import { styleType } from "@/lib/type-offre";
 import { cn } from "@/lib/utils";
 import { offresServerApi } from "@/lib/api/offres";
 import { typesOffresServerApi } from "@/lib/api/types-offres";
+import {
+  partenaireServerApi,
+  type PartenaireVitrine,
+} from "@/lib/api/partenaire";
 import { NIVEAU_EXPERIENCE_LABELS, SECTEUR_LABELS } from "@/lib/enums";
 import type {
   NiveauExperience,
@@ -47,6 +51,7 @@ type Search = {
   niveauExperience?: string;
   localisation?: string;
   echeance?: string;
+  partenaireId?: string;
   page?: string;
 };
 
@@ -79,6 +84,17 @@ export default async function OffresPage(props: {
   }
   const typeDemande = types.find((type) => type.code === sp.typeOffre);
 
+  // Structures de l'annuaire, pour filtrer par partenaire.
+  let partenaires: PartenaireVitrine[] = [];
+  try {
+    partenaires = await partenaireServerApi.annuaire();
+  } catch {
+    partenaires = [];
+  }
+  const partenaireDemande = partenaires.find(
+    (p) => String(p.id) === sp.partenaireId,
+  );
+
   const page = Math.max(1, Number(sp.page) || 1);
   const filters: OffresFilters = {
     keyword: sp.keyword?.trim() || undefined,
@@ -89,6 +105,9 @@ export default async function OffresPage(props: {
       NIVEAU_EXPERIENCE_LABELS,
     ),
     localisation: sp.localisation?.trim() || undefined,
+    // Un identifiant inconnu de l'annuaire est tout de même transmis : la
+    // vitrine d'une structure en vitrine mais hors annuaire y renvoie aussi.
+    partenaireId: Number(sp.partenaireId) > 0 ? Number(sp.partenaireId) : undefined,
     echeance:
       sp.echeance === "ouverte" || sp.echeance === "depassee"
         ? sp.echeance
@@ -120,9 +139,17 @@ export default async function OffresPage(props: {
       key: "niveauExperience",
     },
     filters.localisation && { label: filters.localisation, key: "localisation" },
+    filters.partenaireId && {
+      label: partenaireDemande?.nom ?? t("partenaire"),
+      key: "partenaireId",
+    },
   ].filter(Boolean) as { label: string; key: string }[];
-  const nombreCriteres = [filters.localisation, filters.echeance, filters.secteur]
-    .filter(Boolean).length;
+  const nombreCriteres = [
+    filters.localisation,
+    filters.echeance,
+    filters.secteur,
+    filters.partenaireId,
+  ].filter(Boolean).length;
 
   /** Conserve les filtres courants en changeant une seule clé. */
   function urlWith(patch: Record<string, string | number | undefined>) {
@@ -270,6 +297,22 @@ export default async function OffresPage(props: {
               </option>
             ))}
           </select>
+
+          {partenaires.length ? (
+            <select
+              name="partenaireId"
+              defaultValue={sp.partenaireId ?? ""}
+              aria-label={t("partenaire")}
+              className="h-9 rounded-md border bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:ring-2 focus-visible:ring-ring/50 lg:w-48"
+            >
+              <option value="">{t("tousPartenaires")}</option>
+              {partenaires.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.nom}
+                </option>
+              ))}
+            </select>
+          ) : null}
 
           <Button type="submit" className="lg:w-auto">
             <SlidersHorizontal className="size-4" />

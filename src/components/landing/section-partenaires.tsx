@@ -1,7 +1,8 @@
 "use client";
 
-import { Building2, ExternalLink, MapPin } from "lucide-react";
+import { ArrowRight, Building2, MapPin } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { Reveal } from "@/components/landing/motion";
 import { fileUrl } from "@/lib/api";
 import { secteurLabel } from "@/lib/enums";
@@ -89,12 +90,10 @@ export function SectionPartenaires({
                     ) : null}
                   </div>
 
-                  {partenaire.siteWeb ? (
-                    <ExternalLink
-                      className="mt-1 size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-primary"
-                      aria-hidden
-                    />
-                  ) : null}
+                  <ArrowRight
+                    className="mt-1 size-4 shrink-0 text-muted-foreground transition-all group-hover:translate-x-0.5 group-hover:text-primary"
+                    aria-hidden
+                  />
                 </div>
 
                 {partenaire.description ? (
@@ -107,29 +106,32 @@ export function SectionPartenaires({
 
             return (
               <Reveal key={partenaire.id} delay={(index % 3) * 0.07}>
-                {partenaire.siteWeb ? (
-                  <a
-                    href={partenaire.siteWeb}
-                    target="_blank"
-                    // `nofollow` en plus de `noopener` : la vitrine ne doit pas
-                    // devenir un dispositif de référencement monnayable.
-                    rel="noopener noreferrer nofollow"
-                    className="group block h-full rounded-2xl border bg-card p-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg"
-                  >
-                    {contenu}
-                  </a>
-                ) : (
-                  <div className="h-full rounded-2xl border bg-card p-5">
-                    {contenu}
-                  </div>
-                )}
+                {/* La carte ouvre la vitrine de la structure sur Noken — sa
+                    présentation et ses offres — plutôt que son site : c'est ici
+                    que le visiteur peut agir. Le site reste accessible depuis
+                    la vitrine. */}
+                <Link
+                  href={`/partenaires/${partenaire.id}`}
+                  className="group block h-full rounded-2xl border bg-card p-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg"
+                >
+                  {contenu}
+                </Link>
               </Reveal>
             );
           })}
         </ul>
 
         <Reveal delay={0.1}>
-          <p className="mt-8 text-center text-sm text-muted-foreground">
+          <div className="mt-8 text-center">
+            <Link
+              href="/partenaires"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary underline-offset-4 hover:underline"
+            >
+              {t("voirTous")}
+              <ArrowRight className="size-4" aria-hidden />
+            </Link>
+          </div>
+          <p className="mt-4 text-center text-sm text-muted-foreground">
             {t("appelDebut")}{" "}
             <a
               href="mailto:contact@noken.app?subject=Devenir%20partenaire"

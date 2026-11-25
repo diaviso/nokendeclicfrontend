@@ -9,6 +9,7 @@ import {
   Layers,
   MessageCircle,
   ShieldCheck,
+  Star,
   Store,
   Users,
   type LucideIcon,
@@ -93,10 +94,16 @@ export const CONSOLE_NAV: ConsoleNavItem[] = [
     teinte: "var(--chart-4)",
   },
   {
-    label: "Vitrine",
+    label: "Partenaires",
     href: "/admin/vitrine",
     icon: Store,
     teinte: "var(--chart-3)",
+  },
+  {
+    label: "Retours",
+    href: "/admin/retours",
+    icon: Star,
+    teinte: "var(--chart-4)",
   },
   {
     label: "Signalements",

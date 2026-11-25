@@ -3,7 +3,16 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Bell, Loader2, Mail, Megaphone, Send, Smartphone, Users } from "lucide-react";
+import {
+  Bell,
+  Loader2,
+  Mail,
+  Megaphone,
+  Send,
+  Smartphone,
+  Users,
+  RotateCcw,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -206,11 +215,23 @@ export default function AnnoncesPage() {
       align: "right",
       secondaire: true,
       cellule: (a) =>
-        a.avecEmail
-          ? `${formatNumber(a.emailsEnvoyes)} / ${formatNumber(a.emailsPrevus)}${
-              a.emailsEchecs ? ` (${a.emailsEchecs} échecs)` : ""
-            }`
-          : "—",
+        a.avecEmail ? (
+          <div className="text-right">
+            <p>
+              {formatNumber(a.emailsEnvoyes)} / {formatNumber(a.emailsPrevus)}
+              {a.emailsEchecs ? (
+                <span className="text-destructive"> ({a.emailsEchecs} échecs)</span>
+              ) : null}
+            </p>
+            {a.derniereErreur ? (
+              <p className="ml-auto max-w-56 text-xs text-destructive">
+                {a.derniereErreur}
+              </p>
+            ) : null}
+          </div>
+        ) : (
+          "—"
+        ),
     },
     {
       cle: "statut",
@@ -223,6 +244,34 @@ export default function AnnoncesPage() {
         ) : (
           <ConsolePastille libelle="Terminée" teinte="var(--success)" />
         ),
+    },
+    {
+      cle: "reprendre",
+      entete: "",
+      align: "right",
+      cellule: (a) => (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="rounded-lg"
+          onClick={() => {
+            // Reprend le texte dans le formulaire, pour un nouvel envoi après
+            // un échec : l'annonce d'origine n'est pas renvoyée telle quelle,
+            // l'administrateur revoit d'abord ses destinataires.
+            setTitre(a.titre);
+            setMessage(a.message);
+            setLien(a.lien ?? "");
+            setAvecEmail(a.avecEmail);
+            window.scrollTo({ top: 0, behavior: "smooth" });
+            toast.info("Annonce reprise dans le formulaire", {
+              description: "Vérifiez les destinataires, puis envoyez-la.",
+            });
+          }}
+        >
+          <RotateCcw className="size-4" />
+          Réutiliser
+        </Button>
+      ),
     },
   ];
 

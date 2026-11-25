@@ -37,6 +37,7 @@ import {
   CorpsOffre,
 } from "@/components/offres/offre-protegee";
 import { OffreCard } from "@/components/shared/offre-card";
+import { RappelALaVue } from "@/components/shared/rappel-profil";
 import {
   daysUntil,
   formatDate,
@@ -228,8 +229,12 @@ export default async function OffreDetailPage(props: {
   return (
     <>
       <JobPostingSchema offre={offre} />
+      <RappelALaVue />
 
-      <div className="mx-auto max-w-5xl px-4 pt-8 pb-28 sm:px-6 lg:pb-8">
+      <div
+        data-rappel-profil
+        className="mx-auto max-w-5xl px-4 pt-8 pb-28 sm:px-6 lg:pb-8"
+      >
         <Button
           variant="ghost"
           size="sm"
@@ -413,6 +418,7 @@ export default async function OffreDetailPage(props: {
               titre={offre.titre}
               resume={resume}
               likesInitial={offre._count?.likes ?? 0}
+              partenaireId={offre.partenaireId}
             />
 
             {offre.fichiers?.length ? (
@@ -571,7 +577,9 @@ export default async function OffreDetailPage(props: {
       {/* Sur téléphone, la colonne latérale passe sous tout le contenu : la
           date limite et le bouton pour postuler n'apparaissaient qu'après les
           commentaires. Ils restent ici à portée de pouce. */}
-      <BarreCandidature apercu={offre} restants={remaining} />
+      <div data-rappel-profil>
+        <BarreCandidature apercu={offre} restants={remaining} />
+      </div>
     </>
   );
 }
