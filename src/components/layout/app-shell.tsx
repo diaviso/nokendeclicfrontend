@@ -84,26 +84,6 @@ export function AppShell({
         {/* pb-20 laisse la place à la navigation basse mobile */}
         <main id="contenu" className="px-4 pb-20 pt-5 sm:px-6 lg:px-8 lg:pb-10 print:p-0">
           {children}
-          <p className="mt-10 border-t pt-4 text-center text-xs text-muted-foreground print:hidden">
-            Plateforme Noken développée par{" "}
-            <a
-              href="https://www.declicsud.org"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-semibold text-foreground hover:text-primary"
-            >
-              DECLIC
-            </a>{" "}
-            et soutenue par la{" "}
-            <a
-              href="https://www.giz.de"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-semibold text-foreground hover:text-primary"
-            >
-              GIZ
-            </a>
-          </p>
         </main>
       </div>
 

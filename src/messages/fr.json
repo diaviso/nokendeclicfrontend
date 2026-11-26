@@ -452,5 +452,28 @@
     "retour": "Tous les partenaires",
     "introuvable": "Partenaire introuvable",
     "filtrer": "Filtrer par type de partenaire"
+  },
+  "centres": {
+    "titre": "Centres de formation",
+    "surtitre": "Formation",
+    "description": "Les centres où se former près de chez vous. Ouvrez une fiche pour voir ses formations et le contacter.",
+    "bascule": "Formation : offres ou centres",
+    "ongletOffres": "Offres de formation",
+    "ongletCentres": "Centres de formation",
+    "toutes": "Toutes les régions",
+    "filtrer": "Filtrer par région",
+    "vide": "Aucun centre de formation référencé pour l'instant.",
+    "formations": "{n, plural, =0 {Aucune formation en ligne} one {# formation en ligne} other {# formations en ligne}}",
+    "domaines": "Domaines",
+    "contact": "Contact",
+    "siteWeb": "Site web",
+    "appeler": "Appeler",
+    "ecrire": "Écrire",
+    "sesFormations": "Formations dispensées",
+    "aucuneFormation": "Aucune formation de ce centre n'est en ligne pour le moment.",
+    "retour": "Tous les centres",
+    "introuvable": "Centre de formation introuvable",
+    "dispenseePar": "Où suivre cette formation",
+    "voirCentre": "Voir le centre"
   }
 }

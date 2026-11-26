@@ -24,7 +24,6 @@ import { dashboardApi, offresApi, typesOffresApi } from "@/lib/api";
 import { styleType } from "@/lib/type-offre";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
-import type { User } from "@/lib/types";
 import { completionProfil } from "@/lib/profil";
 
 
@@ -113,15 +112,37 @@ export default function DashboardPage() {
             <p className="text-sm font-semibold uppercase tracking-[0.16em] text-primary">
               Votre espace
             </p>
-            <h1 className="mt-2 text-balance text-3xl font-extrabold tracking-tight sm:text-4xl">
-              {salutation()}
-              {prenom ? (
-                <>
-                  {" "}
-                  <span className="text-gradient">{prenom}</span>
-                </>
-              ) : null}
-            </h1>
+            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2">
+              <h1 className="text-balance text-3xl font-extrabold tracking-tight sm:text-4xl">
+                {salutation()}
+                {prenom ? (
+                  <>
+                    {" "}
+                    <span className="text-gradient">{prenom}</span>
+                  </>
+                ) : null}
+              </h1>
+              <p className="rounded-full border bg-background/70 px-3 py-1 text-xs text-muted-foreground backdrop-blur">
+                Plateforme Noken développée par{" "}
+                <a
+                  href="https://www.declicsud.org"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold text-foreground hover:text-primary"
+                >
+                  DECLIC
+                </a>{" "}
+                et soutenue par la{" "}
+                <a
+                  href="https://www.giz.de"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold text-foreground hover:text-primary"
+                >
+                  GIZ
+                </a>
+              </p>
+            </div>
             <p className="mt-2 max-w-lg text-base text-muted-foreground">
               Voici votre activité et les dernières opportunités publiées.
             </p>

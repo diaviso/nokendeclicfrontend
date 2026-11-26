@@ -8,6 +8,7 @@ import {
   Megaphone,
   Layers,
   MessageCircle,
+  School,
   ShieldCheck,
   Star,
   Store,
@@ -98,6 +99,12 @@ export const CONSOLE_NAV: ConsoleNavItem[] = [
     href: "/admin/vitrine",
     icon: Store,
     teinte: "var(--chart-3)",
+  },
+  {
+    label: "Centres de formation",
+    href: "/admin/centres",
+    icon: School,
+    teinte: "var(--chart-2)",
   },
   {
     label: "Retours",

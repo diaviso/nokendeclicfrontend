@@ -13,6 +13,7 @@ import {
   MapPin,
   Maximize2,
   Paperclip,
+  School,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -210,6 +211,7 @@ export default async function OffreDetailPage(props: {
   const { id, locale } = await props.params;
   setRequestLocale(locale);
   const t = await getTranslations("offre");
+  const tc = await getTranslations("centres");
   const offre = await getOffre(id);
 
   if (!offre) notFound();
@@ -535,6 +537,50 @@ export default async function OffreDetailPage(props: {
                 {t("consultations", { n: offre.viewCount })}
               </p>
             </div>
+
+            {/* Formation : où la suivre. Le centre se contacte depuis sa fiche. */}
+            {offre.centresFormation?.length ? (
+              <div className="mt-4 rounded-2xl border bg-card p-5 shadow-sm">
+                <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold">
+                  <School className="size-4 text-primary" aria-hidden />
+                  {tc("dispenseePar")}
+                </h2>
+                <ul className="space-y-2">
+                  {offre.centresFormation.map((centre) => (
+                    <li key={centre.id}>
+                      <Link
+                        href={`/centres-formation/${centre.id}`}
+                        className="group flex items-center gap-3 rounded-xl border p-2.5 transition-colors hover:border-primary/40 hover:bg-muted/40"
+                      >
+                        <span className="grid size-10 shrink-0 place-items-center overflow-hidden rounded-lg border bg-background">
+                          {centre.logoUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={fileUrl(centre.logoUrl)}
+                              alt=""
+                              loading="lazy"
+                              className="size-full object-contain p-1"
+                            />
+                          ) : (
+                            <School className="size-4 text-muted-foreground" aria-hidden />
+                          )}
+                        </span>
+                        <span className="min-w-0">
+                          <span className="block truncate text-sm font-semibold group-hover:text-primary">
+                            {centre.nom}
+                          </span>
+                          {centre.ville ? (
+                            <span className="block text-xs text-muted-foreground">
+                              {centre.ville}
+                            </span>
+                          ) : null}
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
           </aside>
         </div>
 

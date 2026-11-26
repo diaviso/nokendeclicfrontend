@@ -92,6 +92,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly",
       priority: 0.7,
     }),
+    ...entrees("/centres-formation", {
+      lastModified: maintenant,
+      changeFrequency: "weekly",
+      priority: 0.7,
+    }),
     ...entrees("/installer", {
       changeFrequency: "monthly",
       priority: 0.6,

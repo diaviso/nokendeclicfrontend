@@ -452,5 +452,28 @@
     "retour": "All partners",
     "introuvable": "Partner not found",
     "filtrer": "Filter by partner type"
+  },
+  "centres": {
+    "titre": "Training centres",
+    "surtitre": "Training",
+    "description": "Places to train near you. Open a centre to see its courses and contact it.",
+    "bascule": "Training: offers or centres",
+    "ongletOffres": "Training offers",
+    "ongletCentres": "Training centres",
+    "toutes": "All regions",
+    "filtrer": "Filter by region",
+    "vide": "No training centre listed yet.",
+    "formations": "{n, plural, =0 {No course online} one {# course online} other {# courses online}}",
+    "domaines": "Fields",
+    "contact": "Contact",
+    "siteWeb": "Website",
+    "appeler": "Call",
+    "ecrire": "Email",
+    "sesFormations": "Courses offered",
+    "aucuneFormation": "None of this centre's courses are online at the moment.",
+    "retour": "All centres",
+    "introuvable": "Training centre not found",
+    "dispenseePar": "Where to take this course",
+    "voirCentre": "View centre"
   }
 }

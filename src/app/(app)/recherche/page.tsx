@@ -1,9 +1,10 @@
 "use client";
 
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { Loader2, Search, X } from "lucide-react";
+import { Loader2, School, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -13,7 +14,13 @@ import { OffresGrilleSkeleton } from "@/components/shared/offre-card-skeleton";
 import { FiltresRepliables } from "@/components/shared/filtres-repliables";
 import { EmptyState } from "@/components/shared/empty-state";
 import { FavoriteButton } from "@/components/shared/favorite-button";
+import { BasculeFormation } from "@/components/offres/bascule-formation";
 import {
+  CLASSE_CARTE_CENTRE,
+  ContenuCarteCentre,
+} from "@/components/offres/carte-centre";
+import {
+  centresApi,
   favoritesApi,
   offresApi,
   partenaireApi,
@@ -55,6 +62,9 @@ function RechercheInner() {
   const [typePartenaire, setTypePartenaire] = useState(
     searchParams.get("typePartenaire") ?? "",
   );
+  // Dans la catégorie Formation : les offres, ou les centres de formation.
+  const [vue, setVue] = useState(searchParams.get("vue") ?? "");
+  const vueCentres = typeOffre === "FORMATION" && vue === "centres";
 
   const debouncedKeyword = useDebounced(keyword);
   const debouncedLocalisation = useDebounced(localisation);
@@ -96,9 +106,10 @@ function RechercheInner() {
     if (filters.echeance) params.set("echeance", filters.echeance);
     if (filters.partenaireId) params.set("partenaireId", String(filters.partenaireId));
     if (filters.typePartenaire) params.set("typePartenaire", filters.typePartenaire);
+    if (vueCentres) params.set("vue", "centres");
     const qs = params.toString();
     router.replace(qs ? `/recherche?${qs}` : "/recherche", { scroll: false });
-  }, [filters, router]);
+  }, [filters, vueCentres, router]);
 
   // Changer un filtre reconstruit la liste depuis le début. Rester au milieu
   // de l'ancienne position donnerait des résultats déjà défilés, et le
@@ -224,7 +235,9 @@ function RechercheInner() {
         icon={Search}
         couleur="var(--chart-2)"
         description={
-          isLoading
+          vueCentres
+            ? "Les centres où suivre une formation, près de chez vous"
+            : isLoading
             ? "Chargement…"
             : `${formatNumber(total)} opportunité${total > 1 ? "s" : ""} correspond${total > 1 ? "ent" : ""} à vos critères`
         }
@@ -287,229 +300,351 @@ function RechercheInner() {
         </div>
       ) : null}
 
-      <div className="mb-6 rounded-2xl border bg-card p-3 shadow-sm">
-        <FiltresRepliables
-          libelle="Filtres"
-          hauteur="h-11"
-          actifs={
-            [localisation, secteur, echeance, niveau, partenaireId, typePartenaire].filter(
-              Boolean,
-            ).length
-          }
-          recherche={
-            <>
-              <Search
-                className="pointer-events-none absolute left-3.5 top-1/2 size-4.5 -translate-y-1/2 text-muted-foreground"
-                aria-hidden
-              />
-              <Input
-                value={keyword}
-                onChange={(e) => {
-                  setKeyword(e.target.value);
-                }}
-                placeholder="Métier, entreprise, mot-clé…"
-                className="h-11 rounded-xl pl-11 text-base"
-                aria-label="Rechercher"
-              />
-              {isFetching && !isLoading ? (
-                <Loader2 className="absolute right-3.5 top-1/2 size-4 -translate-y-1/2 animate-spin text-primary" />
-              ) : null}
-            </>
-          }
-        >
-          <Input
-            value={localisation}
-            onChange={(e) => {
-              setLocalisation(e.target.value);
-            }}
-            placeholder="Localisation"
-            className="h-11 rounded-xl lg:w-44"
-            aria-label="Localisation"
-          />
-
-          <select
-            value={secteur}
-            onChange={(e) => {
-              setSecteur(e.target.value);
-            }}
-            aria-label="Secteur"
-            className="h-11 rounded-xl border bg-transparent px-3 text-sm shadow-xs outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/50 lg:w-44"
-          >
-            <option value="">Tous les secteurs</option>
-            {(Object.keys(SECTEUR_LABELS) as Secteur[]).map((s) => (
-              <option key={s} value={s}>
-                {SECTEUR_LABELS[s]}
-              </option>
-            ))}
-          </select>
-
-          <select
-            value={echeance}
-            onChange={(e) => {
-              setEcheance(e.target.value);
-            }}
-            aria-label="État de l'échéance"
-            className="h-11 rounded-xl border bg-transparent px-3 text-sm shadow-xs outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/50 lg:w-44"
-          >
-            <option value="">Toutes les échéances</option>
-            <option value="ouverte">Encore ouvertes</option>
-            <option value="depassee">Échéance dépassée</option>
-          </select>
-
-          <select
-            value={niveau}
-            onChange={(e) => {
-              setNiveau(e.target.value);
-            }}
-            aria-label="Niveau d'expérience"
-            className="h-11 rounded-xl border bg-transparent px-3 text-sm shadow-xs outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/50 lg:w-40"
-          >
-            <option value="">Tous niveaux</option>
-            {(Object.keys(NIVEAU_EXPERIENCE_LABELS) as NiveauExperience[]).map(
-              (n) => (
-                <option key={n} value={n}>
-                  {NIVEAU_EXPERIENCE_LABELS[n]}
-                </option>
-              ),
-            )}
-          </select>
-
-          {typesPartenaires.length ? (
-            <select
-              value={typePartenaire}
-              onChange={(e) => {
-                setTypePartenaire(e.target.value);
-                setPartenaireId("");
-              }}
-              aria-label="Type de partenaire"
-              className="h-11 rounded-xl border bg-transparent px-3 text-sm shadow-xs outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/50 lg:w-44"
-            >
-              <option value="">Tous les types de partenaires</option>
-              {typesPartenaires.map((t) => (
-                <option key={t.id} value={t.slug}>
-                  {t.nom}
-                </option>
-              ))}
-            </select>
-          ) : null}
-
-          {partenaires.length ? (
-            <select
-              value={partenaireId}
-              onChange={(e) => {
-                setPartenaireId(e.target.value);
-              }}
-              aria-label="Partenaire"
-              className="h-11 rounded-xl border bg-transparent px-3 text-sm shadow-xs outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/50 lg:w-44"
-            >
-              <option value="">Tous les partenaires</option>
-              {partenaires
-                .filter(
-                  (p) => !typePartenaire || p.typePartenaire?.slug === typePartenaire,
-                )
-                .map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.nom}
-                  </option>
-                ))}
-            </select>
-          ) : null}
-        </FiltresRepliables>
-
-        {activeFilters.length > 0 ? (
-          <div className="mt-3 flex flex-wrap items-center gap-2 border-t pt-3">
-            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Filtres
-            </span>
-            {activeFilters.map((f) => (
-              <Badge
-                key={f.label}
-                variant="secondary"
-                className="h-7 gap-1 rounded-full pl-3 pr-1 text-sm"
-              >
-                {f.label}
-                <button
-                  onClick={f.clear}
-                  aria-label={`Retirer ${f.label}`}
-                  className="grid size-5 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
-                >
-                  <X className="size-3" />
-                </button>
-              </Badge>
-            ))}
+      {typeOffre === "FORMATION" ? (
+        <BasculeFormation
+          actif={vueCentres ? "centres" : "offres"}
+          className="mb-4"
+          libelles={{
+            offres: "Offres de formation",
+            centres: "Centres de formation",
+            groupe: "Formation : offres ou centres",
+          }}
+          rendre={(onglet, props) => (
             <button
-              onClick={resetAll}
-              className="ml-1 text-sm font-medium text-primary hover:underline"
-            >
-              Tout effacer
-            </button>
-          </div>
-        ) : null}
-      </div>
-
-      {isLoading ? (
-        <OffresGrilleSkeleton nombre={9} />
-      ) : offres.length === 0 ? (
-        <EmptyState
-          icon={Search}
-          couleur="var(--chart-2)"
-          title="Aucun résultat"
-          description="Aucune offre ne correspond à ces critères. Élargissez la recherche, ou retirez un filtre pour voir davantage de résultats."
-          action={
-            <Button className="rounded-xl" onClick={resetAll}>
-              Réinitialiser la recherche
-            </Button>
-          }
+              type="button"
+              onClick={() => setVue(onglet === "centres" ? "centres" : "")}
+              {...props}
+            />
+          )}
         />
+      ) : null}
+
+      {vueCentres ? (
+        <PanneauCentres />
       ) : (
         <>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {offres.map((offre, index) => (
-              <OffreCard
-                key={offre.id}
-                offre={offre}
-                href={`/offres/${offre.id}`}
-                className="entree"
-                style={{ "--i": index % 6 } as React.CSSProperties}
-                action={
-                  <FavoriteButton
-                    offreId={offre.id}
-                    isFavorite={favoriteIds.has(offre.id)}
+          <div className="mb-6 rounded-2xl border bg-card p-3 shadow-sm">
+            <FiltresRepliables
+              libelle="Filtres"
+              hauteur="h-11"
+              actifs={
+                [localisation, secteur, echeance, niveau, partenaireId, typePartenaire].filter(
+                  Boolean,
+                ).length
+              }
+              recherche={
+                <>
+                  <Search
+                    className="pointer-events-none absolute left-3.5 top-1/2 size-4.5 -translate-y-1/2 text-muted-foreground"
+                    aria-hidden
                   />
-                }
+                  <Input
+                    value={keyword}
+                    onChange={(e) => {
+                      setKeyword(e.target.value);
+                    }}
+                    placeholder="Métier, entreprise, mot-clé…"
+                    className="h-11 rounded-xl pl-11 text-base"
+                    aria-label="Rechercher"
+                  />
+                  {isFetching && !isLoading ? (
+                    <Loader2 className="absolute right-3.5 top-1/2 size-4 -translate-y-1/2 animate-spin text-primary" />
+                  ) : null}
+                </>
+              }
+            >
+              <Input
+                value={localisation}
+                onChange={(e) => {
+                  setLocalisation(e.target.value);
+                }}
+                placeholder="Localisation"
+                className="h-11 rounded-xl lg:w-44"
+                aria-label="Localisation"
               />
-            ))}
+
+              <select
+                value={secteur}
+                onChange={(e) => {
+                  setSecteur(e.target.value);
+                }}
+                aria-label="Secteur"
+                className="h-11 rounded-xl border bg-transparent px-3 text-sm shadow-xs outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/50 lg:w-44"
+              >
+                <option value="">Tous les secteurs</option>
+                {(Object.keys(SECTEUR_LABELS) as Secteur[]).map((s) => (
+                  <option key={s} value={s}>
+                    {SECTEUR_LABELS[s]}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                value={echeance}
+                onChange={(e) => {
+                  setEcheance(e.target.value);
+                }}
+                aria-label="État de l'échéance"
+                className="h-11 rounded-xl border bg-transparent px-3 text-sm shadow-xs outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/50 lg:w-44"
+              >
+                <option value="">Toutes les échéances</option>
+                <option value="ouverte">Encore ouvertes</option>
+                <option value="depassee">Échéance dépassée</option>
+              </select>
+
+              <select
+                value={niveau}
+                onChange={(e) => {
+                  setNiveau(e.target.value);
+                }}
+                aria-label="Niveau d'expérience"
+                className="h-11 rounded-xl border bg-transparent px-3 text-sm shadow-xs outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/50 lg:w-40"
+              >
+                <option value="">Tous niveaux</option>
+                {(Object.keys(NIVEAU_EXPERIENCE_LABELS) as NiveauExperience[]).map(
+                  (n) => (
+                    <option key={n} value={n}>
+                      {NIVEAU_EXPERIENCE_LABELS[n]}
+                    </option>
+                  ),
+                )}
+              </select>
+
+              {typesPartenaires.length ? (
+                <select
+                  value={typePartenaire}
+                  onChange={(e) => {
+                    setTypePartenaire(e.target.value);
+                    setPartenaireId("");
+                  }}
+                  aria-label="Type de partenaire"
+                  className="h-11 rounded-xl border bg-transparent px-3 text-sm shadow-xs outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/50 lg:w-44"
+                >
+                  <option value="">Tous les types de partenaires</option>
+                  {typesPartenaires.map((t) => (
+                    <option key={t.id} value={t.slug}>
+                      {t.nom}
+                    </option>
+                  ))}
+                </select>
+              ) : null}
+
+              {partenaires.length ? (
+                <select
+                  value={partenaireId}
+                  onChange={(e) => {
+                    setPartenaireId(e.target.value);
+                  }}
+                  aria-label="Partenaire"
+                  className="h-11 rounded-xl border bg-transparent px-3 text-sm shadow-xs outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/50 lg:w-44"
+                >
+                  <option value="">Tous les partenaires</option>
+                  {partenaires
+                    .filter(
+                      (p) => !typePartenaire || p.typePartenaire?.slug === typePartenaire,
+                    )
+                    .map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.nom}
+                      </option>
+                    ))}
+                </select>
+              ) : null}
+            </FiltresRepliables>
+
+            {activeFilters.length > 0 ? (
+              <div className="mt-3 flex flex-wrap items-center gap-2 border-t pt-3">
+                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Filtres
+                </span>
+                {activeFilters.map((f) => (
+                  <Badge
+                    key={f.label}
+                    variant="secondary"
+                    className="h-7 gap-1 rounded-full pl-3 pr-1 text-sm"
+                  >
+                    {f.label}
+                    <button
+                      onClick={f.clear}
+                      aria-label={`Retirer ${f.label}`}
+                      className="grid size-5 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
+                    >
+                      <X className="size-3" />
+                    </button>
+                  </Badge>
+                ))}
+                <button
+                  onClick={resetAll}
+                  className="ml-1 text-sm font-medium text-primary hover:underline"
+                >
+                  Tout effacer
+                </button>
+              </div>
+            ) : null}
           </div>
 
-          {/* Sentinelle : invisible, elle sert de déclencheur au chargement. */}
-          <div ref={sentinelle} aria-hidden className="h-px" />
+          {isLoading ? (
+            <OffresGrilleSkeleton nombre={9} />
+          ) : offres.length === 0 ? (
+            <EmptyState
+              icon={Search}
+              couleur="var(--chart-2)"
+              title="Aucun résultat"
+              description="Aucune offre ne correspond à ces critères. Élargissez la recherche, ou retirez un filtre pour voir davantage de résultats."
+              action={
+                <Button className="rounded-xl" onClick={resetAll}>
+                  Réinitialiser la recherche
+                </Button>
+              }
+            />
+          ) : (
+            <>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {offres.map((offre, index) => (
+                  <OffreCard
+                    key={offre.id}
+                    offre={offre}
+                    href={`/offres/${offre.id}`}
+                    className="entree"
+                    style={{ "--i": index % 6 } as React.CSSProperties}
+                    action={
+                      <FavoriteButton
+                        offreId={offre.id}
+                        isFavorite={favoriteIds.has(offre.id)}
+                      />
+                    }
+                  />
+                ))}
+              </div>
 
-          {hasNextPage ? (
-            <div className="mt-8 flex justify-center">
-              {/* Le bouton double la sentinelle : au clavier, ou si
-                  l'observateur ne se déclenche pas, la suite reste
-                  atteignable. */}
-              <Button
-                variant="outline"
-                className="rounded-xl"
-                disabled={isFetchingNextPage}
-                onClick={() => void fetchNextPage()}
-              >
-                {isFetchingNextPage ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : null}
-                {isFetchingNextPage ? "Chargement…" : "Voir la suite"}
-              </Button>
-            </div>
-          ) : offres.length >= PAGE_SIZE ? (
-            <p className="mt-8 text-center text-sm text-muted-foreground">
-              Vous avez vu les {formatNumber(total)} résultats.
-            </p>
-          ) : null}
+              {/* Sentinelle : invisible, elle sert de déclencheur au chargement. */}
+              <div ref={sentinelle} aria-hidden className="h-px" />
+
+              {hasNextPage ? (
+                <div className="mt-8 flex justify-center">
+                  {/* Le bouton double la sentinelle : au clavier, ou si
+                      l'observateur ne se déclenche pas, la suite reste
+                      atteignable. */}
+                  <Button
+                    variant="outline"
+                    className="rounded-xl"
+                    disabled={isFetchingNextPage}
+                    onClick={() => void fetchNextPage()}
+                  >
+                    {isFetchingNextPage ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : null}
+                    {isFetchingNextPage ? "Chargement…" : "Voir la suite"}
+                  </Button>
+                </div>
+              ) : offres.length >= PAGE_SIZE ? (
+                <p className="mt-8 text-center text-sm text-muted-foreground">
+                  Vous avez vu les {formatNumber(total)} résultats.
+                </p>
+              ) : null}
+            </>
+          )}
         </>
       )}
     </>
   );
+}
+
+/**
+ * Centres de formation, dans la catégorie Formation de la recherche. Liste
+ * courte : un filtre par région et une recherche sur le nom ou le domaine
+ * suffisent.
+ */
+function PanneauCentres() {
+  const [recherche, setRecherche] = useState("");
+  const [region, setRegion] = useState("");
+  const rechercheDifferee = useDebounced(recherche);
+
+  const { data: tous = [] } = useQuery({
+    queryKey: ["centres-formation", "tous"],
+    queryFn: () => centresApi.lister(),
+    staleTime: 5 * 60 * 1000,
+  });
+  const { data: centres = [], isLoading } = useQuery({
+    queryKey: ["centres-formation", { recherche: rechercheDifferee, region }],
+    queryFn: () => centresApi.lister({ search: rechercheDifferee, region }),
+    placeholderData: (precedent) => precedent,
+  });
+
+  const regions = useMemo(
+    () =>
+      [...new Set(tous.map((c) => c.region).filter(Boolean) as string[])].sort(
+        (a, b) => a.localeCompare(b, "fr"),
+      ),
+    [tous],
+  );
+
+  return (
+    <>
+      <div className="mb-6 flex flex-col gap-2 rounded-2xl border bg-card p-3 shadow-sm sm:flex-row">
+        <div className="relative flex-1">
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={recherche}
+            onChange={(e) => setRecherche(e.target.value)}
+            placeholder="Nom du centre, domaine, ville…"
+            aria-label="Rechercher un centre de formation"
+            className="h-11 rounded-xl pl-9"
+          />
+        </div>
+        {regions.length > 1 ? (
+          <select
+            value={region}
+            onChange={(e) => setRegion(e.target.value)}
+            aria-label="Région"
+            className="h-11 rounded-xl border bg-background px-3 text-sm"
+          >
+            <option value="">Toutes les régions</option>
+            {regions.map((r) => (
+              <option key={r} value={r}>
+                {r}
+              </option>
+            ))}
+          </select>
+        ) : null}
+      </div>
+
+      {isLoading ? (
+        <OffresGrilleSkeleton nombre={6} />
+      ) : centres.length === 0 ? (
+        <EmptyState
+          icon={School}
+          couleur="var(--chart-2)"
+          title="Aucun centre de formation"
+          description={
+            recherche || region
+              ? "Aucun centre ne correspond à ces critères."
+              : "Aucun centre de formation n'est encore référencé."
+          }
+        />
+      ) : (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {centres.map((centre) => (
+            <Link
+              key={centre.id}
+              href={`/centres-formation/${centre.id}`}
+              className={CLASSE_CARTE_CENTRE}
+            >
+              <ContenuCarteCentre
+                centre={centre}
+                formations={formationsEnLigne(centre._count?.formations ?? 0)}
+              />
+            </Link>
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
+
+function formationsEnLigne(n: number) {
+  if (n === 0) return "Aucune formation en ligne";
+  return `${formatNumber(n)} formation${n > 1 ? "s" : ""} en ligne`;
 }
 
 export default function RecherchePage() {

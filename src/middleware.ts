@@ -16,6 +16,7 @@ export const config = {
     "/(fr|en)/:path*",
     "/offres/:path*",
     "/partenaires/:path*",
+    "/centres-formation/:path*",
     "/cgu",
     "/politique-confidentialite",
     "/installer",

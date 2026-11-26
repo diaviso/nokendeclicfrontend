@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { OffreCard } from "@/components/shared/offre-card";
 import { EmptyState } from "@/components/shared/empty-state";
 import { FiltresRepliables } from "@/components/shared/filtres-repliables";
+import { BasculeFormation } from "@/components/offres/bascule-formation";
 import { styleType } from "@/lib/type-offre";
 import { cn } from "@/lib/utils";
 import { offresServerApi } from "@/lib/api/offres";
@@ -73,6 +74,7 @@ export default async function OffresPage(props: {
   setRequestLocale((await props.params).locale);
   const sp = await props.searchParams;
   const t = await getTranslations("offres");
+  const tc = await getTranslations("centres");
 
   // Les types sont administrables : la liste des valeurs acceptées vient de
   // l'API, et non d'une énumération figée dans le code.
@@ -166,6 +168,25 @@ export default async function OffresPage(props: {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+      {/* Dans la catégorie Formation, deux portes : les offres, ou les
+          centres où se former. */}
+      {typeDemande?.code === "FORMATION" ? (
+        <BasculeFormation
+          actif="offres"
+          className="mb-6"
+          libelles={{
+            offres: tc("ongletOffres"),
+            centres: tc("ongletCentres"),
+            groupe: tc("bascule"),
+          }}
+          rendre={(onglet, props) => (
+            <Link
+              href={onglet === "offres" ? "/offres?typeOffre=FORMATION" : "/centres-formation"}
+              {...props}
+            />
+          )}
+        />
+      ) : null}
       <header className="mb-6">
         <h1 className="text-2xl font-semibold tracking-tight">{t("titre")}</h1>
         <p className="mt-1 text-sm text-muted-foreground">

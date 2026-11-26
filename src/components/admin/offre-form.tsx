@@ -21,6 +21,7 @@ import {
   offresApi,
   typesOffresApi,
   partenaireApi,
+  centresApi,
 } from "@/lib/api";
 import {
   NIVEAU_EXPERIENCE_LABELS,
@@ -292,6 +293,17 @@ function OffreFormInner({
     enabled: estConsole,
   });
 
+  // Centres où la formation est dispensée : console seulement, et pour une
+  // offre de formation. Le lien se règle aussi depuis la page des centres.
+  const [centreIds, setCentreIds] = useState<number[]>(
+    () => offre?.centresFormation?.map((c) => c.id) ?? [],
+  );
+  const { data: centres = [] } = useQuery({
+    queryKey: ["admin", "centres"],
+    queryFn: centresApi.listerPourAdministration,
+    enabled: estConsole,
+  });
+
   // Couverture choisie à la création. Sur une offre existante, elle est
   // appliquée tout de suite par `OffreMedias` et n'attend pas l'enregistrement.
   const [couverture, setCouverture] = useState<Media | null>(null);
@@ -397,6 +409,11 @@ function OffreFormInner({
         entreprise: values.entreprise || undefined,
         ...(estConsole
           ? { partenaireId: partenaireId ? Number(partenaireId) : null }
+          : {}),
+        // Envoyé seulement pour une formation : le serveur détache de toute
+        // façon les centres d'une offre qui change de type.
+        ...(estConsole && typeSelectionne?.code === "FORMATION"
+          ? { centreFormationIds: centreIds }
           : {}),
         localisation: values.localisation || undefined,
         url: values.url || undefined,
@@ -581,6 +598,50 @@ function OffreFormInner({
             </select>
             <p className="mt-1 text-xs text-muted-foreground">
               L&apos;offre rejoint le catalogue de la structure, sur sa vitrine.
+            </p>
+          </Field>
+        ) : null}
+
+        {estConsole && typeSelectionne?.code === "FORMATION" ? (
+          <Field label="Centres de formation" htmlFor="centres-formation">
+            {centres.length === 0 ? (
+              <p id="centres-formation" className="text-sm text-muted-foreground">
+                Aucun centre référencé. Créez-en depuis la page Centres de formation.
+              </p>
+            ) : (
+              <div
+                id="centres-formation"
+                className="max-h-48 space-y-1 overflow-y-auto rounded-md border p-2"
+              >
+                {centres.map((centre) => (
+                  <label
+                    key={centre.id}
+                    className="flex cursor-pointer items-center gap-2 rounded px-1.5 py-1 text-sm hover:bg-muted/50"
+                  >
+                    <input
+                      type="checkbox"
+                      className="size-4 accent-primary"
+                      checked={centreIds.includes(centre.id)}
+                      onChange={(e) =>
+                        setCentreIds((avant) =>
+                          e.target.checked
+                            ? [...avant, centre.id]
+                            : avant.filter((id) => id !== centre.id),
+                        )
+                      }
+                    />
+                    <span className="truncate">
+                      {centre.nom}
+                      {centre.ville ? (
+                        <span className="text-muted-foreground"> · {centre.ville}</span>
+                      ) : null}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            )}
+            <p className="mt-1 text-xs text-muted-foreground">
+              La formation apparaît sur la fiche de chaque centre coché.
             </p>
           </Field>
         ) : null}

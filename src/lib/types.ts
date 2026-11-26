@@ -211,6 +211,15 @@ export interface Offre {
   /** Structure partenaire au nom de laquelle l'offre est publiée. */
   partenaireId?: number | null;
   partenaire?: { id: number; nom: string; logoUrl?: string | null } | null;
+  /** Centres où la formation est dispensée (offres de formation). */
+  centresFormation?: {
+    id: number;
+    nom: string;
+    logoUrl?: string | null;
+    ville?: string | null;
+  }[];
+  /** En écriture seulement : centres à relier (administration, formations). */
+  centreFormationIds?: number[];
   salaireMin?: number | null;
   salaireMax?: number | null;
   devise?: string | null;
@@ -271,6 +280,8 @@ export interface OffresFilters {
   localisation?: string;
   /** Catalogue d'une structure partenaire. */
   partenaireId?: number;
+  /** Formations dispensées par un centre. */
+  centreFormationId?: number;
   /** Offres des structures d'un type de partenaire (slug). */
   typePartenaire?: string;
   /**

@@ -28,6 +28,7 @@ export * from "./offres";
 export * from "./types-offres";
 export * from "./profils";
 export * from "./partenaire";
+export * from "./centres";
 export * from "./chatbot-flux";
 export * from "./medias";
 export * from "./demandes";
