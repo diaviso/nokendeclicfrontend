@@ -631,6 +631,24 @@
   }
 
   /*
+   * Minuterie du diaporama d'annonces : la jauge se remplit, sa fin fait
+   * passer à la diapo suivante. Mise en pause, elle s'arrête où elle en est.
+   */
+  @keyframes noken-progression {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
+
+  .diapo-progression {
+    transform-origin: left;
+    animation: noken-progression var(--duree, 7s) linear both;
+  }
+
+  /*
    * Entrée en cascade d'une liste.
    *
    * Le retard est porté par une variable posée en ligne (`--i`) plutôt que par

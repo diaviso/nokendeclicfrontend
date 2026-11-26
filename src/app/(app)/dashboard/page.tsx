@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { InvitePush } from "@/components/notifications/invite-push";
 import { InviteInstallation } from "@/components/pwa/invite-installation";
+import { DiaporamaPublicites } from "@/components/dashboard/diaporama-publicites";
 import { Button } from "@/components/ui/button";
 import { StatCard, StatCardSkeleton } from "@/components/shared/stat-card";
 import { OffreCard } from "@/components/shared/offre-card";
@@ -175,6 +176,9 @@ export default function DashboardPage() {
           première. */}
       <InviteInstallation />
       <InvitePush />
+
+      {/* ─────────────────────────────────────── Annonces des partenaires */}
+      <DiaporamaPublicites className="mb-6" />
 
       {/* ───────────────────────────────────────── Complétion du profil */}
       {completion < 100 ? (

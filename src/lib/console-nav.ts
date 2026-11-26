@@ -4,6 +4,7 @@ import {
   Briefcase,
   Eye,
   FilePlus2,
+  GalleryHorizontalEnd,
   Gauge,
   Images,
   Layers,
@@ -95,6 +96,13 @@ export const CONSOLE_GROUPES: ConsoleNavGroupe[] = [
         icon: Megaphone,
         teinte: "var(--c-orange)",
         resume: "Annonces diffusées aux membres",
+      },
+      {
+        label: "Publicités",
+        href: "/admin/publicites",
+        icon: GalleryHorizontalEnd,
+        teinte: "var(--c-fuchsia)",
+        resume: "Diaporama sponsorisé du tableau de bord",
       },
       {
         label: "Médiathèque",
