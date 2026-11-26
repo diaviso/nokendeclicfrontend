@@ -3,20 +3,31 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ImageIcon, Images, Loader2, Pencil, Trash2, Upload } from "lucide-react";
+import {
+  AlertTriangle,
+  Check,
+  HardDrive,
+  ImageIcon,
+  Images,
+  Loader2,
+  Pencil,
+  Share2,
+  Trash2,
+  Upload,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { ConsoleHeader } from "@/components/admin/console-header";
+import {
+  ConsoleAction,
+  ConsoleActions,
+  ConsoleChamp,
+  ConsoleDialogue,
+  ConsoleInterrupteur,
+  ConsoleSection,
+  useConfirmation,
+} from "@/components/admin/console-kit";
+import { EmptyState } from "@/components/shared/empty-state";
 import {
   BarreFiltresMedias,
   GrilleMedias,
@@ -30,10 +41,10 @@ import {
   type FiltreMedias,
   type TriMedias,
 } from "@/lib/api";
-import { formatFileSize } from "@/lib/format";
+import { formatDate, formatFileSize } from "@/lib/format";
 import type { Media } from "@/lib/types";
 
-const TEINTE = "var(--chart-5)";
+const TEINTE = "var(--c-cyan)";
 
 /**
  * Médiathèque : les images de couverture de toutes les offres.
@@ -44,12 +55,12 @@ const TEINTE = "var(--chart-5)";
  */
 export default function MediathequePage() {
   const queryClient = useQueryClient();
+  const confirmer = useConfirmation();
   const [q, setQ] = useState("");
   const [filtre, setFiltre] = useState<FiltreMedias>("toutes");
   const [tri, setTri] = useState<TriMedias>("recentes");
   const [importOuvert, setImportOuvert] = useState(false);
   const [enEdition, setEnEdition] = useState<Media | null>(null);
-  const [aSupprimer, setASupprimer] = useState<Media | null>(null);
 
   const requete = useMedias({ q, filtre, tri });
   const medias = requete.data?.pages.flatMap((page) => page.elements) ?? [];
@@ -67,7 +78,6 @@ export default function MediathequePage() {
   const suppression = useMutation({
     mutationFn: (media: Media) => mediasApi.supprimer(media.id),
     onSuccess: async (_d, media) => {
-      setASupprimer(null);
       await rafraichir();
       toast.success("Image supprimée", {
         description: media.taille
@@ -78,6 +88,18 @@ export default function MediathequePage() {
     onError: (erreur) =>
       toast.error("Suppression impossible", { description: errorMessage(erreur) }),
   });
+
+  const demanderSuppression = async (media: Media) => {
+    const ok = await confirmer({
+      titre: "Supprimer cette image ?",
+      message: `« ${media.nom} » sera retirée de la médiathèque et effacée du stockage. Cette action est définitive.`,
+      confirmer: "Supprimer",
+      danger: true,
+    });
+    if (ok) suppression.mutate(media);
+  };
+
+  const filtresActifs = Boolean(q) || filtre !== "toutes";
 
   return (
     <>
@@ -105,9 +127,12 @@ export default function MediathequePage() {
       />
 
       {bilan && bilan.inutilisees > 0 && filtre !== "inutilisees" ? (
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-warning/30 bg-warning/5 px-4 py-3 text-sm">
-          <p className="min-w-0">
-            <span className="font-medium">
+        <div className="mb-5 flex flex-wrap items-center gap-3 rounded-2xl border border-[color-mix(in_oklch,var(--warning)_35%,transparent)] bg-[color-mix(in_oklch,var(--warning)_8%,transparent)] px-4 py-3 text-sm">
+          <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-[color-mix(in_oklch,var(--warning)_16%,transparent)] text-[var(--warning)]">
+            <HardDrive className="size-4" aria-hidden />
+          </span>
+          <p className="min-w-0 flex-1">
+            <span className="font-semibold">
               {bilan.inutilisees} image{bilan.inutilisees > 1 ? "s" : ""}{" "}
               {bilan.inutilisees > 1 ? "ne sont utilisées" : "n'est utilisée"} par
               aucune offre
@@ -117,76 +142,101 @@ export default function MediathequePage() {
               serviront plus pour libérer de la place.
             </span>
           </p>
-          <Button size="sm" variant="outline" onClick={() => setFiltre("inutilisees")}>
+          <Button
+            size="sm"
+            variant="outline"
+            className="rounded-lg"
+            onClick={() => setFiltre("inutilisees")}
+          >
             Les afficher
           </Button>
         </div>
       ) : null}
 
       <div className="space-y-4">
-        <BarreFiltresMedias
-          q={q}
-          onQ={setQ}
-          filtre={filtre}
-          onFiltre={setFiltre}
-          tri={tri}
-          onTri={setTri}
-        />
+        <div className="rounded-2xl border bg-card p-3 shadow-sm">
+          <BarreFiltresMedias
+            q={q}
+            onQ={setQ}
+            filtre={filtre}
+            onFiltre={setFiltre}
+            tri={tri}
+            onTri={setTri}
+          />
+        </div>
+
+        {!requete.isLoading && medias.length > 0 ? (
+          <p className="px-1 text-xs text-muted-foreground">
+            <span className="font-semibold text-foreground tabular-nums">{medias.length}</span>{" "}
+            affichée{medias.length > 1 ? "s" : ""} sur{" "}
+            <span className="font-semibold text-foreground tabular-nums">{total}</span>
+          </p>
+        ) : null}
 
         <GrilleMedias
           medias={medias}
           chargement={requete.isLoading}
           actions={(media) => (
-            <>
-              <Button
-                type="button"
-                size="xs"
-                variant="ghost"
-                onClick={() => setEnEdition(media)}
-                disabled={!media.modifiable}
-              >
-                <Pencil className="size-3.5" />
-                Modifier
-              </Button>
-              <Button
-                type="button"
-                size="xs"
-                variant="ghost"
-                className="text-muted-foreground hover:text-destructive"
-                disabled={!media.modifiable || media.utilisations > 0}
-                title={
-                  media.utilisations > 0
-                    ? `Utilisée par ${libelleUtilisations(media.utilisations)} : changez leur couverture d'abord`
-                    : undefined
-                }
-                onClick={() => setASupprimer(media)}
-              >
-                <Trash2 className="size-3.5" />
-                Supprimer
-              </Button>
-            </>
+            <ConsoleActions>
+              <span className="flex items-center gap-0.5">
+                <ConsoleAction
+                  libelle="Modifier"
+                  icone={Pencil}
+                  ton="primaire"
+                  disabled={!media.modifiable}
+                  onClick={() => setEnEdition(media)}
+                />
+                <ConsoleAction
+                  libelle={
+                    media.utilisations > 0
+                      ? `Utilisée par ${libelleUtilisations(media.utilisations)} : changez leur couverture d'abord`
+                      : "Supprimer"
+                  }
+                  icone={Trash2}
+                  ton="danger"
+                  disabled={!media.modifiable || media.utilisations > 0}
+                  enCours={suppression.isPending && suppression.variables?.id === media.id}
+                  onClick={() => demanderSuppression(media)}
+                />
+              </span>
+            </ConsoleActions>
           )}
           vide={
-            <div className="grid place-items-center gap-2 rounded-xl border border-dashed px-4 py-14 text-center">
-              <ImageIcon className="size-6 text-muted-foreground" aria-hidden />
-              <p className="text-sm font-medium">
-                {q || filtre !== "toutes"
-                  ? "Aucune image ne correspond"
-                  : "Aucune image pour l'instant"}
-              </p>
-              <p className="max-w-sm text-sm text-muted-foreground">
-                Les couvertures choisies ou importées depuis le formulaire d&apos;une
-                offre apparaissent ici.
-              </p>
-            </div>
+            <EmptyState
+              icon={ImageIcon}
+              couleur={TEINTE}
+              title={
+                filtresActifs ? "Aucune image ne correspond" : "Aucune image pour l'instant"
+              }
+              description="Les couvertures choisies ou importées depuis le formulaire d'une offre apparaissent ici."
+              action={
+                filtresActifs ? (
+                  <Button
+                    variant="outline"
+                    className="rounded-xl"
+                    onClick={() => {
+                      setQ("");
+                      setFiltre("toutes");
+                    }}
+                  >
+                    Réinitialiser les filtres
+                  </Button>
+                ) : (
+                  <Button className="rounded-xl" onClick={() => setImportOuvert(true)}>
+                    <Upload className="size-4" />
+                    Importer une image
+                  </Button>
+                )
+              }
+            />
           }
         />
 
         {requete.hasNextPage ? (
-          <div className="flex justify-center">
+          <div className="flex justify-center pt-2">
             <Button
               variant="outline"
-              size="sm"
+              className="rounded-xl"
               disabled={requete.isFetchingNextPage}
               onClick={() => requete.fetchNextPage()}
             >
@@ -200,72 +250,28 @@ export default function MediathequePage() {
       </div>
 
       {/* Import */}
-      <Dialog open={importOuvert} onOpenChange={setImportOuvert}>
-        <DialogContent className="sm:max-w-xl">
-          <DialogHeader>
-            <DialogTitle>Importer une image</DialogTitle>
-            <DialogDescription>
-              Elle sera réduite et allégée, puis proposée dans le formulaire de
-              chaque offre.
-            </DialogDescription>
-          </DialogHeader>
-          <ZoneImport onImportee={() => setImportOuvert(false)} />
-        </DialogContent>
-      </Dialog>
-
-      {/* Modification */}
-      <DialogueEdition media={enEdition} onFermer={() => setEnEdition(null)} />
-
-      {/* Suppression */}
-      <Dialog
-        open={aSupprimer !== null}
-        onOpenChange={(ouvert) => !ouvert && setASupprimer(null)}
+      <ConsoleDialogue
+        ouvert={importOuvert}
+        onFermer={() => setImportOuvert(false)}
+        icone={Upload}
+        teinte={TEINTE}
+        taille="md"
+        titre="Importer une image"
+        description="Elle sera réduite et allégée, puis proposée dans le formulaire de chaque offre."
       >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Supprimer cette image ?</DialogTitle>
-            <DialogDescription>
-              « {aSupprimer?.nom} » sera retirée de la médiathèque et effacée du
-              stockage. Cette action est définitive.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setASupprimer(null)}>
-              Annuler
-            </Button>
-            <Button
-              variant="destructive"
-              disabled={suppression.isPending}
-              onClick={() => aSupprimer && suppression.mutate(aSupprimer)}
-            >
-              {suppression.isPending ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <Trash2 className="size-4" />
-              )}
-              Supprimer
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
-  );
-}
+        <ZoneImport onImportee={() => setImportOuvert(false)} />
+      </ConsoleDialogue>
 
-function DialogueEdition({
-  media,
-  onFermer,
-}: {
-  media: Media | null;
-  onFermer: () => void;
-}) {
-  return (
-    <Dialog open={media !== null} onOpenChange={(ouvert) => !ouvert && onFermer()}>
-      <DialogContent className="sm:max-w-md">
-        {/* Remonté pour chaque image : les champs repartent de ses valeurs. */}
-        {media ? <FormulaireEdition key={media.id} media={media} onFermer={onFermer} /> : null}
-      </DialogContent>
-    </Dialog>
+      {/* Modification : remontée pour chaque image, les champs repartent de
+          ses valeurs. */}
+      {enEdition ? (
+        <FormulaireEdition
+          key={enEdition.id}
+          media={enEdition}
+          onFermer={() => setEnEdition(null)}
+        />
+      ) : null}
+    </>
   );
 }
 
@@ -287,68 +293,87 @@ function FormulaireEdition({ media, onFermer }: { media: Media; onFermer: () => 
       toast.error("Modification impossible", { description: errorMessage(erreur) }),
   });
 
+  const details = [
+    libelleUtilisations(media.utilisations),
+    media.largeur && media.hauteur ? `${media.largeur} × ${media.hauteur} px` : null,
+    media.taille ? formatFileSize(media.taille) : null,
+    media.auteur ? `déposée par ${media.auteur}` : null,
+    media.createdAt ? `le ${formatDate(media.createdAt)}` : null,
+  ].filter(Boolean);
+
   return (
-    <form
-      className="grid gap-4"
-      onSubmit={(e) => {
-        e.preventDefault();
-        enregistrement.mutate();
-      }}
+    <ConsoleDialogue
+      onFermer={onFermer}
+      icone={Pencil}
+      teinte={TEINTE}
+      taille="md"
+      titre="Modifier l'image"
+      description={details.join(" · ")}
+      onSubmit={() => nom.trim() && enregistrement.mutate()}
+      pied={
+        <>
+          <Button type="button" variant="ghost" className="rounded-lg" onClick={onFermer}>
+            Annuler
+          </Button>
+          <Button
+            type="submit"
+            className="rounded-lg"
+            disabled={enregistrement.isPending || !nom.trim()}
+          >
+            {enregistrement.isPending ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Check className="size-4" />
+            )}
+            Enregistrer
+          </Button>
+        </>
+      }
     >
-      <DialogHeader>
-        <DialogTitle>Modifier l&apos;image</DialogTitle>
-        <DialogDescription>
-          {libelleUtilisations(media.utilisations)}
-          {media.largeur && media.hauteur ? ` · ${media.largeur} × ${media.hauteur} px` : ""}
-          {media.taille ? ` · ${formatFileSize(media.taille)}` : ""}
-          {media.auteur ? ` · déposée par ${media.auteur}` : ""}
-        </DialogDescription>
-      </DialogHeader>
-
-      <div className="min-w-0">
-        <Label htmlFor="edition-nom">Nom</Label>
-        <Input
-          id="edition-nom"
-          className="mt-1.5"
-          required
-          maxLength={120}
-          value={nom}
-          onChange={(e) => setNom(e.target.value)}
-        />
+      <div className="mb-5 overflow-hidden rounded-xl border bg-muted/30">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={media.url} alt={alt || media.nom} className="mx-auto max-h-56 object-contain" />
       </div>
-      <div className="min-w-0">
-        <Label htmlFor="edition-alt">Texte alternatif proposé par défaut</Label>
-        <Input
+
+      {media.utilisations > 0 ? (
+        <p className="mb-5 flex gap-2 rounded-xl border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+          <AlertTriangle className="mt-0.5 size-3.5 shrink-0" aria-hidden />
+          Utilisée par {libelleUtilisations(media.utilisations)} : elle ne peut pas être
+          supprimée tant qu&apos;une offre l&apos;affiche.
+        </p>
+      ) : null}
+
+      <ConsoleSection colonnes={1}>
+        <ConsoleChamp id="edition-nom" libelle="Nom" requis>
+          <Input
+            id="edition-nom"
+            required
+            maxLength={120}
+            value={nom}
+            onChange={(e) => setNom(e.target.value)}
+          />
+        </ConsoleChamp>
+        <ConsoleChamp
           id="edition-alt"
-          className="mt-1.5"
-          maxLength={300}
-          value={alt}
-          onChange={(e) => setAlt(e.target.value)}
-          placeholder="Ce que montre l'image"
+          libelle="Texte alternatif proposé par défaut"
+          aide="Lu par les lecteurs d'écran : décrivez ce que montre l'image."
+        >
+          <Input
+            id="edition-alt"
+            maxLength={300}
+            value={alt}
+            onChange={(e) => setAlt(e.target.value)}
+            placeholder="Ce que montre l'image"
+          />
+        </ConsoleChamp>
+        <ConsoleInterrupteur
+          icone={Share2}
+          libelle="Partager avec les partenaires"
+          description="Sinon, un partenaire ne voit que les images qu'il a lui-même importées."
+          coche={commune}
+          onChange={setCommune}
         />
-      </div>
-      <div className="flex items-start gap-3 rounded-lg bg-muted/50 p-3">
-        <Switch id="edition-commune" checked={commune} onCheckedChange={setCommune} />
-        <div className="min-w-0">
-          <label htmlFor="edition-commune" className="text-sm font-medium">
-            Partager avec les partenaires
-          </label>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            Sinon, un partenaire ne voit que les images qu&apos;il a lui-même
-            importées.
-          </p>
-        </div>
-      </div>
-
-      <DialogFooter>
-        <Button type="button" variant="ghost" onClick={onFermer}>
-          Annuler
-        </Button>
-        <Button type="submit" disabled={enregistrement.isPending || !nom.trim()}>
-          {enregistrement.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
-          Enregistrer
-        </Button>
-      </DialogFooter>
-    </form>
+      </ConsoleSection>
+    </ConsoleDialogue>
   );
 }

@@ -2,19 +2,27 @@
 
 import { use } from "react";
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import {
   Accessibility,
+  Activity,
   ArrowLeft,
+  Ban,
   Bell,
   BellRing,
   Bot,
   Briefcase,
   Cake,
+  CheckCircle2,
+  ChevronDown,
+  Clock,
   FileText,
   GraduationCap,
   Heart,
+  KeyRound,
   Layers,
+  LayoutGrid,
   Loader2,
   Mail,
   MapPin,
@@ -22,20 +30,37 @@ import {
   MessageSquare,
   MessagesSquare,
   Phone,
+  ShieldCheck,
   Star,
   ThumbsUp,
+  UserCog,
   UserRound,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { EmptyState } from "@/components/shared/empty-state";
 import { ConsolePastille } from "@/components/admin/console-ui";
+import {
+  ConsoleChiffre,
+  ConsolePanneau,
+  useConfirmation,
+} from "@/components/admin/console-kit";
 import { DefinirMotDePasse } from "@/components/admin/definir-mot-de-passe";
-import { adminApi, fileUrl } from "@/lib/api";
+import { adminApi, errorMessage, fileUrl } from "@/lib/api";
 import {
   FEEDBACK_CATEGORY_LABELS,
   FEEDBACK_PRIORITY_LABELS,
   FEEDBACK_STATUS_LABELS,
+  ROLE_LABELS,
   roleLabel,
   sexeLabel,
   statutProfessionnelLabel,
@@ -57,13 +82,13 @@ import type {
 } from "@/lib/types";
 
 const TEINTE_ROLE: Record<Role, string> = {
-  ADMIN: "var(--destructive)",
-  PARTENAIRE: "var(--chart-2)",
-  MEMBRE: "var(--chart-1)",
+  ADMIN: "var(--c-rose)",
+  PARTENAIRE: "var(--c-orange)",
+  MEMBRE: "var(--c-blue)",
 };
 
 const TEINTE_STATUT_SIGNALEMENT: Record<FeedbackStatus, string | undefined> = {
-  OUVERT: "var(--info)",
+  OUVERT: "var(--c-sky)",
   EN_COURS: "var(--warning)",
   RESOLU: "var(--success)",
   FERME: undefined,
@@ -272,7 +297,8 @@ function Ligne({
 
 function Panneau({
   titre,
-  teinte = "var(--chart-1)",
+  teinte = "var(--primary)",
+  icone,
   compte,
   index = 0,
   className,
@@ -280,6 +306,7 @@ function Panneau({
 }: {
   titre: string;
   teinte?: string;
+  icone?: typeof Mail;
   /** Total réel, quand la liste affichée n'en montre qu'un extrait. */
   compte?: number;
   index?: number;
@@ -287,62 +314,25 @@ function Panneau({
   children: React.ReactNode;
 }) {
   return (
-    <section
+    <div
       style={{ "--i": index } as React.CSSProperties}
-      className={cn(
-        "entree overflow-hidden rounded-2xl border bg-card shadow-sm",
-        className,
-      )}
+      className={cn("entree", className)}
     >
-      <header className="flex items-center gap-2.5 border-b px-5 py-3.5">
-        <span
-          aria-hidden
-          className="h-4 w-1 shrink-0 rounded-full"
-          style={{ background: teinte }}
-        />
-        <h2 className="text-sm font-bold">{titre}</h2>
-        {compte !== undefined && compte > 0 ? (
-          <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold tabular-nums text-muted-foreground">
-            {compte}
-          </span>
-        ) : null}
-      </header>
-      <div className="p-5">{children}</div>
-    </section>
-  );
-}
-
-function Mesure({
-  label,
-  valeur,
-  icone: Icone,
-  teinte,
-  precision,
-}: {
-  label: string;
-  valeur: number;
-  icone: typeof Briefcase;
-  teinte: string;
-  precision?: string;
-}) {
-  return (
-    <div className="rounded-xl border bg-card p-3.5">
-      <div className="flex items-center gap-2">
-        <span
-          className="grid size-7 shrink-0 place-items-center rounded-lg"
-          style={{
-            background: `color-mix(in oklch, ${teinte} 13%, transparent)`,
-            color: teinte,
-          }}
-        >
-          <Icone className="size-3.5" aria-hidden />
-        </span>
-        <p className="min-w-0 truncate text-xs text-muted-foreground">{label}</p>
-      </div>
-      <p className="mt-2 text-2xl font-bold leading-none tabular-nums">{valeur}</p>
-      {precision ? (
-        <p className="mt-1.5 truncate text-xs text-muted-foreground">{precision}</p>
-      ) : null}
+      <ConsolePanneau
+        titre={titre}
+        icone={icone}
+        teinte={teinte}
+        className="h-full"
+        actions={
+          compte !== undefined && compte > 0 ? (
+            <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold tabular-nums text-muted-foreground">
+              {compte}
+            </span>
+          ) : undefined
+        }
+      >
+        {children}
+      </ConsolePanneau>
     </div>
   );
 }
@@ -436,11 +426,41 @@ function Vide({ texte }: { texte: string }) {
   );
 }
 
+/** Onglet avec compteur facultatif. */
+function Onglet({
+  valeur,
+  icone: Icone,
+  libelle,
+  compte,
+}: {
+  valeur: string;
+  icone: typeof Mail;
+  libelle: string;
+  compte?: number;
+}) {
+  return (
+    <TabsTrigger
+      value={valeur}
+      className="h-9 flex-none gap-2 rounded-lg px-3.5 data-active:shadow-sm"
+    >
+      <Icone className="size-4" aria-hidden />
+      {libelle}
+      {compte ? (
+        <span className="rounded-full bg-muted px-1.5 text-[10px] font-bold tabular-nums text-muted-foreground">
+          {compte}
+        </span>
+      ) : null}
+    </TabsTrigger>
+  );
+}
+
 export default function AdminUserDetailPage(props: {
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(props.params);
   const userId = Number(id);
+  const queryClient = useQueryClient();
+  const confirmer = useConfirmation();
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["admin", "user", userId],
@@ -448,10 +468,40 @@ export default function AdminUserDetailPage(props: {
     enabled: Number.isInteger(userId),
   });
 
+  const rafraichir = async () => {
+    await queryClient.invalidateQueries({ queryKey: ["admin", "user", userId] });
+    await queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
+  };
+
+  const changerRole = useMutation({
+    mutationFn: (role: Role) => adminApi.setUserRole(userId, role),
+    onSuccess: async () => {
+      await rafraichir();
+      toast.success("Rôle modifié");
+    },
+    onError: (error) =>
+      toast.error("Modification impossible", { description: errorMessage(error) }),
+  });
+
+  const basculerActif = useMutation({
+    mutationFn: (isActive: boolean) => adminApi.toggleUserActive(userId, isActive),
+    onSuccess: async (_donnees, isActive) => {
+      await rafraichir();
+      toast.success(isActive ? "Compte réactivé" : "Compte désactivé");
+    },
+    onError: (error) =>
+      toast.error("Modification impossible", { description: errorMessage(error) }),
+  });
+
   if (isLoading) {
     return (
-      <div className="grid place-items-center py-24">
-        <Loader2 className="size-5 animate-spin text-muted-foreground" />
+      <div className="space-y-4">
+        <div className="shimmer h-44 rounded-3xl bg-muted" />
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          {Array.from({ length: 4 }, (_, index) => (
+            <div key={index} className="shimmer h-20 rounded-2xl bg-muted" />
+          ))}
+        </div>
         <span className="sr-only">Chargement de la fiche…</span>
       </div>
     );
@@ -461,7 +511,7 @@ export default function AdminUserDetailPage(props: {
     return (
       <EmptyState
         icon={UserRound}
-        couleur="var(--chart-2)"
+        couleur="var(--c-blue)"
         title="Utilisateur introuvable"
         description="Ce compte a peut-être été supprimé depuis l'ouverture de la liste."
         action={
@@ -484,51 +534,110 @@ export default function AdminUserDetailPage(props: {
   const cv = data.cv;
   const engagement = data.engagementStats;
 
+  const desactiver = async () => {
+    if (
+      data.isActive &&
+      !(await confirmer({
+        titre: `Désactiver le compte de ${fullName(data)} ?`,
+        message:
+          "La personne ne pourra plus se connecter. Ses données sont conservées et le compte peut être réactivé à tout moment.",
+        confirmer: "Désactiver",
+        danger: true,
+      }))
+    ) {
+      return;
+    }
+    basculerActif.mutate(!data.isActive);
+  };
+
+  const activite =
+    (data._count?.favorites ?? 0) +
+    (engagement?.likesCount ?? 0) +
+    (data._count?.retours ?? 0) +
+    (engagement?.commentsCount ?? 0) +
+    (data._count?.offres ?? 0);
+
   return (
     <>
       <Button
         variant="ghost"
         size="sm"
-        className="mb-3 -ml-2 rounded-lg"
+        className="mb-3 -ml-2 rounded-lg text-muted-foreground"
         render={<Link href="/admin/utilisateurs" />}
       >
         <ArrowLeft className="size-4" />
         Utilisateurs
       </Button>
 
-      <header className="entree relative mb-4 overflow-hidden rounded-2xl border bg-card shadow-sm">
-        <span
+      {/* En-tête de profil */}
+      <header className="entree relative mb-5 overflow-hidden rounded-3xl border bg-card shadow-sm">
+        <div
           aria-hidden
-          className="absolute inset-x-0 top-0 h-20"
+          className="relative h-28 sm:h-32"
           style={{
-            background: `linear-gradient(135deg, color-mix(in oklch, ${teinte} 16%, transparent), transparent 70%)`,
+            background: `linear-gradient(120deg, color-mix(in oklch, ${teinte} 22%, var(--card)), color-mix(in oklch, ${teinte} 6%, var(--card)) 60%, var(--card))`,
           }}
-        />
+        >
+          <span
+            className="absolute inset-0 opacity-50"
+            style={{
+              backgroundImage: `radial-gradient(color-mix(in oklch, ${teinte} 30%, transparent) 1px, transparent 1px)`,
+              backgroundSize: "18px 18px",
+              maskImage: "linear-gradient(90deg, transparent, black)",
+              WebkitMaskImage: "linear-gradient(90deg, transparent, black)",
+            }}
+          />
+        </div>
 
-        <div className="relative flex flex-col gap-4 p-5 pt-8 sm:flex-row sm:items-end">
-          <Avatar className="size-20 shrink-0 border-4 border-card shadow-sm">
-            <AvatarImage src={fileUrl(data.pictureUrl)} alt="" />
-            <AvatarFallback
-              className="text-2xl font-bold"
-              style={{
-                background: `color-mix(in oklch, ${teinte} 15%, transparent)`,
-                color: teinte,
-              }}
-            >
-              {(data.firstName?.[0] ?? data.username[0] ?? "?").toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
+        <div className="relative -mt-14 flex flex-col gap-5 px-5 pb-5 sm:px-6 lg:flex-row lg:items-end">
+          <div className="relative w-fit">
+            <Avatar className="size-24 shrink-0 border-4 border-card shadow-md sm:size-28">
+              <AvatarImage src={fileUrl(data.pictureUrl)} alt="" />
+              <AvatarFallback
+                className="text-3xl font-bold"
+                style={{
+                  background: `color-mix(in oklch, ${teinte} 15%, var(--card))`,
+                  color: teinte,
+                }}
+              >
+                {(data.firstName?.[0] ?? data.username[0] ?? "?").toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <span
+              aria-label={data.isActive ? "Compte actif" : "Compte désactivé"}
+              className={cn(
+                "absolute bottom-2 right-2 size-4 rounded-full ring-4 ring-card",
+                data.isActive ? "bg-[var(--success)]" : "bg-muted-foreground",
+              )}
+            />
+          </div>
 
-          <div className="min-w-0 flex-1 pb-1">
-            <h1 className="truncate text-2xl font-bold tracking-tight">
+          <div className="min-w-0 flex-1">
+            <h1 className="truncate text-2xl font-extrabold tracking-tight sm:text-3xl">
               {fullName(data)}
             </h1>
-            <p className="mt-0.5 truncate text-sm text-muted-foreground">
-              @{data.username} · {data.email} ·{" "}
-              <span className="font-mono">#{data.id}</span>
+            <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
+              <span>@{data.username}</span>
+              <a
+                href={`mailto:${data.email}`}
+                className="inline-flex items-center gap-1 hover:text-foreground hover:underline"
+              >
+                <Mail className="size-3.5" aria-hidden />
+                {data.email}
+              </a>
+              {data.telephone ? (
+                <a
+                  href={`tel:${data.telephone.replace(/\s+/g, "")}`}
+                  className="inline-flex items-center gap-1 hover:text-foreground hover:underline"
+                >
+                  <Phone className="size-3.5" aria-hidden />
+                  {data.telephone}
+                </a>
+              ) : null}
+              <span className="font-mono text-xs">#{data.id}</span>
             </p>
 
-            <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+            <div className="mt-3 flex flex-wrap items-center gap-1.5">
               <ConsolePastille
                 libelle={roleLabel(data.role)}
                 teinte={teinte}
@@ -543,94 +652,187 @@ export default function AdminUserDetailPage(props: {
                 <ConsolePastille libelle="Connexion Google" discret />
               ) : null}
               {data.isEmailVerified === false ? (
-                <ConsolePastille
-                  libelle="Email non vérifié"
-                  teinte="var(--warning)"
-                />
+                <ConsolePastille libelle="Email non vérifié" teinte="var(--warning)" />
               ) : null}
               {cv?.estPublic ? (
-                <ConsolePastille libelle="CV public" teinte="var(--chart-3)" />
+                <ConsolePastille libelle="CV public" teinte="var(--c-emerald)" />
               ) : null}
             </div>
           </div>
 
-          <dl className="shrink-0 space-y-1 pb-1 text-xs text-muted-foreground sm:text-right">
-            <div>
-              <dt className="inline">Inscrit le </dt>
-              <dd className="inline font-semibold text-foreground">
-                {formatDate(data.createdAt)}
-              </dd>
+          <div className="flex shrink-0 flex-col gap-3 lg:items-end">
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-lg"
+                render={<a href={`mailto:${data.email}`} />}
+              >
+                <Mail className="size-4" />
+                Écrire
+              </Button>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  render={
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="rounded-lg"
+                      disabled={changerRole.isPending}
+                    >
+                      {changerRole.isPending ? (
+                        <Loader2 className="size-4 animate-spin" />
+                      ) : (
+                        <UserCog className="size-4" />
+                      )}
+                      Rôle
+                      <ChevronDown className="size-3.5 opacity-60" />
+                    </Button>
+                  }
+                />
+                <DropdownMenuContent align="end" className="w-52">
+                  <DropdownMenuGroup>
+                    <DropdownMenuLabel className="text-xs">Changer le rôle</DropdownMenuLabel>
+                    {(Object.keys(ROLE_LABELS) as Role[]).map((valeur) => (
+                      <DropdownMenuItem
+                        key={valeur}
+                        disabled={data.role === valeur || changerRole.isPending}
+                        onClick={() => changerRole.mutate(valeur)}
+                      >
+                        <span
+                          aria-hidden
+                          className="size-2 rounded-full"
+                          style={{ background: TEINTE_ROLE[valeur] }}
+                        />
+                        {ROLE_LABELS[valeur]}
+                        {data.role === valeur ? (
+                          <span className="ml-auto text-[10px] text-muted-foreground">
+                            actuel
+                          </span>
+                        ) : null}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <DefinirMotDePasse utilisateurId={data.id} nomUtilisateur={data.username} />
+
+              <Button
+                variant="outline"
+                size="sm"
+                className={cn(
+                  "rounded-lg",
+                  data.isActive
+                    ? "text-destructive hover:bg-destructive/10 hover:text-destructive"
+                    : "text-[var(--success)]",
+                )}
+                disabled={basculerActif.isPending}
+                onClick={desactiver}
+              >
+                {basculerActif.isPending ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : data.isActive ? (
+                  <Ban className="size-4" />
+                ) : (
+                  <CheckCircle2 className="size-4" />
+                )}
+                {data.isActive ? "Désactiver" : "Réactiver"}
+              </Button>
             </div>
-            <div>
-              <dt className="inline">Dernière activité </dt>
-              <dd className="inline font-semibold text-foreground">
-                {data.derniereActivite
-                  ? formatRelative(data.derniereActivite)
-                  : "aucune"}
-              </dd>
-            </div>
-          </dl>
+
+            <dl className="flex flex-wrap gap-x-5 gap-y-1 text-xs text-muted-foreground lg:justify-end">
+              <div className="flex items-center gap-1.5">
+                <Clock className="size-3.5" aria-hidden />
+                <dt>Inscrit le</dt>
+                <dd className="font-semibold text-foreground">{formatDate(data.createdAt)}</dd>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Activity className="size-3.5" aria-hidden />
+                <dt>Dernière activité</dt>
+                <dd className="font-semibold text-foreground">
+                  {data.derniereActivite ? formatRelative(data.derniereActivite) : "aucune"}
+                </dd>
+              </div>
+            </dl>
+          </div>
         </div>
       </header>
 
-      <section className="mb-4 grid gap-3 grid-cols-2 lg:grid-cols-4 xl:grid-cols-8">
-        <Mesure
-          label="Offres"
+      {/* Chiffres clés */}
+      <section className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4 2xl:grid-cols-8">
+        <ConsoleChiffre
+          libelle="Offres publiées"
           valeur={data._count?.offres ?? 0}
           icone={Briefcase}
-          teinte="var(--chart-3)"
+          teinte="var(--c-emerald)"
         />
-        <Mesure
-          label="Retours"
+        <ConsoleChiffre
+          libelle="Retours"
           valeur={data._count?.retours ?? 0}
           icone={Star}
-          teinte="var(--chart-4)"
+          teinte="var(--c-orange)"
         />
-        <Mesure
-          label="Favoris"
+        <ConsoleChiffre
+          libelle="Favoris"
           valeur={data._count?.favorites ?? 0}
           icone={Heart}
-          teinte="var(--chart-5)"
+          teinte="var(--c-rose)"
         />
-        <Mesure
-          label="J'aime"
+        <ConsoleChiffre
+          libelle="J'aime"
           valeur={engagement?.likesCount ?? 0}
           icone={ThumbsUp}
-          teinte="var(--chart-1)"
+          teinte="var(--c-sky)"
         />
-        <Mesure
-          label="Commentaires"
+        <ConsoleChiffre
+          libelle="Commentaires"
           valeur={engagement?.commentsCount ?? 0}
           icone={MessageSquare}
-          teinte="var(--chart-2)"
+          teinte="var(--c-indigo)"
         />
-        <Mesure
-          label="Signalements"
+        <ConsoleChiffre
+          libelle="Signalements"
           valeur={engagement?.feedbacksCount ?? 0}
           icone={MessageCircle}
-          teinte="var(--chart-5)"
+          teinte="var(--c-rose)"
         />
-        <Mesure
-          label="Alertes"
+        <ConsoleChiffre
+          libelle="Alertes"
           valeur={engagement?.alertsCount ?? 0}
           icone={Bell}
-          teinte="var(--chart-4)"
+          teinte="var(--c-amber)"
         />
-        <Mesure
-          label="Assistant"
+        <ConsoleChiffre
+          libelle="Questions à l'assistant"
           valeur={data.aiChatStats?.userMessages ?? 0}
           icone={Bot}
-          teinte="var(--chart-2)"
-          precision={
+          teinte="var(--c-teal)"
+          note={
             data.aiChatStats?.totalConversations
-              ? `${data.aiChatStats.totalConversations} conv.`
+              ? `${data.aiChatStats.totalConversations} conversation${data.aiChatStats.totalConversations > 1 ? "s" : ""}`
               : undefined
           }
         />
       </section>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Panneau titre="Identité et coordonnées" teinte="var(--chart-2)" index={0}>
+      <Tabs defaultValue="profil" className="gap-4">
+        <TabsList className="no-scrollbar h-auto w-full justify-start gap-1 overflow-x-auto rounded-xl border bg-card p-1 shadow-sm">
+          <Onglet valeur="profil" icone={LayoutGrid} libelle="Profil" />
+          <Onglet valeur="cv" icone={FileText} libelle="CV" />
+          <Onglet valeur="activite" icone={Activity} libelle="Activité" compte={activite} />
+          <Onglet
+            valeur="suivi"
+            icone={ShieldCheck}
+            libelle="Signalements et alertes"
+            compte={(engagement?.feedbacksCount ?? 0) + (engagement?.alertsCount ?? 0)}
+          />
+        </TabsList>
+
+        {/* ----------------------------------------------------- Profil */}
+        <TabsContent value="profil" className="grid gap-4 lg:grid-cols-2">
+        <Panneau titre="Identité et coordonnées" icone={UserRound} teinte="var(--c-blue)" index={0}>
           <dl className="divide-y">
             <Ligne icone={Mail} label="Email" valeur={data.email} />
             <Ligne icone={Phone} label="Téléphone" valeur={data.telephone} />
@@ -654,7 +856,7 @@ export default function AdminUserDetailPage(props: {
           </dl>
         </Panneau>
 
-        <Panneau titre="Localisation" teinte="var(--chart-5)" index={1}>
+        <Panneau titre="Localisation" icone={MapPin} teinte="var(--c-teal)" index={1}>
           {localisation || data.adresse ? (
             <dl className="divide-y">
               <Ligne icone={MapPin} label="Pays" valeur={data.pays} />
@@ -668,7 +870,7 @@ export default function AdminUserDetailPage(props: {
           )}
         </Panneau>
 
-        <Panneau titre="Compte et accès" teinte="var(--destructive)" index={2}>
+        <Panneau titre="Compte et accès" icone={KeyRound} teinte="var(--c-rose)" index={2}>
           <dl className="divide-y">
             <Ligne label="Identifiant interne" valeur={`#${data.id}`} />
             <Ligne label="Nom d'utilisateur" valeur={data.username} />
@@ -707,7 +909,7 @@ export default function AdminUserDetailPage(props: {
           </div>
         </Panneau>
 
-        <Panneau titre="Échanges" teinte="var(--chart-1)" index={3}>
+        <Panneau titre="Échanges" icone={MessagesSquare} teinte="var(--c-indigo)" index={3}>
           <dl className="divide-y">
             <Ligne
               icone={MessagesSquare}
@@ -750,12 +952,15 @@ export default function AdminUserDetailPage(props: {
             />
           </dl>
         </Panneau>
+        </TabsContent>
 
+        {/* --------------------------------------------------------- CV */}
+        <TabsContent value="cv">
         <Panneau
           titre="Curriculum vitæ"
-          teinte="var(--chart-3)"
+          icone={FileText}
+          teinte="var(--c-emerald)"
           index={4}
-          className="lg:col-span-2"
         >
           {!cv ? (
             <Vide texte="Aucun CV renseigné." />
@@ -902,10 +1107,14 @@ export default function AdminUserDetailPage(props: {
             </div>
           )}
         </Panneau>
+        </TabsContent>
 
+        {/* --------------------------------------------------- Activité */}
+        <TabsContent value="activite" className="grid gap-4 lg:grid-cols-2">
         <Panneau
           titre="Favoris"
-          teinte="var(--chart-5)"
+          icone={Heart}
+          teinte="var(--c-rose)"
           compte={data._count?.favorites}
           index={5}
         >
@@ -935,7 +1144,8 @@ export default function AdminUserDetailPage(props: {
 
         <Panneau
           titre="Offres aimées"
-          teinte="var(--chart-1)"
+          icone={ThumbsUp}
+          teinte="var(--c-sky)"
           compte={engagement?.likesCount}
           index={6}
         >
@@ -959,7 +1169,8 @@ export default function AdminUserDetailPage(props: {
 
         <Panneau
           titre="Retours d'expérience"
-          teinte="var(--chart-4)"
+          icone={Star}
+          teinte="var(--c-orange)"
           compte={data._count?.retours}
           index={7}
         >
@@ -997,7 +1208,8 @@ export default function AdminUserDetailPage(props: {
 
         <Panneau
           titre="Commentaires"
-          teinte="var(--chart-2)"
+          icone={MessageSquare}
+          teinte="var(--c-indigo)"
           compte={engagement?.commentsCount}
           index={8}
         >
@@ -1030,9 +1242,48 @@ export default function AdminUserDetailPage(props: {
           )}
         </Panneau>
 
+        {data.offres?.length ? (
+          <Panneau
+            titre="Offres publiées"
+            icone={Briefcase}
+            teinte="var(--c-emerald)"
+            compte={data._count?.offres}
+            index={12}
+            className="lg:col-span-2"
+          >
+            <ul className="grid gap-0.5 sm:grid-cols-2">
+              {data.offres.map((offre) => (
+                <li key={offre.id}>
+                  <LigneOffre
+                    id={offre.id}
+                    titre={offre.titre}
+                    type={offre.typeOffre}
+                    cloturee={offre.estCloturee}
+                    meta={[
+                      formatDateShort(offre.datePublication),
+                      offre._count?.retours
+                        ? `${offre._count.retours} retour${offre._count.retours > 1 ? "s" : ""}`
+                        : null,
+                      offre._count?.commentaires
+                        ? `${offre._count.commentaires} comm.`
+                        : null,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  />
+                </li>
+              ))}
+            </ul>
+          </Panneau>
+        ) : null}
+        </TabsContent>
+
+        {/* ------------------------------------ Signalements et alertes */}
+        <TabsContent value="suivi" className="grid gap-4 lg:grid-cols-2">
         <Panneau
           titre="Signalements déposés"
-          teinte="var(--chart-5)"
+          icone={MessageCircle}
+          teinte="var(--c-rose)"
           compte={engagement?.feedbacksCount}
           index={9}
         >
@@ -1074,7 +1325,8 @@ export default function AdminUserDetailPage(props: {
 
         <Panneau
           titre="Alertes configurées"
-          teinte="var(--chart-4)"
+          icone={Bell}
+          teinte="var(--c-amber)"
           compte={engagement?.alertsCount}
           index={10}
         >
@@ -1136,7 +1388,8 @@ export default function AdminUserDetailPage(props: {
 
         <Panneau
           titre="Dernières notifications"
-          teinte="var(--chart-1)"
+          icone={BellRing}
+          teinte="var(--c-indigo)"
           compte={engagement?.notificationsCount}
           index={11}
         >
@@ -1170,40 +1423,8 @@ export default function AdminUserDetailPage(props: {
           )}
         </Panneau>
 
-        {data.offres?.length ? (
-          <Panneau
-            titre="Offres publiées"
-            teinte="var(--chart-3)"
-            compte={data._count?.offres}
-            index={12}
-            className="lg:col-span-2"
-          >
-            <ul className="grid gap-0.5 sm:grid-cols-2">
-              {data.offres.map((offre) => (
-                <li key={offre.id}>
-                  <LigneOffre
-                    id={offre.id}
-                    titre={offre.titre}
-                    type={offre.typeOffre}
-                    cloturee={offre.estCloturee}
-                    meta={[
-                      formatDateShort(offre.datePublication),
-                      offre._count?.retours
-                        ? `${offre._count.retours} retour${offre._count.retours > 1 ? "s" : ""}`
-                        : null,
-                      offre._count?.commentaires
-                        ? `${offre._count.commentaires} comm.`
-                        : null,
-                    ]
-                      .filter(Boolean)
-                      .join(" · ")}
-                  />
-                </li>
-              ))}
-            </ul>
-          </Panneau>
-        ) : null}
-      </div>
+        </TabsContent>
+      </Tabs>
     </>
   );
 }

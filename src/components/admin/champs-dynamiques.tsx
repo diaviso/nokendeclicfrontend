@@ -1,6 +1,8 @@
 "use client";
 
 import type { UseFormReturn } from "react-hook-form";
+import { Layers } from "lucide-react";
+import { ConsolePanneau } from "@/components/admin/console-kit";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,7 +24,7 @@ export interface FormAvecChamps {
 }
 
 const selectClass =
-  "h-9 w-full rounded-md border bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:ring-2 focus-visible:ring-ring/50";
+  "h-9 w-full rounded-lg border bg-background px-3 text-sm shadow-xs outline-none transition-colors focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40";
 
 function ChampDynamique({
   champ,
@@ -41,7 +43,7 @@ function ChampDynamique({
   )?.[champ.code]?.message;
 
   const label = (
-    <Label htmlFor={id}>
+    <Label htmlFor={id} className="text-[13px] font-semibold">
       {champ.libelle}
       {champ.obligatoire ? (
         <span className="ml-0.5 text-destructive" aria-hidden>
@@ -153,18 +155,15 @@ export function ChampsDynamiques({
   if (!type?.champs.length) return null;
 
   return (
-    <section className="rounded-lg border bg-card">
-      <header className="border-b px-4 py-3">
-        <h2 className="text-sm font-semibold">Détails — {type.libelle}</h2>
-        {type.description ? (
-          <p className="mt-0.5 text-xs text-muted-foreground">{type.description}</p>
-        ) : null}
-      </header>
-      <div className="grid gap-4 p-4 sm:grid-cols-2">
-        {type.champs.map((champ) => (
-          <ChampDynamique key={champ.code} champ={champ} form={form} />
-        ))}
-      </div>
-    </section>
+    <ConsolePanneau
+      titre={`Détails — ${type.libelle}`}
+      description={type.description ?? "Informations propres à ce type d'opportunité."}
+      icone={Layers}
+      corpsClassName="grid gap-4 p-5 sm:grid-cols-2"
+    >
+      {type.champs.map((champ) => (
+        <ChampDynamique key={champ.code} champ={champ} form={form} />
+      ))}
+    </ConsolePanneau>
   );
 }

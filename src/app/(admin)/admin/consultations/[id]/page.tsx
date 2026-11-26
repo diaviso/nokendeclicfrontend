@@ -5,11 +5,18 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowLeft, ChevronRight, Download, Eye, Loader2 } from "lucide-react";
+import { ArrowLeft, Download, ExternalLink, Eye, Loader2, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ConsoleHeader } from "@/components/admin/console-header";
 import { ConsoleTable, type ColonneConsole } from "@/components/admin/console-table";
-import { ConsoleFiltre, ConsolePagination } from "@/components/admin/console-ui";
+import {
+  ConsoleFiltre,
+  ConsolePagination,
+  ConsoleToolbar,
+} from "@/components/admin/console-ui";
+import { ConsoleAction, ConsoleActions } from "@/components/admin/console-kit";
+import { EmptyState } from "@/components/shared/empty-state";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   consultationsApi,
   errorMessage,
@@ -18,9 +25,9 @@ import {
   type PersonneConsultation,
 } from "@/lib/api";
 import { roleLabel, statutProfessionnelLabel } from "@/lib/enums";
-import { formatDateTime, fullName } from "@/lib/format";
+import { formatDate, formatDateTime, fullName } from "@/lib/format";
 
-const TEINTE = "var(--chart-1)";
+const TEINTE = "var(--c-sky)";
 type Periode = "0" | "7" | "30" | "90" | "365";
 
 export default function DetailConsultationsPage({
@@ -65,19 +72,31 @@ export default function DetailConsultationsPage({
       cle: "personne",
       entete: "Personne",
       cellule: (p) => (
-        <div className="min-w-0">
-          <Link
-            href={`/admin/utilisateurs/${p.id}`}
-            className="flex items-center gap-1 truncate font-medium text-primary hover:underline"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {fullName(p)}
-            <ChevronRight className="size-3.5 shrink-0" aria-hidden />
-          </Link>
-          <p className="truncate text-xs text-muted-foreground">
-            {p.email}
-            {p.telephone ? ` · ${p.telephone}` : ""}
-          </p>
+        <div className="flex min-w-0 items-center gap-3">
+          <Avatar className="size-9 shrink-0">
+            <AvatarFallback
+              className="text-xs font-semibold"
+              style={{
+                background: `color-mix(in oklch, ${TEINTE} 14%, transparent)`,
+                color: TEINTE,
+              }}
+            >
+              {(fullName(p)[0] ?? "?").toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+          <div className="min-w-0">
+            <Link
+              href={`/admin/utilisateurs/${p.id}`}
+              className="block truncate font-semibold hover:text-primary hover:underline"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {fullName(p)}
+            </Link>
+            <p className="truncate text-xs text-muted-foreground">
+              {p.email}
+              {p.telephone ? ` · ${p.telephone}` : ""}
+            </p>
+          </div>
         </div>
       ),
     },
@@ -101,7 +120,21 @@ export default function DetailConsultationsPage({
       cle: "nombre",
       entete: "Consultations",
       align: "right",
-      cellule: (p) => <span className="font-semibold">{p.nombre}</span>,
+      cellule: (p) => (
+        <span
+          className="inline-flex min-w-7 justify-center rounded-md px-1.5 py-0.5 text-xs font-bold tabular-nums"
+          style={
+            p.nombre > 1
+              ? {
+                  background: `color-mix(in oklch, ${TEINTE} 14%, transparent)`,
+                  color: TEINTE,
+                }
+              : undefined
+          }
+        >
+          {p.nombre}
+        </span>
+      ),
     },
     {
       cle: "dates",
@@ -110,17 +143,33 @@ export default function DetailConsultationsPage({
         p.nombre === 1 ? (
           formatDateTime(p.derniere)
         ) : (
-          <details onClick={(e) => e.stopPropagation()}>
-            <summary className="cursor-pointer">
+          <details onClick={(e) => e.stopPropagation()} className="text-sm">
+            <summary className="cursor-pointer select-none hover:text-primary">
               Dernière : {formatDateTime(p.derniere)}
             </summary>
-            <ul className="mt-1.5 space-y-0.5 text-xs text-muted-foreground">
+            <ul className="mt-1.5 space-y-0.5 border-l-2 pl-2.5 text-xs text-muted-foreground">
               {p.dates.map((date) => (
                 <li key={date}>{formatDateTime(date)}</li>
               ))}
             </ul>
           </details>
         ),
+    },
+    {
+      cle: "actions",
+      entete: "",
+      align: "right",
+      className: "w-14",
+      cellule: (p) => (
+        <ConsoleActions>
+          <ConsoleAction
+            libelle="Ouvrir la fiche"
+            icone={UserRound}
+            ton="primaire"
+            onClick={() => router.push(`/admin/utilisateurs/${p.id}`)}
+          />
+        </ConsoleActions>
+      ),
     },
   ];
 
@@ -140,7 +189,11 @@ export default function DetailConsultationsPage({
         title={data?.offre.titre ?? "Consultations de l'offre"}
         icon={Eye}
         teinte={TEINTE}
-        description="Les vues totales comptent aussi les visiteurs anonymes et les consultations antérieures au suivi nominatif."
+        description={`${
+          data?.offre.entreprise ? `${data.offre.entreprise} · ` : ""
+        }${
+          data ? `publiée le ${formatDate(data.offre.datePublication)}. ` : ""
+        }Les vues totales comptent aussi les visiteurs anonymes et les consultations antérieures au suivi nominatif.`}
         mesures={
           data
             ? [
@@ -148,10 +201,27 @@ export default function DetailConsultationsPage({
                 { label: "consultations", valeur: data.bilan.consultations, teinte: TEINTE },
                 { label: "personnes uniques", valeur: data.bilan.uniques },
                 { label: "répétées", valeur: data.bilan.repetees },
+                ...(data.bilan.comptesSupprimes
+                  ? [
+                      {
+                        label: "comptes supprimés depuis",
+                        valeur: data.bilan.comptesSupprimes,
+                      },
+                    ]
+                  : []),
               ]
             : undefined
         }
         actions={
+          <>
+            <Button
+              variant="ghost"
+              className="rounded-xl"
+              render={<Link href={`/offres/${offreId}`} target="_blank" />}
+            >
+              <ExternalLink className="size-4" />
+              Voir l&apos;offre
+            </Button>
           <Button
             variant="outline"
             className="rounded-xl"
@@ -165,10 +235,11 @@ export default function DetailConsultationsPage({
             )}
             Exporter en Excel
           </Button>
+          </>
         }
       />
 
-      <div className="mb-4">
+      <ConsoleToolbar>
         <ConsoleFiltre<Periode>
           label="Période"
           valeur={periode}
@@ -184,12 +255,21 @@ export default function DetailConsultationsPage({
             { valeur: "365", libelle: "1 an" },
           ]}
         />
-      </div>
+        {data ? (
+          <p className="text-xs text-muted-foreground sm:ml-auto">
+            {data.total} personne{data.total > 1 ? "s" : ""} identifiée
+            {data.total > 1 ? "s" : ""}
+          </p>
+        ) : null}
+      </ConsoleToolbar>
 
       {error ? (
-        <p className="rounded-xl border p-4 text-sm text-destructive">
-          {errorMessage(error)}
-        </p>
+        <EmptyState
+          icon={Eye}
+          couleur="var(--destructive)"
+          title="Consultations indisponibles"
+          description={errorMessage(error)}
+        />
       ) : (
         <ConsoleTable
           lignes={data?.personnes ?? []}
@@ -197,11 +277,14 @@ export default function DetailConsultationsPage({
           cle={(p) => p.id}
           chargement={isLoading}
           onLigneClick={(p) => router.push(`/admin/utilisateurs/${p.id}`)}
+          rail={(p) => (p.nombre > 1 ? TEINTE : undefined)}
           vide={
-            <p className="p-8 text-center text-sm text-muted-foreground">
-              Aucune personne connectée n&apos;a encore consulté cette offre sur
-              cette période.
-            </p>
+            <EmptyState
+              icon={Eye}
+              couleur={TEINTE}
+              title="Aucune consultation identifiée"
+              description="Aucune personne connectée n'a encore consulté cette offre sur cette période."
+            />
           }
         />
       )}

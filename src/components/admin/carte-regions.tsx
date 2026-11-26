@@ -34,7 +34,7 @@ function palier(valeur: number, maximum: number): number {
 function teinte(niveau: number): string {
   if (niveau === 0) return "var(--muted)";
   const melange = 12 + (niveau - 1) * 20; // 12 % → 92 %
-  return `color-mix(in oklch, var(--chart-2) ${melange}%, var(--card))`;
+  return `color-mix(in oklch, var(--c-teal) ${melange}%, var(--card))`;
 }
 
 export function CarteRegions({
@@ -82,7 +82,24 @@ export function CarteRegions({
 
   return (
     <div className="grid gap-5 lg:grid-cols-[1.15fr_1fr]">
-      <figure className="m-0">
+      <figure className="relative m-0 rounded-2xl border bg-muted/25 p-4 print:border-0 print:bg-transparent print:p-0">
+        {/* Rappel de la région survolée : le chiffre exact sans quitter la
+            carte des yeux. */}
+        <div
+          aria-hidden
+          className={cn(
+            "pointer-events-none absolute right-4 top-4 rounded-xl border bg-card/95 px-3 py-2 shadow-sm backdrop-blur transition-opacity duration-200 print:hidden",
+            survolee ? "opacity-100" : "opacity-0",
+          )}
+        >
+          <p className="text-xs font-semibold">{survolee ?? "\u00a0"}</p>
+          <p className="text-lg font-extrabold leading-tight tabular-nums">
+            {formatNumber(survolee ? parRegion.get(survolee) ?? 0 : 0)}
+            <span className="ml-1 text-xs font-medium text-muted-foreground">
+              membre{(survolee ? parRegion.get(survolee) ?? 0 : 0) > 1 ? "s" : ""}
+            </span>
+          </p>
+        </div>
         <svg
           viewBox={`0 0 ${CARTE_VUE.largeur} ${CARTE_VUE.hauteur}`}
           className="h-auto w-full"
@@ -108,7 +125,7 @@ export function CarteRegions({
                 stroke="var(--card)"
                 strokeWidth={actif ? 3 : 1.5}
                 strokeLinejoin="round"
-                className="transition-[fill,stroke-width] duration-200"
+                className="cursor-pointer transition-[fill,stroke-width] duration-200"
                 style={{ filter: actif ? "brightness(1.08)" : undefined }}
                 onMouseEnter={() => setSurvolee(region.nom)}
                 onMouseLeave={() => setSurvolee(null)}
@@ -125,7 +142,7 @@ export function CarteRegions({
                 <span
                   key={niveau}
                   aria-hidden
-                  className="size-4 first:rounded-l-sm last:rounded-r-sm"
+                  className="h-2.5 w-5 first:rounded-l-full last:rounded-r-full"
                   style={{ background: teinte(niveau) }}
                 />
               ))}
@@ -142,7 +159,7 @@ export function CarteRegions({
       </figure>
 
       <div className="min-w-0">
-        <ul className="space-y-1">
+        <ul className="space-y-0.5">
           {classement.map((ligne) => (
             <li key={ligne.nom}>
               <button
@@ -152,7 +169,7 @@ export function CarteRegions({
                 onFocus={() => setSurvolee(ligne.nom)}
                 onBlur={() => setSurvolee(null)}
                 className={cn(
-                  "flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left transition-colors",
+                  "flex w-full items-center gap-2.5 rounded-xl px-2.5 py-1.5 text-left transition-colors",
                   "outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
                   survolee === ligne.nom ? "bg-muted" : "hover:bg-muted/60",
                 )}
@@ -162,8 +179,16 @@ export function CarteRegions({
                   className="size-3 shrink-0 rounded-sm border"
                   style={{ background: teinte(palier(ligne.total, maximum)) }}
                 />
-                <span className="min-w-0 flex-1 truncate text-sm">
-                  {ligne.nom}
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm">{ligne.nom}</span>
+                  <span className="mt-1 block h-1 overflow-hidden rounded-full bg-muted print:hidden">
+                    <span
+                      className="block h-full rounded-full bg-[var(--c-teal)] transition-[width] duration-500"
+                      style={{
+                        width: `${maximum > 0 ? (ligne.total / maximum) * 100 : 0}%`,
+                      }}
+                    />
+                  </span>
                 </span>
                 <span className="shrink-0 text-sm font-semibold tabular-nums">
                   {formatNumber(ligne.total)}

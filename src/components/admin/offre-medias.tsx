@@ -3,8 +3,9 @@
 import { useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { FileText, Loader2, Trash2, Upload } from "lucide-react";
+import { FileText, ImageIcon, Loader2, Trash2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ConsolePanneau } from "@/components/admin/console-kit";
 import { ChoixCouverture } from "@/components/medias/mediatheque";
 import { errorMessage, mediasApi, offresApi } from "@/lib/api";
 import type { Media, Offre } from "@/lib/types";
@@ -47,9 +48,9 @@ function Cadre({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-w-0 rounded-lg border p-4">
-      <p className="text-sm font-medium">{titre}</p>
-      <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
+    <div className="min-w-0 rounded-xl border bg-muted/20 p-4">
+      <p className="text-[13px] font-semibold">{titre}</p>
+      <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{description}</p>
       <div className="mt-3">{children}</div>
     </div>
   );
@@ -129,12 +130,12 @@ export function OffreMedias({
   }
 
   return (
-    <section className="rounded-lg border bg-card">
-      <header className="border-b px-4 py-3">
-        <h2 className="text-sm font-semibold">Photo et pièce jointe</h2>
-      </header>
-
-      <div className="grid gap-4 p-4 sm:grid-cols-2">
+    <ConsolePanneau
+      titre="Photo et pièce jointe"
+      description="Couverture affichée sur l'annonce, et document à télécharger."
+      icone={ImageIcon}
+      corpsClassName="grid gap-4 p-5 sm:grid-cols-2"
+    >
         <Cadre titre="Photo de couverture" description={DESCRIPTION_COUVERTURE}>
           <ChoixCouverture
             valeur={
@@ -158,7 +159,7 @@ export function OffreMedias({
                 href={offre.documentUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2.5 rounded-md border px-3 py-2.5 text-sm hover:border-primary/40 hover:text-primary"
+                className="flex items-center gap-2.5 rounded-lg border bg-background px-3 py-2.5 text-sm hover:border-primary/40 hover:text-primary"
               >
                 <FileText className="size-4 shrink-0 text-muted-foreground" aria-hidden />
                 <span className="min-w-0 flex-1 truncate">
@@ -197,7 +198,7 @@ export function OffreMedias({
             <Button
               type="button"
               variant="outline"
-              className="h-24 w-full flex-col gap-1.5 border-dashed"
+              className="h-24 w-full flex-col gap-1.5 rounded-xl border-dashed bg-background"
               disabled={documentEnCours}
               onClick={() => documentInput.current?.click()}
             >
@@ -225,8 +226,7 @@ export function OffreMedias({
             }}
           />
         </Cadre>
-      </div>
-    </section>
+    </ConsolePanneau>
   );
 }
 
@@ -251,15 +251,12 @@ export function MediasEnAttente({
   const documentInput = useRef<HTMLInputElement>(null);
 
   return (
-    <section className="rounded-lg border bg-card">
-      <header className="border-b px-4 py-3">
-        <h2 className="text-sm font-semibold">Photo et pièce jointe</h2>
-        <p className="mt-0.5 text-xs text-muted-foreground">
-          Le document est envoyé dès l&apos;offre créée.
-        </p>
-      </header>
-
-      <div className="grid gap-4 p-4 sm:grid-cols-2">
+    <ConsolePanneau
+      titre="Photo et pièce jointe"
+      description="Le document est envoyé dès l'offre créée."
+      icone={ImageIcon}
+      corpsClassName="grid gap-4 p-5 sm:grid-cols-2"
+    >
         <Cadre titre="Photo de couverture" description={DESCRIPTION_COUVERTURE}>
           <ChoixCouverture valeur={couverture} onChange={onCouverture} />
           {champAlt ? <div className="mt-3">{champAlt}</div> : null}
@@ -268,7 +265,7 @@ export function MediasEnAttente({
         <Cadre titre="Document joint" description="PDF uniquement, 10 Mo maximum.">
           {doc ? (
             <div className="space-y-2">
-              <div className="flex items-center gap-2.5 rounded-md border px-3 py-2.5 text-sm">
+              <div className="flex items-center gap-2.5 rounded-lg border bg-background px-3 py-2.5 text-sm">
                 <FileText className="size-4 shrink-0 text-muted-foreground" aria-hidden />
                 <span className="min-w-0 flex-1 truncate">{doc.name}</span>
               </div>
@@ -298,7 +295,7 @@ export function MediasEnAttente({
             <Button
               type="button"
               variant="outline"
-              className="h-24 w-full flex-col gap-1.5 border-dashed"
+              className="h-24 w-full flex-col gap-1.5 rounded-xl border-dashed bg-background"
               onClick={() => documentInput.current?.click()}
             >
               <FileText className="size-5 text-muted-foreground" />
@@ -326,7 +323,6 @@ export function MediasEnAttente({
             }}
           />
         </Cadre>
-      </div>
-    </section>
+    </ConsolePanneau>
   );
 }

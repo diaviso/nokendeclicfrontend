@@ -3,7 +3,16 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronRight, MessageCircle, MessagesSquare } from "lucide-react";
+import {
+  ArrowUpRight,
+  Bug,
+  HelpCircle,
+  Lightbulb,
+  MessageCircle,
+  MessagesSquare,
+  MoreHorizontal,
+  type LucideIcon,
+} from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { EmptyState } from "@/components/shared/empty-state";
 import { ConsoleHeader } from "@/components/admin/console-header";
@@ -11,8 +20,10 @@ import { ConsoleTable, type ColonneConsole } from "@/components/admin/console-ta
 import {
   ConsoleFiltre,
   ConsolePastille,
+  ConsoleSearch,
   ConsoleToolbar,
 } from "@/components/admin/console-ui";
+import { ConsoleAction, ConsoleActions } from "@/components/admin/console-kit";
 import { adminApi, fileUrl } from "@/lib/api";
 import {
   FEEDBACK_CATEGORY_LABELS,
@@ -21,7 +32,14 @@ import {
 } from "@/lib/enums";
 import { formatRelative, fullName } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import type { Feedback, FeedbackPriority, FeedbackStatus } from "@/lib/types";
+import type {
+  Feedback,
+  FeedbackCategory,
+  FeedbackPriority,
+  FeedbackStatus,
+} from "@/lib/types";
+
+const TEINTE = "var(--c-rose)";
 
 /**
  * L'ordre des statuts est celui du traitement, pas l'ordre alphabétique : un
@@ -44,13 +62,21 @@ const TEINTE_STATUT: Record<FeedbackStatus, string | undefined> = {
 const TEINTE_PRIORITE: Record<FeedbackPriority, string | undefined> = {
   CRITIQUE: "var(--destructive)",
   HAUTE: "var(--warning)",
-  MOYENNE: "var(--chart-1)",
+  MOYENNE: "var(--c-sky)",
   BASSE: undefined,
+};
+
+const ICONE_CATEGORIE: Record<FeedbackCategory, LucideIcon> = {
+  BUG: Bug,
+  AMELIORATION: Lightbulb,
+  QUESTION: HelpCircle,
+  AUTRE: MoreHorizontal,
 };
 
 export default function AdminFeedbackPage() {
   const router = useRouter();
   const [statut, setStatut] = useState<FeedbackStatus | "">("");
+  const [recherche, setRecherche] = useState("");
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin", "feedback"],
@@ -60,13 +86,20 @@ export default function AdminFeedbackPage() {
   const tous = useMemo(() => data ?? [], [data]);
 
   const signalements = useMemo(() => {
-    const filtres = statut ? tous.filter((f) => f.statut === statut) : tous;
+    const terme = recherche.trim().toLowerCase();
+    const filtres = tous.filter((f) => {
+      if (statut && f.statut !== statut) return false;
+      if (!terme) return true;
+      return [f.titre, f.description, f.auteur.username, fullName(f.auteur)]
+        .filter(Boolean)
+        .some((valeur) => valeur!.toLowerCase().includes(terme));
+    });
     return [...filtres].sort(
       (a, b) =>
         ORDRE_STATUTS.indexOf(a.statut) - ORDRE_STATUTS.indexOf(b.statut) ||
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
-  }, [tous, statut]);
+  }, [tous, statut, recherche]);
 
   const comptes = useMemo(
     () =>
@@ -87,6 +120,9 @@ export default function AdminFeedbackPage() {
       f.statut !== "RESOLU" &&
       f.statut !== "FERME",
   ).length;
+  const sansReponse = tous.filter(
+    (f) => !f.reponses?.length && f.statut !== "FERME",
+  ).length;
 
   const colonnes: ColonneConsole<Feedback>[] = [
     {
@@ -94,16 +130,19 @@ export default function AdminFeedbackPage() {
       entete: "Signalement",
       cellule: (feedback) => (
         <div className="flex items-start gap-3">
-          <Avatar className="mt-0.5 size-8 shrink-0">
+          <Avatar className="mt-0.5 size-9 shrink-0 ring-2 ring-background">
             <AvatarImage src={fileUrl(feedback.auteur.pictureUrl)} alt="" />
-            <AvatarFallback className="text-[11px]">
+            <AvatarFallback className="bg-muted text-[11px] font-semibold">
               {(feedback.auteur.username[0] ?? "?").toUpperCase()}
             </AvatarFallback>
           </Avatar>
 
           <div className="min-w-0 text-left">
             <p className="truncate font-semibold">{feedback.titre}</p>
-            <p className="truncate text-xs text-muted-foreground">
+            <p className="line-clamp-1 text-xs text-muted-foreground">
+              {feedback.description}
+            </p>
+            <p className="mt-0.5 truncate text-[11px] text-muted-foreground/80">
               {fullName(feedback.auteur)} · {formatRelative(feedback.createdAt)}
             </p>
           </div>
@@ -114,11 +153,15 @@ export default function AdminFeedbackPage() {
       cle: "categorie",
       entete: "Catégorie",
       className: "w-36",
-      cellule: (feedback) => (
-        <span className="rounded-md bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-          {FEEDBACK_CATEGORY_LABELS[feedback.categorie]}
-        </span>
-      ),
+      cellule: (feedback) => {
+        const Icone = ICONE_CATEGORIE[feedback.categorie] ?? MoreHorizontal;
+        return (
+          <span className="inline-flex items-center gap-1.5 rounded-lg border bg-muted/40 px-2 py-0.5 text-xs text-muted-foreground">
+            <Icone className="size-3.5" aria-hidden />
+            {FEEDBACK_CATEGORY_LABELS[feedback.categorie]}
+          </span>
+        );
+      },
     },
     {
       cle: "statut",
@@ -155,10 +198,10 @@ export default function AdminFeedbackPage() {
         return (
           <span
             className={cn(
-              "inline-flex items-center gap-1.5 text-xs tabular-nums",
+              "inline-flex items-center gap-1.5 rounded-md px-1.5 py-0.5 text-xs tabular-nums",
               nombre === 0
-                ? "text-muted-foreground/50"
-                : "font-semibold text-foreground",
+                ? "text-muted-foreground/60"
+                : "bg-primary/10 font-semibold text-primary",
             )}
           >
             <MessagesSquare className="size-3.5" aria-hidden />
@@ -170,13 +213,17 @@ export default function AdminFeedbackPage() {
     {
       cle: "aller",
       entete: "",
-      className: "w-8",
+      className: "w-14",
       align: "right",
-      cellule: () => (
-        <ChevronRight
-          className="size-4 text-muted-foreground/40 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-muted-foreground"
-          aria-hidden
-        />
+      cellule: (feedback) => (
+        <ConsoleActions>
+          <ConsoleAction
+            libelle="Ouvrir le signalement"
+            icone={ArrowUpRight}
+            ton="primaire"
+            onClick={() => router.push(`/admin/feedback/${feedback.id}`)}
+          />
+        </ConsoleActions>
       ),
     },
   ];
@@ -186,13 +233,13 @@ export default function AdminFeedbackPage() {
       <ConsoleHeader
         title="Signalements"
         icon={MessageCircle}
-        teinte="var(--chart-5)"
+        teinte={TEINTE}
         description="Anomalies, questions et suggestions remontées par les membres depuis l'application."
         mesures={
           isLoading
             ? undefined
             : [
-                { label: "au total", valeur: tous.length, teinte: "var(--chart-5)" },
+                { label: "au total", valeur: tous.length, teinte: TEINTE },
                 {
                   label: "en attente de traitement",
                   valeur: enAttente,
@@ -203,11 +250,27 @@ export default function AdminFeedbackPage() {
                   valeur: urgents,
                   teinte: urgents > 0 ? "var(--destructive)" : undefined,
                 },
+                {
+                  label: "sans réponse",
+                  valeur: sansReponse,
+                  teinte: sansReponse > 0 ? "var(--warning)" : undefined,
+                },
+                {
+                  label: "résolus",
+                  valeur: comptes.RESOLU ?? 0,
+                  teinte: "var(--success)",
+                },
               ]
         }
       />
 
       <ConsoleToolbar>
+        <ConsoleSearch
+          valeur={recherche}
+          onChange={setRecherche}
+          placeholder="Titre, description, auteur…"
+          label="Rechercher un signalement"
+        />
         <ConsoleFiltre<FeedbackStatus | "">
           label="Filtrer par statut"
           valeur={statut}
@@ -223,11 +286,12 @@ export default function AdminFeedbackPage() {
             })),
           ]}
         />
-
-        <p className="ml-auto hidden text-xs text-muted-foreground lg:block">
-          Les signalements ouverts remontent en premier.
-        </p>
       </ConsoleToolbar>
+
+      <p className="-mt-1 mb-3 px-1 text-xs text-muted-foreground">
+        Les signalements ouverts remontent en premier · le rail de couleur
+        indique la priorité.
+      </p>
 
       <ConsoleTable
         lignes={signalements}
@@ -245,12 +309,20 @@ export default function AdminFeedbackPage() {
         vide={
           <EmptyState
             icon={MessageCircle}
-            couleur="var(--chart-5)"
-            title={statut ? "Rien dans ce statut" : "Aucun signalement"}
+            couleur={TEINTE}
+            title={
+              recherche
+                ? "Aucun signalement ne correspond"
+                : statut
+                  ? "Rien dans ce statut"
+                  : "Aucun signalement"
+            }
             description={
-              statut
-                ? "Aucun signalement n'est actuellement dans cet état."
-                : "Les retours envoyés depuis l'application apparaîtront ici."
+              recherche
+                ? "Essayez avec un autre mot du titre ou le nom de l'auteur."
+                : statut
+                  ? "Aucun signalement n'est actuellement dans cet état."
+                  : "Les retours envoyés depuis l'application apparaîtront ici."
             }
           />
         }

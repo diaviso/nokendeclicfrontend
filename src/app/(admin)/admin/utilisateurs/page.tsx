@@ -8,11 +8,13 @@ import { toast } from "sonner";
 import {
   Ban,
   CheckCircle2,
-  ChevronRight,
+  Download,
+  Eye,
   FileUp,
-  MoreHorizontal,
+  Loader2,
   QrCode,
   ShieldCheck,
+  UserCog,
   Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -27,6 +29,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { EmptyState } from "@/components/shared/empty-state";
+import {
+  ConsoleAction,
+  ConsoleActions,
+  useConfirmation,
+} from "@/components/admin/console-kit";
 import { ConsoleHeader } from "@/components/admin/console-header";
 import { ConsoleTable, type ColonneConsole } from "@/components/admin/console-table";
 import {
@@ -37,16 +44,84 @@ import {
   ConsoleToolbar,
 } from "@/components/admin/console-ui";
 import { adminApi, errorMessage, fileUrl } from "@/lib/api";
-import { ROLE_LABELS, roleLabel } from "@/lib/enums";
+import {
+  ROLE_LABELS,
+  STATUT_PROFESSIONNEL_LABELS,
+  roleLabel,
+} from "@/lib/enums";
 import { formatDateShort, fullName } from "@/lib/format";
 import type { Role, User } from "@/lib/types";
 
 /** Teinte par rôle : la même dans le rail, la pastille et le filtre. */
 const TEINTE_ROLE: Record<Role, string> = {
-  ADMIN: "var(--destructive)",
-  PARTENAIRE: "var(--chart-2)",
-  MEMBRE: "var(--chart-1)",
+  ADMIN: "var(--c-rose)",
+  PARTENAIRE: "var(--c-orange)",
+  MEMBRE: "var(--c-blue)",
 };
+
+const TEINTE = "var(--c-blue)";
+
+/** Cellule CSV : guillemets doublés, séparateur point-virgule (Excel FR). */
+function celluleCsv(valeur: unknown): string {
+  const texte = valeur === null || valeur === undefined ? "" : String(valeur);
+  return /[";\n\r]/.test(texte) ? `"${texte.replace(/"/g, '""')}"` : texte;
+}
+
+/** Fichier CSV de tous les comptes, ouvrable directement dans Excel. */
+function telechargerCsv(comptes: User[]) {
+  const entetes = [
+    "Identifiant",
+    "Prénom",
+    "Nom",
+    "Nom d'utilisateur",
+    "Email",
+    "Téléphone",
+    "Rôle",
+    "Actif",
+    "Statut professionnel",
+    "Sexe",
+    "Date de naissance",
+    "Pays",
+    "Région",
+    "Département",
+    "Commune",
+    "Situation de handicap",
+    "Connexion",
+    "Inscrit le",
+  ];
+  const lignes = comptes.map((compte) => [
+    compte.id,
+    compte.firstName,
+    compte.lastName,
+    compte.username,
+    compte.email,
+    compte.telephone,
+    roleLabel(compte.role),
+    compte.isActive ? "Oui" : "Non",
+    STATUT_PROFESSIONNEL_LABELS[compte.statutProfessionnel] ?? compte.statutProfessionnel,
+    compte.sexe,
+    compte.dateNaissance ? compte.dateNaissance.slice(0, 10) : "",
+    compte.pays,
+    compte.region,
+    compte.departement,
+    compte.commune,
+    compte.handicap ? "Oui" : "Non",
+    compte.isGoogleLogin ? "Google" : "Mot de passe",
+    compte.createdAt.slice(0, 10),
+  ]);
+  const contenu = [entetes, ...lignes]
+    .map((ligne) => ligne.map(celluleCsv).join(";"))
+    .join("\r\n");
+  // BOM : sans lui, Excel lit l'UTF-8 comme du Latin-1 et casse les accents.
+  const blob = new Blob(["\uFEFF" + contenu], { type: "text/csv;charset=utf-8" });
+  const lien = document.createElement("a");
+  lien.href = URL.createObjectURL(blob);
+  lien.download = `noken-utilisateurs-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(lien);
+  lien.click();
+  lien.remove();
+  URL.revokeObjectURL(lien.href);
+}
 
 type FiltreRole = Role | "";
 
@@ -62,6 +137,7 @@ function useDebounced<T>(value: T, delay = 350): T {
 export default function AdminUsersPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const confirmer = useConfirmation();
   const [search, setSearch] = useState("");
   const [role, setRole] = useState<FiltreRole>("");
   const [page, setPage] = useState(1);
@@ -101,6 +177,16 @@ export default function AdminUsersPage() {
     },
     onError: (error) =>
       toast.error("Modification impossible", { description: errorMessage(error) }),
+  });
+
+  const exporter = useMutation({
+    mutationFn: adminApi.exportUsers,
+    onSuccess: (comptes) => {
+      telechargerCsv(comptes);
+      toast.success(`${comptes.length} comptes exportés`);
+    },
+    onError: (error) =>
+      toast.error("Export impossible", { description: errorMessage(error) }),
   });
 
   const meta = data?.meta;
@@ -198,23 +284,32 @@ export default function AdminUsersPage() {
     {
       cle: "actions",
       entete: "",
-      className: "w-20",
+      className: "w-36",
       align: "right",
       cellule: (utilisateur) => (
-        <div
-          className="flex items-center justify-end gap-0.5"
-          onClick={(event) => event.stopPropagation()}
-        >
+        <ConsoleActions>
+          <ConsoleAction
+            libelle="Ouvrir la fiche"
+            icone={Eye}
+            ton="primaire"
+            onClick={() => router.push(`/admin/utilisateurs/${utilisateur.id}`)}
+          />
+
           <DropdownMenu>
             <DropdownMenuTrigger
               render={
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="size-8 rounded-lg"
-                  aria-label={`Actions sur ${fullName(utilisateur)}`}
+                  className="size-8 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
+                  aria-label={`Changer le rôle de ${fullName(utilisateur)}`}
+                  title="Changer le rôle"
                 >
-                  <MoreHorizontal className="size-4" />
+                  {changerRole.isPending && changerRole.variables?.id === utilisateur.id ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <UserCog className="size-4" />
+                  )}
                 </Button>
               }
             />
@@ -240,41 +335,51 @@ export default function AdminUsersPage() {
                       style={{ background: TEINTE_ROLE[valeur] }}
                     />
                     {ROLE_LABELS[valeur]}
+                    {utilisateur.role === valeur ? (
+                      <span className="ml-auto text-[10px] text-muted-foreground">
+                        actuel
+                      </span>
+                    ) : null}
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuGroup>
-
               <DropdownMenuSeparator />
-
               <DropdownMenuItem
-                variant={utilisateur.isActive ? "destructive" : undefined}
-                onClick={() =>
-                  basculerActif.mutate({
-                    id: utilisateur.id,
-                    isActive: !utilisateur.isActive,
-                  })
-                }
+                onClick={() => router.push(`/admin/utilisateurs/${utilisateur.id}`)}
               >
-                {utilisateur.isActive ? (
-                  <>
-                    <Ban className="size-4" />
-                    Désactiver le compte
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle2 className="size-4" />
-                    Réactiver le compte
-                  </>
-                )}
+                <Eye className="size-4" />
+                Ouvrir la fiche
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <ChevronRight
-            className="size-4 shrink-0 text-muted-foreground/40 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-muted-foreground"
-            aria-hidden
+          <ConsoleAction
+            libelle={utilisateur.isActive ? "Désactiver le compte" : "Réactiver le compte"}
+            icone={utilisateur.isActive ? Ban : CheckCircle2}
+            ton={utilisateur.isActive ? "danger" : "succes"}
+            enCours={
+              basculerActif.isPending && basculerActif.variables?.id === utilisateur.id
+            }
+            onClick={async () => {
+              if (
+                utilisateur.isActive &&
+                !(await confirmer({
+                  titre: `Désactiver le compte de ${fullName(utilisateur)} ?`,
+                  message:
+                    "La personne ne pourra plus se connecter. Ses données sont conservées et le compte peut être réactivé à tout moment.",
+                  confirmer: "Désactiver",
+                  danger: true,
+                }))
+              ) {
+                return;
+              }
+              basculerActif.mutate({
+                id: utilisateur.id,
+                isActive: !utilisateur.isActive,
+              });
+            }}
           />
-        </div>
+        </ConsoleActions>
       ),
     },
   ];
@@ -284,10 +389,23 @@ export default function AdminUsersPage() {
       <ConsoleHeader
         title="Utilisateurs"
         icon={Users}
-        teinte="var(--chart-2)"
+        teinte={TEINTE}
         description="Rôles, accès et fiches détaillées des comptes inscrits sur la plateforme."
         actions={
           <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              className="rounded-xl"
+              disabled={exporter.isPending}
+              onClick={() => exporter.mutate()}
+            >
+              {exporter.isPending ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Download className="size-4" />
+              )}
+              Exporter (CSV)
+            </Button>
             <Button
               variant="outline"
               className="rounded-xl"
@@ -309,11 +427,21 @@ export default function AdminUsersPage() {
         mesures={
           meta
             ? [
-                { label: "comptes", valeur: meta.total, teinte: "var(--chart-2)" },
+                { label: "comptes", valeur: meta.total, teinte: TEINTE },
+                {
+                  label: (comptesParRole.MEMBRE ?? 0) > 1 ? "membres" : "membre",
+                  valeur: comptesParRole.MEMBRE ?? 0,
+                  teinte: TEINTE_ROLE.MEMBRE,
+                },
+                {
+                  label: (comptesParRole.PARTENAIRE ?? 0) > 1 ? "partenaires" : "partenaire",
+                  valeur: comptesParRole.PARTENAIRE ?? 0,
+                  teinte: TEINTE_ROLE.PARTENAIRE,
+                },
                 {
                   label: (comptesParRole.ADMIN ?? 0) > 1 ? "administrateurs" : "administrateur",
                   valeur: comptesParRole.ADMIN ?? 0,
-                  teinte: "var(--destructive)",
+                  teinte: TEINTE_ROLE.ADMIN,
                 },
                 {
                   label: desactives > 1 ? "désactivés" : "désactivé",
@@ -377,7 +505,7 @@ export default function AdminUsersPage() {
         vide={
           <EmptyState
             icon={rechercheDifferee || role ? Users : ShieldCheck}
-            couleur="var(--chart-2)"
+            couleur={TEINTE}
             title={
               rechercheDifferee || role
                 ? "Aucun compte ne correspond"
@@ -389,6 +517,26 @@ export default function AdminUsersPage() {
                 : role
                   ? "Aucun compte n'a ce rôle sur la plateforme."
                   : "Les comptes apparaîtront ici dès la première inscription."
+            }
+            action={
+              rechercheDifferee || role ? (
+                <Button
+                  variant="outline"
+                  className="rounded-xl"
+                  onClick={() => {
+                    setSearch("");
+                    setRole("");
+                    setPage(1);
+                  }}
+                >
+                  Effacer les filtres
+                </Button>
+              ) : (
+                <Button className="rounded-xl" render={<Link href="/admin/utilisateurs/import" />}>
+                  <FileUp className="size-4" />
+                  Importer des comptes
+                </Button>
+              )
             }
           />
         }

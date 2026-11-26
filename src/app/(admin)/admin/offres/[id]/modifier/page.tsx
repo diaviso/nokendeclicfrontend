@@ -3,7 +3,7 @@
 import { use } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Briefcase, Loader2 } from "lucide-react";
+import { ArrowLeft, Briefcase, Loader2, SearchX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ConsoleHeader } from "@/components/admin/console-header";
 import { FormShell } from "@/components/shared/form-shell";
@@ -25,8 +25,9 @@ export default function ModifierOffrePage(props: {
 
   if (isLoading) {
     return (
-      <div className="grid place-items-center py-24">
-        <Loader2 className="size-5 animate-spin text-muted-foreground" />
+      <div className="grid place-items-center gap-3 py-24 text-sm text-muted-foreground">
+        <Loader2 className="size-5 animate-spin" />
+        Chargement de l&apos;offre…
       </div>
     );
   }
@@ -34,7 +35,9 @@ export default function ModifierOffrePage(props: {
   if (isError || !offre) {
     return (
       <EmptyState
+        icon={SearchX}
         title="Offre introuvable"
+        description="Elle a peut-être été supprimée, ou le lien est incomplet."
         action={
           <Button variant="outline" size="sm" render={<Link href="/admin/offres" />}>
             Retour aux offres
@@ -45,7 +48,7 @@ export default function ModifierOffrePage(props: {
   }
 
   return (
-    <FormShell className="max-w-5xl">
+    <FormShell className="max-w-7xl">
       <Button
         variant="ghost"
         size="sm"
@@ -58,7 +61,7 @@ export default function ModifierOffrePage(props: {
 
       <ConsoleHeader
         icon={Briefcase}
-        teinte="var(--chart-3)"
+        teinte="var(--c-emerald)"
         title="Modifier l'offre"
         description={offre.titre}
       />

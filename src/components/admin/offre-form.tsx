@@ -7,7 +7,25 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Loader2, Save } from "lucide-react";
+import {
+  AlertTriangle,
+  Banknote,
+  Building2,
+  CheckCircle2,
+  Circle,
+  FileText,
+  Info,
+  Layers,
+  Loader2,
+  Lock,
+  Save,
+  School,
+  Search,
+  Send,
+  type LucideIcon,
+} from "lucide-react";
+import { ConsolePanneau } from "@/components/admin/console-kit";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -187,16 +205,40 @@ function enMinuscules(texte: string): string {
 }
 
 const selectClass =
-  "h-9 w-full rounded-md border bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:ring-2 focus-visible:ring-ring/50";
+  "h-9 w-full rounded-lg border bg-background px-3 text-sm shadow-xs outline-none transition-colors focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40";
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+/** Carte de section du formulaire : icône, titre, aide, grille de champs. */
+function Section({
+  title,
+  description,
+  icon,
+  aside,
+  grid = true,
+  id,
+  children,
+}: {
+  title: string;
+  description?: string;
+  icon?: LucideIcon;
+  /** Élément placé à droite de l'en-tête (compteur, lien…). */
+  aside?: React.ReactNode;
+  /** Faux : le contenu est rendu tel quel, sans grille à deux colonnes. */
+  grid?: boolean;
+  id?: string;
+  children: React.ReactNode;
+}) {
   return (
-    <section className="rounded-lg border bg-card">
-      <header className="border-b px-4 py-3">
-        <h2 className="text-sm font-semibold">{title}</h2>
-      </header>
-      <div className="grid gap-4 p-4 sm:grid-cols-2">{children}</div>
-    </section>
+    <ConsolePanneau
+      titre={title}
+      description={description}
+      icone={icon}
+      actions={aside}
+      className="scroll-mt-24"
+      corpsClassName={grid ? "grid gap-4 p-5 sm:grid-cols-2" : "p-5"}
+    >
+      {id ? <span id={id} className="sr-only" /> : null}
+      {children}
+    </ConsolePanneau>
   );
 }
 
@@ -204,25 +246,47 @@ function Field({
   label,
   htmlFor,
   error,
+  hint,
   className,
   children,
 }: {
   label: string;
   htmlFor: string;
   error?: string;
+  /** Aide affichée sous le contrôle, remplacée par l'erreur s'il y en a une. */
+  hint?: React.ReactNode;
   className?: string;
   children: React.ReactNode;
 }) {
   return (
-    <div className={className}>
-      <Label htmlFor={htmlFor}>{label}</Label>
+    <div className={cn("min-w-0", className)}>
+      <Label htmlFor={htmlFor} className="text-[13px] font-semibold">
+        {label}
+      </Label>
       <div className="mt-1.5">{children}</div>
       {error ? (
-        <p role="alert" className="mt-1 text-xs text-destructive">
+        <p role="alert" className="mt-1 text-xs font-medium text-destructive">
           {error}
         </p>
+      ) : hint ? (
+        <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{hint}</p>
       ) : null}
     </div>
+  );
+}
+
+/** Ligne de la liste de contrôle « qualité de l'annonce ». */
+function Controle({ ok, children }: { ok: boolean; children: React.ReactNode }) {
+  return (
+    <li className="flex items-start gap-2 text-xs">
+      {ok ? (
+        <CheckCircle2 className="mt-px size-3.5 shrink-0 text-[var(--success)]" aria-hidden />
+      ) : (
+        <Circle className="mt-px size-3.5 shrink-0 text-muted-foreground/50" aria-hidden />
+      )}
+      <span className={ok ? "text-foreground" : "text-muted-foreground"}>{children}</span>
+      <span className="sr-only">{ok ? "(fait)" : "(à faire)"}</span>
+    </li>
   );
 }
 
@@ -493,218 +557,273 @@ function OffreFormInner({
     .split(/\s+/)
     .filter(Boolean).length;
 
+  // Liste de contrôle : ce qui fait une annonce utile pour un jeune.
+  const extraitSaisi = form.watch("extrait") ?? "";
+  const urlSaisie = form.watch("url") ?? "";
+  const emailSaisi = form.watch("emailCandidature") ?? "";
+  const dateLimiteSaisie = form.watch("dateLimite") ?? "";
+  const metaTitreSaisi = form.watch("metaTitre") ?? "";
+  const metaDescriptionSaisie = form.watch("metaDescription") ?? "";
+  const brouillon = form.watch("estBrouillon");
+  const aCouverture = Boolean(offre?.imageUrl || couverture);
+  const controles = [
+    { ok: (titreSaisi ?? "").trim().length >= 5 && !estEnMajuscules(titreSaisi ?? ""), texte: "Titre clair, sans majuscules partout" },
+    { ok: motsDuContenu >= 60, texte: "Contenu détaillé (60 mots au moins)" },
+    { ok: extraitSaisi.trim().length > 0, texte: "Accroche rédigée" },
+    { ok: Boolean(urlSaisie.trim() || emailSaisi.trim()), texte: "Moyen de candidater (lien ou email)" },
+    { ok: Boolean(dateLimiteSaisie), texte: "Date limite indiquée" },
+    { ok: aCouverture, texte: "Photo de couverture" },
+  ];
+  const faits = controles.filter((c) => c.ok).length;
+  const nbErreurs = Object.keys(form.formState.errors).length;
+
+  const libelleEnvoi = brouillon
+    ? "Enregistrer le brouillon"
+    : isEdit
+      ? "Enregistrer"
+      : "Publier l'offre";
+
+  const boutonEnvoi = (classe?: string) => (
+    <Button type="submit" className={cn("rounded-xl", classe)} disabled={save.isPending}>
+      {save.isPending ? (
+        <Loader2 className="size-4 animate-spin" />
+      ) : brouillon || isEdit ? (
+        <Save className="size-4" />
+      ) : (
+        <Send className="size-4" />
+      )}
+      {libelleEnvoi}
+    </Button>
+  );
+
   return (
     <form
       onSubmit={form.handleSubmit((values) => save.mutate(values))}
-      className="space-y-4 pb-4"
+      className="grid gap-5 pb-4 lg:grid-cols-[minmax(0,1fr)_19rem] lg:items-start"
       noValidate
     >
-      <Section title="Informations générales">
-        <Field
-          label="Titre"
-          htmlFor="titre"
-          className="sm:col-span-2"
-          error={form.formState.errors.titre?.message}
+      <div className="min-w-0 space-y-5">
+        <Section
+          title="Informations générales"
+          description="Ce que le membre voit d'abord dans les listes."
+          icon={Info}
         >
-          <Input id="titre" {...form.register("titre")} />
-          {/* Beaucoup d'annonces arrivent recopiées d'une affiche, tout en
-              capitales : elles se lisent mal et paraissent crier au milieu
-              des autres dans le catalogue. */}
-          {estEnMajuscules(titreSaisi ?? "") ? (
-            <p className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-amber-700 dark:text-amber-300">
-              Titre en majuscules : il sera plus lisible en minuscules.
-              <button
-                type="button"
-                className="font-semibold underline underline-offset-2 hover:no-underline"
-                onClick={() =>
-                  form.setValue("titre", enMinuscules(titreSaisi), {
-                    shouldDirty: true,
-                    shouldValidate: true,
-                  })
-                }
-              >
-                Mettre en minuscules
-              </button>
-              <span className="text-muted-foreground">(vérifiez ensuite les sigles)</span>
-            </p>
-          ) : null}
-        </Field>
-
-        <Field
-          label="Type d'opportunité"
-          htmlFor="typeOffreId"
-          error={form.formState.errors.typeOffreId?.message}
-        >
-          <select
-            id="typeOffreId"
-            className={selectClass}
-            value={typeOffreId}
-            onChange={(event) => changerType(event.target.value)}
+          <Field
+            label="Titre"
+            htmlFor="titre"
+            className="sm:col-span-2"
+            error={form.formState.errors.titre?.message}
           >
-            {/* Le type d'une offre publiée peut avoir été désactivé depuis :
-                il est alors absent de la liste, on l'ajoute pour ne pas le
-                remplacer à l'insu de l'administrateur. */}
-            {typeInitial && !types.some((t) => t.id === typeInitial.id) ? (
-              <option value={String(typeInitial.id)}>
-                {typeInitial.libelle} (désactivé)
-              </option>
+            <Input id="titre" className="h-10 text-base font-medium" {...form.register("titre")} />
+            {/* Beaucoup d'annonces arrivent recopiées d'une affiche, tout en
+                capitales : elles se lisent mal et paraissent crier au milieu
+                des autres dans le catalogue. */}
+            {estEnMajuscules(titreSaisi ?? "") ? (
+              <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg bg-[color-mix(in_oklch,var(--warning)_12%,transparent)] px-3 py-2 text-xs text-amber-800 dark:text-amber-200">
+                <AlertTriangle className="size-3.5 shrink-0" aria-hidden />
+                Titre en majuscules : il sera plus lisible en minuscules.
+                <button
+                  type="button"
+                  className="font-semibold underline underline-offset-2 hover:no-underline"
+                  onClick={() =>
+                    form.setValue("titre", enMinuscules(titreSaisi), {
+                      shouldDirty: true,
+                      shouldValidate: true,
+                    })
+                  }
+                >
+                  Mettre en minuscules
+                </button>
+                <span className="text-muted-foreground">(vérifiez ensuite les sigles)</span>
+              </p>
             ) : null}
-            {types.map((type) => (
-              <option key={type.id} value={String(type.id)}>
-                {type.libelle}
-              </option>
-            ))}
-          </select>
-        </Field>
+          </Field>
 
-        <Field label="Secteur" htmlFor="secteur">
-          <select id="secteur" className={selectClass} {...form.register("secteur")}>
-            <option value="">Non précisé</option>
-            {(Object.keys(SECTEUR_LABELS) as Secteur[]).map((s) => (
-              <option key={s} value={s}>
-                {SECTEUR_LABELS[s]}
-              </option>
-            ))}
-          </select>
-        </Field>
-
-        <Field label="Entreprise / organisme" htmlFor="entreprise">
-          <Input id="entreprise" {...form.register("entreprise")} />
-        </Field>
-
-        {estConsole ? (
-          <Field label="Structure partenaire" htmlFor="partenaireId">
+          <Field
+            label="Type d'opportunité"
+            htmlFor="typeOffreId"
+            error={form.formState.errors.typeOffreId?.message}
+            hint="Les champs « Détails » s'adaptent au type choisi."
+          >
             <select
-              id="partenaireId"
+              id="typeOffreId"
               className={selectClass}
-              value={partenaireId}
-              onChange={(e) => {
-                const choix = e.target.value;
-                setPartenaireId(choix);
-                // Le nom affiché sur l'offre suit la structure choisie, tant
-                // qu'aucun autre n'a été saisi.
-                const structure = structures.find((x) => String(x.id) === choix);
-                if (structure && !form.getValues("entreprise")) {
-                  form.setValue("entreprise", structure.nom, { shouldDirty: true });
-                }
-              }}
+              value={typeOffreId}
+              onChange={(event) => changerType(event.target.value)}
             >
-              <option value="">Aucune</option>
-              {structures.map((structure) => (
-                <option key={structure.id} value={structure.id}>
-                  {structure.nom}
+              {/* Le type d'une offre publiée peut avoir été désactivé depuis :
+                  il est alors absent de la liste, on l'ajoute pour ne pas le
+                  remplacer à l'insu de l'administrateur. */}
+              {typeInitial && !types.some((t) => t.id === typeInitial.id) ? (
+                <option value={String(typeInitial.id)}>
+                  {typeInitial.libelle} (désactivé)
+                </option>
+              ) : null}
+              {types.map((type) => (
+                <option key={type.id} value={String(type.id)}>
+                  {type.libelle}
                 </option>
               ))}
             </select>
-            <p className="mt-1 text-xs text-muted-foreground">
-              L&apos;offre rejoint le catalogue de la structure, sur sa vitrine.
-            </p>
           </Field>
-        ) : null}
 
-        {estConsole && typeSelectionne?.code === "FORMATION" ? (
-          <Field label="Centres de formation" htmlFor="centres-formation">
-            {centres.length === 0 ? (
-              <p id="centres-formation" className="text-sm text-muted-foreground">
-                Aucun centre référencé. Créez-en depuis la page Centres de formation.
-              </p>
-            ) : (
-              <div
-                id="centres-formation"
-                className="max-h-48 space-y-1 overflow-y-auto rounded-md border p-2"
-              >
-                {centres.map((centre) => (
-                  <label
-                    key={centre.id}
-                    className="flex cursor-pointer items-center gap-2 rounded px-1.5 py-1 text-sm hover:bg-muted/50"
-                  >
-                    <input
-                      type="checkbox"
-                      className="size-4 accent-primary"
-                      checked={centreIds.includes(centre.id)}
-                      onChange={(e) =>
-                        setCentreIds((avant) =>
-                          e.target.checked
-                            ? [...avant, centre.id]
-                            : avant.filter((id) => id !== centre.id),
-                        )
-                      }
-                    />
-                    <span className="truncate">
-                      {centre.nom}
-                      {centre.ville ? (
-                        <span className="text-muted-foreground"> · {centre.ville}</span>
-                      ) : null}
-                    </span>
-                  </label>
-                ))}
-              </div>
-            )}
-            <p className="mt-1 text-xs text-muted-foreground">
-              La formation apparaît sur la fiche de chaque centre coché.
-            </p>
+          <Field label="Secteur" htmlFor="secteur">
+            <select id="secteur" className={selectClass} {...form.register("secteur")}>
+              <option value="">Non précisé</option>
+              {(Object.keys(SECTEUR_LABELS) as Secteur[]).map((s) => (
+                <option key={s} value={s}>
+                  {SECTEUR_LABELS[s]}
+                </option>
+              ))}
+            </select>
           </Field>
-        ) : null}
 
-        <Field label="Localisation" htmlFor="localisation">
-          <Input
-            id="localisation"
-            placeholder="Ziguinchor, Casamance"
-            {...form.register("localisation")}
-          />
-        </Field>
+          <Field label="Entreprise / organisme" htmlFor="entreprise">
+            <Input id="entreprise" {...form.register("entreprise")} />
+          </Field>
 
-        <Field
-          label="Lien de candidature"
-          htmlFor="url"
-          error={form.formState.errors.url?.message}
-        >
-          <Input id="url" type="url" placeholder="https://…" {...form.register("url")} />
-        </Field>
+          <Field label="Localisation" htmlFor="localisation">
+            <Input
+              id="localisation"
+              placeholder="Ziguinchor, Casamance"
+              {...form.register("localisation")}
+            />
+          </Field>
 
-        <Field label="Date limite" htmlFor="dateLimite">
-          <Input id="dateLimite" type="date" {...form.register("dateLimite")} />
-        </Field>
+          <Field label="Type de contrat" htmlFor="typeEmploi">
+            <select id="typeEmploi" className={selectClass} {...form.register("typeEmploi")}>
+              <option value="">Non précisé</option>
+              {(Object.keys(TYPE_EMPLOI_LABELS) as TypeEmploi[]).map((t) => (
+                <option key={t} value={t}>
+                  {TYPE_EMPLOI_LABELS[t]}
+                </option>
+              ))}
+            </select>
+          </Field>
 
-        <Field label="Type de contrat" htmlFor="typeEmploi">
-          <select id="typeEmploi" className={selectClass} {...form.register("typeEmploi")}>
-            <option value="">Non précisé</option>
-            {(Object.keys(TYPE_EMPLOI_LABELS) as TypeEmploi[]).map((t) => (
-              <option key={t} value={t}>
-                {TYPE_EMPLOI_LABELS[t]}
-              </option>
-            ))}
-          </select>
-        </Field>
+          <Field label="Niveau d'expérience" htmlFor="niveauExperience">
+            <select
+              id="niveauExperience"
+              className={selectClass}
+              {...form.register("niveauExperience")}
+            >
+              <option value="">Non précisé</option>
+              {(Object.keys(NIVEAU_EXPERIENCE_LABELS) as NiveauExperience[]).map((n) => (
+                <option key={n} value={n}>
+                  {NIVEAU_EXPERIENCE_LABELS[n]}
+                </option>
+              ))}
+            </select>
+          </Field>
+        </Section>
 
-        <Field label="Niveau d'expérience" htmlFor="niveauExperience">
-          <select
-            id="niveauExperience"
-            className={selectClass}
-            {...form.register("niveauExperience")}
+        {estConsole ? (
+          <Section
+            title="Rattachement"
+            description="Structure au nom de laquelle l'offre paraît, et centres qui dispensent une formation."
+            icon={Building2}
           >
-            <option value="">Non précisé</option>
-            {(Object.keys(NIVEAU_EXPERIENCE_LABELS) as NiveauExperience[]).map((n) => (
-              <option key={n} value={n}>
-                {NIVEAU_EXPERIENCE_LABELS[n]}
-              </option>
-            ))}
-          </select>
-        </Field>
+            <Field
+              label="Structure partenaire"
+              htmlFor="partenaireId"
+              className={typeSelectionne?.code === "FORMATION" ? undefined : "sm:col-span-2"}
+              hint="L'offre rejoint le catalogue de la structure, sur sa vitrine."
+            >
+              <select
+                id="partenaireId"
+                className={selectClass}
+                value={partenaireId}
+                onChange={(e) => {
+                  const choix = e.target.value;
+                  setPartenaireId(choix);
+                  // Le nom affiché sur l'offre suit la structure choisie, tant
+                  // qu'aucun autre n'a été saisi.
+                  const structure = structures.find((x) => String(x.id) === choix);
+                  if (structure && !form.getValues("entreprise")) {
+                    form.setValue("entreprise", structure.nom, { shouldDirty: true });
+                  }
+                }}
+              >
+                <option value="">Aucune</option>
+                {structures.map((structure) => (
+                  <option key={structure.id} value={structure.id}>
+                    {structure.nom}
+                  </option>
+                ))}
+              </select>
+            </Field>
 
-      </Section>
+            {typeSelectionne?.code === "FORMATION" ? (
+              <Field
+                label={`Centres de formation${centreIds.length ? ` (${centreIds.length})` : ""}`}
+                htmlFor="centres-formation"
+                hint="La formation apparaît sur la fiche de chaque centre coché."
+              >
+                {centres.length === 0 ? (
+                  <p
+                    id="centres-formation"
+                    className="flex items-center gap-2 rounded-lg border border-dashed px-3 py-3 text-sm text-muted-foreground"
+                  >
+                    <School className="size-4 shrink-0" aria-hidden />
+                    Aucun centre référencé. Créez-en depuis la page Centres de formation.
+                  </p>
+                ) : (
+                  <div
+                    id="centres-formation"
+                    className="max-h-48 space-y-1 overflow-y-auto rounded-lg border p-1.5"
+                  >
+                    {centres.map((centre) => {
+                      const coche = centreIds.includes(centre.id);
+                      return (
+                        <label
+                          key={centre.id}
+                          className={cn(
+                            "flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors",
+                            coche ? "bg-primary/[0.07]" : "hover:bg-muted/50",
+                          )}
+                        >
+                          <input
+                            type="checkbox"
+                            className="size-4 accent-primary"
+                            checked={coche}
+                            onChange={(e) =>
+                              setCentreIds((avant) =>
+                                e.target.checked
+                                  ? [...avant, centre.id]
+                                  : avant.filter((id) => id !== centre.id),
+                              )
+                            }
+                          />
+                          <span className="truncate">
+                            {centre.nom}
+                            {centre.ville ? (
+                              <span className="text-muted-foreground"> · {centre.ville}</span>
+                            ) : null}
+                          </span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                )}
+              </Field>
+            ) : null}
+          </Section>
+        ) : null}
 
-      {/* Le corps de l'annonce a sa propre carte, pleine largeur : c'est le
-          seul champ qu'on travaille longuement, et le serrer dans une grille à
-          deux colonnes revenait à écrire un article dans une case. */}
-      <section className="rounded-lg border bg-card">
-        <header className="flex flex-wrap items-center justify-between gap-2 border-b px-4 py-3">
-          <h2 className="text-sm font-semibold">Contenu de l&apos;annonce</h2>
-          <span className="text-xs text-muted-foreground">
-            {motsDuContenu} mot{motsDuContenu > 1 ? "s" : ""}
-          </span>
-        </header>
-        <div className="p-4">
+        {/* Le corps de l'annonce a sa propre carte, pleine largeur : c'est le
+            seul champ qu'on travaille longuement, et le serrer dans une grille à
+            deux colonnes revenait à écrire un article dans une case. */}
+        <Section
+          title="Contenu de l'annonce"
+          description="Missions, profil recherché, avantages : le texte complet."
+          icon={FileText}
+          grid={false}
+          aside={
+            <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-semibold tabular-nums text-muted-foreground">
+              {motsDuContenu} mot{motsDuContenu > 1 ? "s" : ""}
+            </span>
+          }
+        >
           <Controller
             control={form.control}
             name="contenuHtml"
@@ -713,13 +832,15 @@ function OffreFormInner({
             )}
           />
 
-          <div className="mt-4">
-            <label
-              htmlFor="extrait"
-              className="text-sm font-medium text-muted-foreground"
-            >
-              Accroche
-            </label>
+          <div className="mt-5">
+            <div className="flex items-center justify-between gap-2">
+              <Label htmlFor="extrait" className="text-[13px] font-semibold">
+                Accroche
+              </Label>
+              <span className="text-xs tabular-nums text-muted-foreground">
+                {extraitSaisi.length}/400
+              </span>
+            </div>
             <Textarea
               id="extrait"
               rows={2}
@@ -734,183 +855,326 @@ function OffreFormInner({
               </p>
             ) : null}
           </div>
-        </div>
-      </section>
+        </Section>
 
-      <Section title="Rémunération et conditions">
-        <Field label="Salaire minimum" htmlFor="salaireMin">
-          <Input id="salaireMin" type="number" min={0} {...form.register("salaireMin")} />
-        </Field>
-        <Field label="Salaire maximum" htmlFor="salaireMax">
-          <Input id="salaireMax" type="number" min={0} {...form.register("salaireMax")} />
-        </Field>
-        <Field label="Devise" htmlFor="salaireDevise">
-          <Input id="salaireDevise" {...form.register("salaireDevise")} />
-        </Field>
-        <Field label="Période" htmlFor="salairePeriode">
-          <select
-            id="salairePeriode"
-            className={selectClass}
-            {...form.register("salairePeriode")}
-          >
-            <option value="mois">par mois</option>
-            <option value="an">par an</option>
-            <option value="jour">par jour</option>
-            <option value="heure">par heure</option>
-            <option value="mission">pour la mission</option>
-          </select>
-        </Field>
-        <Field label="Télétravail" htmlFor="teletravail">
-          <select
-            id="teletravail"
-            className={selectClass}
-            {...form.register("teletravail")}
-          >
-            <option value="">Non précisé</option>
-            <option value="aucun">Sur site</option>
-            <option value="hybride">Hybride</option>
-            <option value="total">Intégral</option>
-          </select>
-        </Field>
-        <Field label="Nombre de postes" htmlFor="nombrePostes">
-          <Input
-            id="nombrePostes"
-            type="number"
-            min={1}
-            {...form.register("nombrePostes")}
-          />
-        </Field>
-      </Section>
+        <ChampsDynamiques type={typeSelectionne} form={form} />
 
-      <Section title="Candidature">
-        <Field
-          label="Adresse de réception"
-          htmlFor="emailCandidature"
-          error={form.formState.errors.emailCandidature?.message}
+        <Section
+          title="Candidature"
+          description="Comment et jusqu'à quand postuler."
+          icon={Send}
         >
-          <Input
-            id="emailCandidature"
-            type="email"
-            placeholder="recrutement@exemple.sn"
-            {...form.register("emailCandidature")}
+          <Field
+            label="Lien de candidature"
+            htmlFor="url"
+            error={form.formState.errors.url?.message}
+          >
+            <Input id="url" type="url" placeholder="https://…" {...form.register("url")} />
+          </Field>
+
+          <Field label="Date limite" htmlFor="dateLimite">
+            <Input id="dateLimite" type="date" {...form.register("dateLimite")} />
+          </Field>
+
+          <Field
+            label="Adresse de réception"
+            htmlFor="emailCandidature"
+            className="sm:col-span-2"
+            error={form.formState.errors.emailCandidature?.message}
+          >
+            <Input
+              id="emailCandidature"
+              type="email"
+              placeholder="recrutement@exemple.sn"
+              {...form.register("emailCandidature")}
+            />
+          </Field>
+          <Field
+            label="Marche à suivre"
+            htmlFor="instructionsCandidature"
+            className="sm:col-span-2"
+          >
+            <Textarea
+              id="instructionsCandidature"
+              rows={3}
+              placeholder="Pièces à fournir, format attendu, objet du message…"
+              {...form.register("instructionsCandidature")}
+            />
+          </Field>
+        </Section>
+
+        <Section title="Rémunération et conditions" icon={Banknote}>
+          <Field label="Salaire minimum" htmlFor="salaireMin">
+            <Input id="salaireMin" type="number" min={0} {...form.register("salaireMin")} />
+          </Field>
+          <Field label="Salaire maximum" htmlFor="salaireMax">
+            <Input id="salaireMax" type="number" min={0} {...form.register("salaireMax")} />
+          </Field>
+          <Field label="Devise" htmlFor="salaireDevise">
+            <Input id="salaireDevise" {...form.register("salaireDevise")} />
+          </Field>
+          <Field label="Période" htmlFor="salairePeriode">
+            <select
+              id="salairePeriode"
+              className={selectClass}
+              {...form.register("salairePeriode")}
+            >
+              <option value="mois">par mois</option>
+              <option value="an">par an</option>
+              <option value="jour">par jour</option>
+              <option value="heure">par heure</option>
+              <option value="mission">pour la mission</option>
+            </select>
+          </Field>
+          <Field label="Télétravail" htmlFor="teletravail">
+            <select
+              id="teletravail"
+              className={selectClass}
+              {...form.register("teletravail")}
+            >
+              <option value="">Non précisé</option>
+              <option value="aucun">Sur site</option>
+              <option value="hybride">Hybride</option>
+              <option value="total">Intégral</option>
+            </select>
+          </Field>
+          <Field label="Nombre de postes" htmlFor="nombrePostes">
+            <Input
+              id="nombrePostes"
+              type="number"
+              min={1}
+              {...form.register("nombrePostes")}
+            />
+          </Field>
+        </Section>
+
+        {offre ? (
+          <OffreMedias
+            offre={offre}
+            champAlt={champAlt}
+            onCouvertureChoisie={reprendreAlt}
           />
-        </Field>
-        <Field
-          label="Marche à suivre"
-          htmlFor="instructionsCandidature"
-          className="sm:col-span-2"
+        ) : (
+          <MediasEnAttente
+            couverture={couverture}
+            onCouverture={(media) => {
+              setCouverture(media);
+              reprendreAlt(media);
+            }}
+            document={documentEnAttente}
+            onDocument={setDocumentEnAttente}
+            champAlt={champAlt}
+          />
+        )}
+
+        <Section
+          title="Référencement"
+          description="Titre et description affichés par les moteurs de recherche."
+          icon={Search}
         >
-          <Textarea
-            id="instructionsCandidature"
-            rows={3}
-            placeholder="Pièces à fournir, format attendu, objet du message…"
-            {...form.register("instructionsCandidature")}
-          />
-        </Field>
-      </Section>
+          <Field
+            label="Titre pour les moteurs"
+            htmlFor="metaTitre"
+            error={form.formState.errors.metaTitre?.message}
+            hint={`${metaTitreSaisi.length}/70`}
+          >
+            <Input
+              id="metaTitre"
+              maxLength={70}
+              placeholder="Repris du titre si laissé vide"
+              {...form.register("metaTitre")}
+            />
+          </Field>
+          <Field
+            label="Description pour les moteurs"
+            htmlFor="metaDescription"
+            error={form.formState.errors.metaDescription?.message}
+            hint={`${metaDescriptionSaisie.length}/180`}
+          >
+            <Input
+              id="metaDescription"
+              maxLength={180}
+              placeholder="Reprise de l'accroche si laissée vide"
+              {...form.register("metaDescription")}
+            />
+          </Field>
 
-      <Section title="Publication">
-        <Field label="Publier à partir du" htmlFor="datePublicationPrevue">
-          <Input
-            id="datePublicationPrevue"
-            type="date"
-            {...form.register("datePublicationPrevue")}
-          />
-          <p className="mt-1 text-xs text-muted-foreground">
-            Laissé vide, l&apos;offre paraît dès sa validation.
-          </p>
-        </Field>
-
-        <div className="flex items-start gap-3 rounded-lg bg-muted/50 p-3 sm:col-span-1">
-          <Controller
-            control={form.control}
-            name="estBrouillon"
-            render={({ field }) => (
-              <Switch
-                id="estBrouillon"
-                checked={field.value}
-                onCheckedChange={field.onChange}
-              />
-            )}
-          />
-          <div className="min-w-0">
-            <label htmlFor="estBrouillon" className="text-sm font-medium">
-              Garder en brouillon
-            </label>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              Visible de vous seul, sans passer en relecture tant que vous ne
-              l&apos;avez pas terminée.
+          {/* Aperçu d'un résultat de recherche, pour juger de la coupe. */}
+          <div className="rounded-xl border bg-muted/20 p-4 sm:col-span-2">
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+              Aperçu dans un moteur de recherche
+            </p>
+            <p className="truncate text-xs text-muted-foreground">
+              noken.app › offres
+            </p>
+            <p className="mt-0.5 line-clamp-1 text-base font-medium text-[var(--c-blue)]">
+              {metaTitreSaisi.trim() || titreSaisi?.trim() || "Titre de l'offre"}
+            </p>
+            <p className="mt-0.5 line-clamp-2 text-sm text-muted-foreground">
+              {metaDescriptionSaisie.trim() ||
+                extraitSaisi.trim() ||
+                "La description est tirée de l'accroche, ou à défaut du début du contenu."}
             </p>
           </div>
-        </div>
-      </Section>
+        </Section>
+      </div>
 
-      <Section title="Référencement">
-        <Field
-          label="Titre pour les moteurs"
-          htmlFor="metaTitre"
-          error={form.formState.errors.metaTitre?.message}
+      {/* Colonne latérale : publication, qualité, actions. */}
+      <aside className="space-y-5 lg:sticky lg:top-[calc(var(--console-entete,3.5rem)+1.25rem)]">
+        <ConsolePanneau titre="Publication" icone={Layers}>
+          <div className="space-y-4">
+            {offre ? (
+              <div className="flex flex-wrap gap-1.5">
+                {offre.statutModeration === "EN_ATTENTE" ? (
+                  <EtatPublication teinte="var(--warning)">En attente de validation</EtatPublication>
+                ) : offre.statutModeration === "REFUSEE" ? (
+                  <EtatPublication teinte="var(--destructive)">Refusée</EtatPublication>
+                ) : offre.estBrouillon ? (
+                  <EtatPublication>Brouillon</EtatPublication>
+                ) : (
+                  <EtatPublication teinte="var(--success)">Publiée</EtatPublication>
+                )}
+                {offre.estCloturee ? (
+                  <EtatPublication>
+                    <Lock className="size-3" aria-hidden /> Clôturée
+                  </EtatPublication>
+                ) : null}
+              </div>
+            ) : null}
+
+            {offre?.statutModeration === "REFUSEE" && offre.motifRefus ? (
+              <p className="rounded-lg bg-destructive/8 px-3 py-2 text-xs leading-relaxed text-destructive">
+                <strong className="font-semibold">Motif : </strong>
+                {offre.motifRefus}
+              </p>
+            ) : null}
+
+            <label
+              htmlFor="estBrouillon"
+              className={cn(
+                "flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition-colors",
+                brouillon ? "border-primary/30 bg-primary/[0.04]" : "bg-muted/30",
+              )}
+            >
+              <Controller
+                control={form.control}
+                name="estBrouillon"
+                render={({ field }) => (
+                  <Switch
+                    id="estBrouillon"
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                    className="mt-0.5"
+                  />
+                )}
+              />
+              <span className="min-w-0">
+                <span className="block text-sm font-semibold">Garder en brouillon</span>
+                <span className="mt-0.5 block text-xs leading-relaxed text-muted-foreground">
+                  Visible de vous seul, sans passer en relecture tant que vous ne
+                  l&apos;avez pas terminée.
+                </span>
+              </span>
+            </label>
+
+            <Field
+              label="Publier à partir du"
+              htmlFor="datePublicationPrevue"
+              hint="Laissé vide, l'offre paraît dès sa validation."
+            >
+              <Input
+                id="datePublicationPrevue"
+                type="date"
+                {...form.register("datePublicationPrevue")}
+              />
+            </Field>
+
+            {nbErreurs > 0 ? (
+              <p className="flex items-center gap-2 rounded-lg bg-destructive/8 px-3 py-2 text-xs font-medium text-destructive">
+                <AlertTriangle className="size-3.5 shrink-0" aria-hidden />
+                {nbErreurs} champ{nbErreurs > 1 ? "s" : ""} à corriger.
+              </p>
+            ) : null}
+
+            <div className="hidden gap-2 lg:grid">
+              {boutonEnvoi("w-full")}
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-full rounded-xl"
+                onClick={() => router.push(racine)}
+              >
+                Annuler
+              </Button>
+            </div>
+          </div>
+        </ConsolePanneau>
+
+        <ConsolePanneau
+          titre="Qualité de l'annonce"
+          icone={CheckCircle2}
+          teinte="var(--success)"
+          actions={
+            <span className="text-xs font-bold tabular-nums text-muted-foreground">
+              {faits}/{controles.length}
+            </span>
+          }
         >
-          <Input
-            id="metaTitre"
-            maxLength={70}
-            placeholder="Repris du titre si laissé vide"
-            {...form.register("metaTitre")}
-          />
-        </Field>
-        <Field
-          label="Description pour les moteurs"
-          htmlFor="metaDescription"
-          error={form.formState.errors.metaDescription?.message}
-        >
-          <Input
-            id="metaDescription"
-            maxLength={180}
-            placeholder="Reprise de l'accroche si laissée vide"
-            {...form.register("metaDescription")}
-          />
-        </Field>
-      </Section>
+          <div className="mb-3 h-1.5 overflow-hidden rounded-full bg-muted">
+            <div
+              className="h-full rounded-full bg-[var(--success)] transition-all duration-500"
+              style={{ width: `${(faits / controles.length) * 100}%` }}
+            />
+          </div>
+          <ul className="space-y-2">
+            {controles.map((c) => (
+              <Controle key={c.texte} ok={c.ok}>
+                {c.texte}
+              </Controle>
+            ))}
+          </ul>
+        </ConsolePanneau>
+      </aside>
 
-      <ChampsDynamiques type={typeSelectionne} form={form} />
-
-      {offre ? (
-        <OffreMedias
-          offre={offre}
-          champAlt={champAlt}
-          onCouvertureChoisie={reprendreAlt}
-        />
-      ) : (
-        <MediasEnAttente
-          couverture={couverture}
-          onCouverture={(media) => {
-            setCouverture(media);
-            reprendreAlt(media);
-          }}
-          document={documentEnAttente}
-          onDocument={setDocumentEnAttente}
-          champAlt={champAlt}
-        />
-      )}
-
-      <div className="sticky bottom-16 z-10 flex justify-end gap-2 rounded-lg border bg-background/95 p-3 backdrop-blur lg:bottom-4">
-        <Button type="button" variant="ghost" onClick={() => router.push(racine)}>
+      {/* Barre d'actions sur petit écran : la colonne latérale y est en bas. */}
+      <div className="sticky bottom-16 z-10 flex justify-end gap-2 rounded-xl border bg-background/95 p-3 shadow-lg backdrop-blur lg:hidden">
+        <Button type="button" variant="ghost" className="rounded-xl" onClick={() => router.push(racine)}>
           Annuler
         </Button>
-        <Button type="submit" disabled={save.isPending}>
-          {save.isPending ? (
-            <Loader2 className="size-4 animate-spin" />
-          ) : (
-            <Save className="size-4" />
-          )}
-          {form.watch("estBrouillon")
-            ? "Enregistrer le brouillon"
-            : isEdit
-              ? "Enregistrer"
-              : "Publier l'offre"}
-        </Button>
+        {boutonEnvoi()}
       </div>
     </form>
+  );
+}
+
+/** Pastille d'état de l'offre, dans la colonne de publication. */
+function EtatPublication({
+  teinte,
+  children,
+}: {
+  teinte?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold",
+        !teinte && "bg-muted text-muted-foreground",
+      )}
+      style={
+        teinte
+          ? {
+              background: `color-mix(in oklch, ${teinte} 13%, transparent)`,
+              color: teinte,
+            }
+          : undefined
+      }
+    >
+      {teinte ? (
+        <span aria-hidden className="size-1.5 rounded-full" style={{ background: teinte }} />
+      ) : null}
+      {children}
+    </span>
   );
 }
 

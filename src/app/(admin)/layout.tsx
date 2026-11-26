@@ -1,4 +1,5 @@
 import { ConsoleShell } from "@/components/admin/console-shell";
+import { ConsoleConfirmationProvider } from "@/components/admin/console-kit";
 
 /**
  * La console vit dans son propre groupe de routes : elle ne traverse pas
@@ -11,7 +12,7 @@ export default function AdminLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <ConsoleShell>
-      <>{children}</>
+      <ConsoleConfirmationProvider>{children}</ConsoleConfirmationProvider>
     </ConsoleShell>
   );
 }

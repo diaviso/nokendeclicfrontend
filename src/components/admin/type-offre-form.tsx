@@ -7,27 +7,46 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { toast } from "sonner";
 import {
+  AlignLeft,
+  AlertTriangle,
+  Calendar,
+  Check,
   ChevronDown,
   ChevronUp,
-  GripVertical,
+  Eye,
+  Hash,
+  Layers,
+  Link2,
+  List,
+  ListChecks,
   Loader2,
+  Palette,
   Plus,
   Save,
+  ToggleLeft,
   Trash2,
+  Type as TypeIcon,
+  type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
-import { Badge } from "@/components/ui/badge";
 import { TagInput } from "@/components/shared/tag-input";
+import {
+  ConsoleAction,
+  ConsoleActions,
+  ConsoleChamp,
+  ConsoleInterrupteur,
+  ConsolePanneau,
+  ConsoleSection,
+} from "@/components/admin/console-kit";
 import { adminTypesOffresApi, errorMessage } from "@/lib/api";
 import {
   COULEURS_TYPE,
   COULEUR_NOMS,
   ICONES_TYPE,
   ICONE_NOMS,
+  styleType,
 } from "@/lib/type-offre";
 import { cn } from "@/lib/utils";
 import type { TypeChamp, TypeOffreDef } from "@/lib/types";
@@ -43,7 +62,20 @@ const TYPE_CHAMP_LABELS: Record<TypeChamp, string> = {
   URL: "Lien web",
 };
 
+/** Icône de chaque nature, reprise dans l'en-tête du champ et l'aperçu. */
+const TYPE_CHAMP_ICONES: Record<TypeChamp, LucideIcon> = {
+  TEXTE: TypeIcon,
+  TEXTE_LONG: AlignLeft,
+  NOMBRE: Hash,
+  DATE: Calendar,
+  BOOLEEN: ToggleLeft,
+  LISTE: List,
+  URL: Link2,
+};
+
 const TYPE_CHAMP_VALUES = Object.keys(TYPE_CHAMP_LABELS) as TypeChamp[];
+
+const TEINTE = "var(--c-teal)";
 
 const champSchema = z
   .object({
@@ -111,36 +143,6 @@ function CodeTechnique({ code }: { code?: string }) {
   );
 }
 
-function Field({
-  label,
-  htmlFor,
-  error,
-  hint,
-  className,
-  children,
-}: {
-  label: string;
-  htmlFor: string;
-  error?: string;
-  hint?: string;
-  className?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className={className}>
-      <Label htmlFor={htmlFor}>{label}</Label>
-      <div className="mt-1.5">{children}</div>
-      {error ? (
-        <p role="alert" className="mt-1 text-xs text-destructive">
-          {error}
-        </p>
-      ) : hint ? (
-        <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
-      ) : null}
-    </div>
-  );
-}
-
 /** Une ligne du constructeur de champs. */
 function ChampRow({
   form,
@@ -159,73 +161,79 @@ function ChampRow({
   const type = form.watch(`champs.${index}.type`);
   const options = form.watch(`champs.${index}.options`);
   const code = form.watch(`champs.${index}.code`);
+  const libelle = form.watch(`champs.${index}.libelle`);
+  const obligatoire = form.watch(`champs.${index}.obligatoire`);
   const dejaEnregistre = Boolean(form.watch(`champs.${index}.id`));
+  const IconeNature = TYPE_CHAMP_ICONES[type] ?? TypeIcon;
 
   return (
-    <li className="rounded-lg border bg-card">
-      <div className="flex items-center gap-2 border-b px-3 py-2">
-        <GripVertical className="size-4 shrink-0 text-muted-foreground" aria-hidden />
-        <span className="text-xs font-medium tabular-nums text-muted-foreground">
-          Champ {index + 1}
+    <li
+      className={cn(
+        "overflow-hidden rounded-xl border bg-card shadow-sm transition-colors",
+        erreurs && "border-destructive/40",
+      )}
+    >
+      <div className="flex items-center gap-2.5 border-b bg-muted/30 px-3 py-2">
+        <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+          <IconeNature className="size-3.5" aria-hidden />
         </span>
-        {dejaEnregistre ? (
-          <Badge variant="secondary" className="h-5 px-1.5 text-[11px]">
-            Enregistré
-          </Badge>
-        ) : null}
-        <span className="hidden sm:block">
-          <CodeTechnique code={code} />
-        </span>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-semibold">
+            <span className="mr-1.5 tabular-nums text-muted-foreground">
+              {index + 1}.
+            </span>
+            {libelle?.trim() || "Nouveau champ"}
+            {obligatoire ? <span className="text-destructive"> *</span> : null}
+          </p>
+          <p className="flex flex-wrap items-center gap-x-2 text-[11px] text-muted-foreground">
+            {TYPE_CHAMP_LABELS[type]}
+            {dejaEnregistre ? (
+              <span className="rounded bg-[color-mix(in_oklch,var(--success)_14%,transparent)] px-1.5 font-medium text-[var(--success)]">
+                Enregistré
+              </span>
+            ) : null}
+            <span className="hidden sm:inline">
+              <CodeTechnique code={code} />
+            </span>
+          </p>
+        </div>
 
-        <div className="ml-auto flex items-center gap-0.5">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="size-7"
+        <ConsoleActions>
+          <ConsoleAction
+            libelle="Monter le champ"
+            icone={ChevronUp}
             disabled={index === 0}
             onClick={() => onMove(index, index - 1)}
-            aria-label="Monter le champ"
-          >
-            <ChevronUp className="size-4" />
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="size-7"
+          />
+          <ConsoleAction
+            libelle="Descendre le champ"
+            icone={ChevronDown}
             disabled={index === total - 1}
             onClick={() => onMove(index, index + 1)}
-            aria-label="Descendre le champ"
-          >
-            <ChevronDown className="size-4" />
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="size-7 text-muted-foreground hover:text-destructive"
+          />
+          <ConsoleAction
+            libelle="Retirer le champ"
+            icone={Trash2}
+            ton="danger"
             onClick={onRemove}
-            aria-label="Retirer le champ"
-          >
-            <Trash2 className="size-4" />
-          </Button>
-        </div>
+          />
+        </ConsoleActions>
       </div>
 
-      <div className="grid gap-4 p-3 sm:grid-cols-2">
-        <Field
-          label="Libellé affiché"
-          htmlFor={`champ-${index}-libelle`}
-          error={erreurs?.libelle?.message}
+      <div className="grid gap-4 p-4 sm:grid-cols-2">
+        <ConsoleChamp
+          id={`champ-${index}-libelle`}
+          libelle="Libellé affiché"
+          requis
+          erreur={erreurs?.libelle?.message}
         >
           <Input
             id={`champ-${index}-libelle`}
             {...form.register(`champs.${index}.libelle`)}
           />
-        </Field>
+        </ConsoleChamp>
 
-        <Field label="Nature" htmlFor={`champ-${index}-type`}>
+        <ConsoleChamp id={`champ-${index}-type`} libelle="Nature">
           <select
             id={`champ-${index}-type`}
             className={selectClass}
@@ -237,26 +245,22 @@ function ChampRow({
               </option>
             ))}
           </select>
-        </Field>
+        </ConsoleChamp>
 
-        <div className="flex items-end pb-1">
-          <label className="flex cursor-pointer items-center gap-2.5 text-sm">
-            <Switch
-              checked={form.watch(`champs.${index}.obligatoire`)}
-              onCheckedChange={(checked) =>
-                form.setValue(`champs.${index}.obligatoire`, checked)
-              }
-            />
-            Obligatoire
-          </label>
-        </div>
+        <ConsoleInterrupteur
+          libelle="Obligatoire"
+          description="La publication sera refusée tant qu'il n'est pas renseigné."
+          coche={obligatoire}
+          onChange={(checked) => form.setValue(`champs.${index}.obligatoire`, checked)}
+        />
 
         {type === "LISTE" ? (
-          <Field
-            label="Options proposées"
-            htmlFor={`champ-${index}-options`}
-            className="sm:col-span-2"
-            error={erreurs?.options?.message}
+          <ConsoleChamp
+            id={`champ-${index}-options`}
+            libelle="Options proposées"
+            large
+            erreur={erreurs?.options?.message}
+            aide="Validez chaque option avec Entrée."
           >
             <TagInput
               id={`champ-${index}-options`}
@@ -264,19 +268,22 @@ function ChampRow({
               onChange={(next) => form.setValue(`champs.${index}.options`, next)}
               placeholder="Licence, Master, Doctorat…"
             />
-          </Field>
+          </ConsoleChamp>
         ) : null}
 
-        <Field label="Exemple affiché en filigrane" htmlFor={`champ-${index}-placeholder`}>
+        <ConsoleChamp
+          id={`champ-${index}-placeholder`}
+          libelle="Exemple affiché en filigrane"
+        >
           <Input
             id={`champ-${index}-placeholder`}
             {...form.register(`champs.${index}.placeholder`)}
           />
-        </Field>
+        </ConsoleChamp>
 
-        <Field label="Texte d'aide" htmlFor={`champ-${index}-aide`}>
+        <ConsoleChamp id={`champ-${index}-aide`} libelle="Texte d'aide">
           <Input id={`champ-${index}-aide`} {...form.register(`champs.${index}.aide`)} />
-        </Field>
+        </ConsoleChamp>
       </div>
     </li>
   );
@@ -318,6 +325,9 @@ export function TypeOffreForm({ type }: { type?: TypeOffreDef }) {
   const iconeChoisie = form.watch("icone");
   const couleurChoisie = form.watch("couleur");
   const estActif = form.watch("estActif");
+  const libelleSaisi = form.watch("libelle");
+  const descriptionSaisie = form.watch("description");
+  const champsSaisis = form.watch("champs");
 
   const save = useMutation({
     mutationFn: (values: FormInput) => {
@@ -358,215 +368,337 @@ export function TypeOffreForm({ type }: { type?: TypeOffreDef }) {
   });
 
   const nombreOffres = type?._count?.offres ?? 0;
+  const ajouterChamp = () =>
+    champs.append({
+      code: "",
+      libelle: "",
+      type: "TEXTE",
+      obligatoire: false,
+      options: [],
+      placeholder: "",
+      aide: "",
+    });
+
+  // Aperçu en direct : ce que verront les rédacteurs et les membres.
+  const apercu = styleType({
+    code: type?.code ?? "",
+    libelle: libelleSaisi?.trim() || "Nom du type",
+    icone: iconeChoisie,
+    couleur: couleurChoisie,
+  });
+  const IconeApercu = apercu.icone;
+  const nbObligatoires = (champsSaisis ?? []).filter((c) => c.obligatoire).length;
+
+  const boutons = (
+    <>
+      <Button
+        type="button"
+        variant="ghost"
+        className="rounded-lg"
+        onClick={() => router.push("/admin/types-offres")}
+      >
+        Annuler
+      </Button>
+      <Button type="submit" className="rounded-lg" disabled={save.isPending}>
+        {save.isPending ? (
+          <Loader2 className="size-4 animate-spin" />
+        ) : (
+          <Save className="size-4" />
+        )}
+        {isEdit ? "Enregistrer" : "Créer le type"}
+      </Button>
+    </>
+  );
 
   return (
     <form
       onSubmit={form.handleSubmit((values) => save.mutate(values))}
-      className="space-y-4 pb-4"
+      className="grid gap-6 pb-4 xl:grid-cols-[minmax(0,1fr)_20rem]"
       noValidate
     >
-      <section className="rounded-lg border bg-card">
-        <header className="flex flex-wrap items-center justify-between gap-2 border-b px-4 py-3">
-          <h2 className="text-sm font-semibold">Identité du type</h2>
-          <CodeTechnique code={type?.code} />
-        </header>
-        <div className="grid gap-4 p-4 sm:grid-cols-2">
-          <Field
-            label="Nom affiché"
-            htmlFor="libelle"
-            className="sm:col-span-2"
-            error={form.formState.errors.libelle?.message}
-            hint={
-              isEdit
-                ? undefined
-                : "Le code technique en sera dérivé, une fois pour toutes."
-            }
-          >
-            <Input id="libelle" placeholder="Concours" {...form.register("libelle")} />
-          </Field>
+      <div className="min-w-0 space-y-6">
+        <ConsolePanneau
+          titre="Identité du type"
+          description="Nom, description, icône et couleur reprises partout dans l'application."
+          icone={Layers}
+          teinte={TEINTE}
+          actions={<CodeTechnique code={type?.code} />}
+        >
+          <ConsoleSection>
+            <ConsoleChamp
+              id="libelle"
+              libelle="Nom affiché"
+              requis
+              large
+              erreur={form.formState.errors.libelle?.message}
+              aide={
+                isEdit
+                  ? undefined
+                  : "Le code technique en sera dérivé, une fois pour toutes."
+              }
+            >
+              <Input id="libelle" placeholder="Concours" {...form.register("libelle")} />
+            </ConsoleChamp>
 
-          <Field
-            label="Description"
-            htmlFor="description"
-            className="sm:col-span-2"
-            error={form.formState.errors.description?.message}
-          >
-            <Textarea
+            <ConsoleChamp
               id="description"
-              rows={2}
-              placeholder="Présentée aux membres pour les aider à choisir le bon type."
-              {...form.register("description")}
-            />
-          </Field>
-
-          <Field label="Icône" htmlFor="icone" className="sm:col-span-2">
-            <div
-              id="icone"
-              role="radiogroup"
-              aria-label="Icône du type"
-              className="flex flex-wrap gap-1.5"
+              libelle="Description"
+              large
+              erreur={form.formState.errors.description?.message}
+              aide="Présentée aux membres pour les aider à choisir le bon type."
             >
-              {ICONE_NOMS.map((nom) => {
-                const Icon = ICONES_TYPE[nom];
-                const actif = iconeChoisie === nom;
-                return (
-                  <button
-                    key={nom}
-                    type="button"
-                    role="radio"
-                    aria-checked={actif}
-                    aria-label={nom}
-                    onClick={() => form.setValue("icone", nom)}
-                    className={cn(
-                      "grid size-9 place-items-center rounded-md border transition-colors",
-                      actif
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "text-muted-foreground hover:bg-muted",
-                    )}
-                  >
-                    <Icon className="size-4" />
-                  </button>
-                );
-              })}
-            </div>
-          </Field>
-
-          <Field label="Couleur" htmlFor="couleur" className="sm:col-span-2">
-            <div
-              id="couleur"
-              role="radiogroup"
-              aria-label="Couleur du type"
-              className="flex flex-wrap gap-1.5"
-            >
-              {COULEUR_NOMS.map((nom) => {
-                const couleur = COULEURS_TYPE[nom];
-                const actif = couleurChoisie === nom;
-                return (
-                  <button
-                    key={nom}
-                    type="button"
-                    role="radio"
-                    aria-checked={actif}
-                    onClick={() => form.setValue("couleur", nom)}
-                    className={cn(
-                      "rounded-md border px-2.5 py-1 text-xs font-medium transition-shadow",
-                      couleur.badge,
-                      actif ? "ring-2 ring-ring/50" : "",
-                    )}
-                  >
-                    {couleur.libelle}
-                  </button>
-                );
-              })}
-            </div>
-          </Field>
-
-          <Field
-            label="Ordre d'affichage"
-            htmlFor="ordre"
-            hint="Les valeurs les plus basses apparaissent en premier."
-          >
-            <Input id="ordre" type="number" inputMode="numeric" {...form.register("ordre")} />
-          </Field>
-
-          <div className="flex items-end pb-1">
-            <label className="flex cursor-pointer items-center gap-2.5 text-sm">
-              <Switch
-                checked={estActif}
-                onCheckedChange={(checked) => form.setValue("estActif", checked)}
+              <Textarea
+                id="description"
+                rows={2}
+                placeholder="Présentée aux membres pour les aider à choisir le bon type."
+                {...form.register("description")}
               />
-              <span>
-                Proposé à la publication
-                {!estActif ? (
-                  <span className="block text-xs text-muted-foreground">
-                    Les offres existantes restent visibles.
-                  </span>
-                ) : null}
-              </span>
-            </label>
-          </div>
-        </div>
-      </section>
+            </ConsoleChamp>
+          </ConsoleSection>
 
-      <section className="rounded-lg border bg-card">
-        <header className="flex flex-wrap items-center justify-between gap-2 border-b px-4 py-3">
-          <div>
-            <h2 className="text-sm font-semibold">Informations à renseigner</h2>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              Ces champs s&apos;ajoutent au titre, à la description et aux
-              informations communes à toutes les offres.
-            </p>
-          </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              champs.append({
-                code: "",
-                libelle: "",
-                type: "TEXTE",
-                obligatoire: false,
-                options: [],
-                placeholder: "",
-                aide: "",
-              })
-            }
-          >
-            <Plus className="size-4" />
-            Ajouter un champ
-          </Button>
-        </header>
+          <ConsoleSection titre="Apparence" icone={Palette}>
+            <ConsoleChamp id="icone" libelle="Icône" large>
+              <div
+                id="icone"
+                role="radiogroup"
+                aria-label="Icône du type"
+                className="flex flex-wrap gap-1.5"
+              >
+                {ICONE_NOMS.map((nom) => {
+                  const Icon = ICONES_TYPE[nom];
+                  const actif = iconeChoisie === nom;
+                  return (
+                    <button
+                      key={nom}
+                      type="button"
+                      role="radio"
+                      aria-checked={actif}
+                      aria-label={nom}
+                      title={nom}
+                      onClick={() => form.setValue("icone", nom)}
+                      className={cn(
+                        "grid size-10 place-items-center rounded-xl border transition-all",
+                        actif
+                          ? "border-transparent text-white shadow-sm"
+                          : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                      )}
+                      style={actif ? { background: apercu.teinte } : undefined}
+                    >
+                      <Icon className="size-4" />
+                    </button>
+                  );
+                })}
+              </div>
+            </ConsoleChamp>
 
-        <div className="p-4">
+            <ConsoleChamp id="couleur" libelle="Couleur" large>
+              <div
+                id="couleur"
+                role="radiogroup"
+                aria-label="Couleur du type"
+                className="flex flex-wrap gap-1.5"
+              >
+                {COULEUR_NOMS.map((nom) => {
+                  const couleur = COULEURS_TYPE[nom];
+                  const actif = couleurChoisie === nom;
+                  return (
+                    <button
+                      key={nom}
+                      type="button"
+                      role="radio"
+                      aria-checked={actif}
+                      onClick={() => form.setValue("couleur", nom)}
+                      className={cn(
+                        "flex items-center gap-2 rounded-xl border px-3 py-1.5 text-xs font-medium transition-all",
+                        actif
+                          ? "border-foreground/25 bg-muted shadow-sm"
+                          : "text-muted-foreground hover:bg-muted/60",
+                      )}
+                    >
+                      <span
+                        aria-hidden
+                        className="grid size-4 place-items-center rounded-full"
+                        style={{ background: couleur.teinte }}
+                      >
+                        {actif ? <Check className="size-2.5 text-white" /> : null}
+                      </span>
+                      {couleur.libelle}
+                    </button>
+                  );
+                })}
+              </div>
+            </ConsoleChamp>
+          </ConsoleSection>
+
+          <ConsoleSection titre="Publication" icone={Eye}>
+            <ConsoleChamp
+              id="ordre"
+              libelle="Ordre d'affichage"
+              aide="Les valeurs les plus basses apparaissent en premier."
+            >
+              <Input id="ordre" type="number" inputMode="numeric" {...form.register("ordre")} />
+            </ConsoleChamp>
+
+            <ConsoleInterrupteur
+              large={false}
+              libelle="Proposé à la publication"
+              description={
+                estActif
+                  ? "Le type apparaît dans les formulaires."
+                  : "Les offres existantes restent visibles."
+              }
+              coche={estActif}
+              onChange={(checked) => form.setValue("estActif", checked)}
+            />
+          </ConsoleSection>
+        </ConsolePanneau>
+
+        <ConsolePanneau
+          titre="Informations à renseigner"
+          description="Ces champs s'ajoutent au titre, à la description et aux informations communes à toutes les offres."
+          icone={ListChecks}
+          teinte={TEINTE}
+          actions={
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="rounded-lg"
+              onClick={ajouterChamp}
+            >
+              <Plus className="size-4" />
+              <span className="hidden sm:inline">Ajouter un champ</span>
+            </Button>
+          }
+        >
           {nombreOffres > 0 ? (
-            <p className="mb-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300">
-              {nombreOffres} offre{nombreOffres > 1 ? "s" : ""} utilise
-              {nombreOffres > 1 ? "nt" : ""} ce type. Retirer un champ le fait
-              disparaître des formulaires et des pages d&apos;offre ; les valeurs
-              déjà saisies restent en base et réapparaîtront si le champ est
-              rétabli avec le même code.
+            <p className="mb-4 flex gap-2.5 rounded-xl border border-[color-mix(in_oklch,var(--warning)_35%,transparent)] bg-[color-mix(in_oklch,var(--warning)_9%,transparent)] px-3.5 py-2.5 text-xs leading-relaxed">
+              <AlertTriangle className="mt-0.5 size-4 shrink-0 text-[var(--warning)]" aria-hidden />
+              <span>
+                {nombreOffres} offre{nombreOffres > 1 ? "s" : ""} utilise
+                {nombreOffres > 1 ? "nt" : ""} ce type. Retirer un champ le fait
+                disparaître des formulaires et des pages d&apos;offre ; les valeurs
+                déjà saisies restent en base et réapparaîtront si le champ est
+                rétabli avec le même code.
+              </span>
             </p>
           ) : null}
 
           {champs.fields.length === 0 ? (
-            <p className="dashed-frame px-6 py-10 text-center text-sm text-muted-foreground">
-              Aucun champ spécifique. Ce type ne demandera que les informations
-              communes.
+            <div className="rounded-2xl border border-dashed px-6 py-10 text-center">
+              <span className="mx-auto mb-3 grid size-11 place-items-center rounded-xl bg-muted text-muted-foreground">
+                <ListChecks className="size-5" aria-hidden />
+              </span>
+              <p className="text-sm font-semibold">Aucun champ spécifique</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Ce type ne demandera que les informations communes.
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="mt-4 rounded-lg"
+                onClick={ajouterChamp}
+              >
+                <Plus className="size-4" />
+                Ajouter un champ
+              </Button>
+            </div>
+          ) : (
+            <>
+              <ul className="space-y-3">
+                {champs.fields.map((field, index) => (
+                  <ChampRow
+                    key={field.id}
+                    form={form}
+                    index={index}
+                    total={champs.fields.length}
+                    onMove={champs.move}
+                    onRemove={() => champs.remove(index)}
+                  />
+                ))}
+              </ul>
+              <button
+                type="button"
+                onClick={ajouterChamp}
+                className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-dashed py-3 text-sm font-medium text-muted-foreground transition-colors hover:border-primary/40 hover:bg-primary/[0.03] hover:text-primary"
+              >
+                <Plus className="size-4" />
+                Ajouter un champ
+              </button>
+            </>
+          )}
+          {form.formState.errors.champs?.message ? (
+            <p className="mt-2 text-xs font-medium text-destructive">
+              {form.formState.errors.champs.message}
             </p>
-          ) : (
-            <ul className="space-y-3">
-              {champs.fields.map((field, index) => (
-                <ChampRow
-                  key={field.id}
-                  form={form}
-                  index={index}
-                  total={champs.fields.length}
-                  onMove={champs.move}
-                  onRemove={() => champs.remove(index)}
-                />
-              ))}
-            </ul>
-          )}
-        </div>
-      </section>
+          ) : null}
+        </ConsolePanneau>
+      </div>
 
-      <div className="sticky bottom-16 z-10 flex justify-end gap-2 rounded-lg border bg-background/95 p-3 backdrop-blur lg:bottom-4">
-        <Button
-          type="button"
-          variant="ghost"
-          onClick={() => router.push("/admin/types-offres")}
-        >
-          Annuler
-        </Button>
-        <Button type="submit" disabled={save.isPending}>
-          {save.isPending ? (
-            <Loader2 className="size-4 animate-spin" />
-          ) : (
-            <Save className="size-4" />
-          )}
-          {isEdit ? "Enregistrer" : "Créer le type"}
-        </Button>
+      {/* Colonne d'aperçu : collée en haut sur grand écran. */}
+      <aside className="space-y-4 xl:sticky xl:top-[calc(var(--console-entete)+1.5rem)] xl:self-start">
+        <div className="overflow-hidden rounded-2xl border bg-card shadow-sm">
+          <p className="border-b px-4 py-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+            Aperçu
+          </p>
+          <div
+            className="relative h-16"
+            style={{
+              background: `linear-gradient(135deg, color-mix(in oklch, ${apercu.teinte} 18%, transparent), color-mix(in oklch, ${apercu.teinte} 5%, transparent))`,
+            }}
+          >
+            <span
+              className="absolute -bottom-5 left-4 grid size-11 place-items-center rounded-xl border-4 border-card text-white"
+              style={{ background: apercu.teinte }}
+            >
+              <IconeApercu className="size-5" aria-hidden />
+            </span>
+            {!estActif ? (
+              <span className="absolute right-3 top-3 rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                Désactivé
+              </span>
+            ) : null}
+          </div>
+          <div className="p-4 pt-7">
+            <p className="truncate font-bold">{apercu.libelle}</p>
+            <p className="mt-1 line-clamp-3 text-xs leading-relaxed text-muted-foreground">
+              {descriptionSaisie?.trim() || "Aucune description."}
+            </p>
+            <span
+              className={cn(
+                "mt-3 inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-[11px] font-medium",
+                apercu.badge,
+              )}
+            >
+              <IconeApercu className="size-3" aria-hidden />
+              {apercu.libelle}
+            </span>
+          </div>
+          <dl className="grid grid-cols-3 divide-x border-t text-center">
+            <div className="py-3">
+              <dd className="text-lg font-extrabold tabular-nums">{champsSaisis?.length ?? 0}</dd>
+              <dt className="text-[10px] text-muted-foreground">champs</dt>
+            </div>
+            <div className="py-3">
+              <dd className="text-lg font-extrabold tabular-nums">{nbObligatoires}</dd>
+              <dt className="text-[10px] text-muted-foreground">obligatoires</dt>
+            </div>
+            <div className="py-3">
+              <dd className="text-lg font-extrabold tabular-nums">{nombreOffres}</dd>
+              <dt className="text-[10px] text-muted-foreground">offres</dt>
+            </div>
+          </dl>
+        </div>
+
+        <div className="hidden flex-col gap-2 rounded-2xl border bg-card p-3 shadow-sm xl:flex [&>button]:w-full">
+          {boutons}
+        </div>
+      </aside>
+
+      {/* Barre d'actions collante, hors grand écran où l'aperçu la porte. */}
+      <div className="sticky bottom-4 z-10 flex justify-end gap-2 rounded-2xl border bg-background/90 p-3 shadow-lg backdrop-blur xl:hidden">
+        {boutons}
       </div>
     </form>
   );

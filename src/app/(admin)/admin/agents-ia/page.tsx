@@ -52,7 +52,9 @@ import {
 import { cn } from "@/lib/utils";
 import type { StatistiquesAgentsIA, UtilisateurAgentIA } from "@/lib/types";
 
-const TEINTE = "var(--chart-2)";
+const TEINTE = "var(--c-blue)";
+/** Teinte de l'extracteur de CV, distincte de celle de l'assistant. */
+const TEINTE_CV = "var(--c-teal)";
 
 const PERIODES = [
   { jours: 7, libelle: "7 jours" },
@@ -149,27 +151,37 @@ function Bloc({
   sousTitre,
   icone: Icone,
   large,
+  teinte = TEINTE,
   children,
 }: {
   titre: string;
   sousTitre?: string;
   icone?: React.ElementType;
   large?: boolean;
+  teinte?: string;
   children: React.ReactNode;
 }) {
   return (
     <section
-      className={cn("min-w-0 rounded-2xl border bg-card", large && "lg:col-span-2")}
+      className={cn(
+        "min-w-0 overflow-hidden rounded-3xl border bg-card shadow-sm",
+        large && "lg:col-span-2",
+      )}
     >
-      <header className="flex items-start gap-2.5 border-b px-5 py-3.5">
+      <header className="flex items-center gap-3 px-5 pb-1 pt-5">
         {Icone ? (
-          <Icone
-            className="mt-0.5 size-4 shrink-0 text-muted-foreground"
-            aria-hidden
-          />
+          <span
+            className="grid size-9 shrink-0 place-items-center rounded-xl"
+            style={{
+              background: `color-mix(in oklch, ${teinte} 14%, transparent)`,
+              color: teinte,
+            }}
+          >
+            <Icone className="size-4.5" aria-hidden />
+          </span>
         ) : null}
         <div className="min-w-0">
-          <h2 className="text-sm font-bold">{titre}</h2>
+          <h2 className="text-[15px] font-bold">{titre}</h2>
           {sousTitre ? (
             <p className="mt-0.5 text-xs text-muted-foreground">{sousTitre}</p>
           ) : null}
@@ -177,6 +189,69 @@ function Bloc({
       </header>
       <div className="p-5">{children}</div>
     </section>
+  );
+}
+
+/** Onglets segmentés, au style des filtres de la console. */
+function Segments<V extends string | number>({
+  options,
+  valeur,
+  onChange,
+  label,
+  role = "group",
+}: {
+  options: { valeur: V; libelle: string; icone?: React.ElementType }[];
+  valeur: V;
+  onChange: (valeur: V) => void;
+  label: string;
+  role?: "group" | "tablist";
+}) {
+  return (
+    <div
+      role={role}
+      aria-label={label}
+      className="no-scrollbar flex gap-1 overflow-x-auto rounded-xl bg-muted/70 p-1"
+    >
+      {options.map(({ valeur: option, libelle, icone: Icone }) => {
+        const actif = option === valeur;
+        return (
+          <button
+            key={String(option)}
+            type="button"
+            role={role === "tablist" ? "tab" : undefined}
+            aria-selected={role === "tablist" ? actif : undefined}
+            aria-pressed={role === "group" ? actif : undefined}
+            onClick={() => onChange(option)}
+            className={cn(
+              "flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-sm transition-all duration-200",
+              "outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
+              actif
+                ? "bg-card font-semibold text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            {Icone ? <Icone className="size-4" aria-hidden /> : null}
+            {libelle}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/** Rang d'un classement : les trois premiers ressortent. */
+function Rang({ rang }: { rang: number }) {
+  const couleurs = ["var(--c-amber)", "var(--c-sky)", "var(--c-orange)"];
+  return (
+    <span
+      className={cn(
+        "grid size-6 shrink-0 place-items-center rounded-lg text-[11px] font-bold tabular-nums",
+        rang < 3 ? "text-white" : "bg-muted text-muted-foreground",
+      )}
+      style={rang < 3 ? { background: couleurs[rang] } : undefined}
+    >
+      {rang + 1}
+    </span>
   );
 }
 
@@ -221,21 +296,25 @@ function Indicateur({
   teinte?: string;
 }) {
   return (
-    <div className="flex min-w-0 items-start gap-3 rounded-2xl border bg-card p-4">
+    <div className="group relative flex min-w-0 items-start gap-3.5 overflow-hidden rounded-3xl border bg-card p-5 shadow-sm transition-shadow duration-300 hover:shadow-md">
       <span
-        className="grid size-9 shrink-0 place-items-center rounded-xl"
+        aria-hidden
+        className="pointer-events-none absolute -right-10 -top-12 size-32 rounded-full opacity-[0.12] blur-2xl"
+        style={{ background: teinte }}
+      />
+      <span
+        className="relative grid size-11 shrink-0 place-items-center rounded-2xl text-white shadow-sm transition-transform duration-300 group-hover:scale-105"
         style={{
-          background: `color-mix(in oklch, ${teinte} 13%, transparent)`,
-          color: teinte,
+          background: `linear-gradient(135deg, ${teinte}, color-mix(in oklch, ${teinte} 70%, black))`,
         }}
       >
-        <Icone className="size-4" aria-hidden />
+        <Icone className="size-5" aria-hidden />
       </span>
-      <div className="min-w-0">
+      <div className="relative min-w-0">
         <p className="truncate text-xs font-medium text-muted-foreground">
           {libelle}
         </p>
-        <p className="mt-0.5 flex items-center gap-2 text-xl font-bold tabular-nums">
+        <p className="mt-1 flex flex-wrap items-center gap-2 text-2xl font-extrabold leading-tight tabular-nums">
           {valeur}
           {tendance !== undefined ? <Tendance valeur={tendance} /> : null}
         </p>
@@ -307,7 +386,7 @@ function Barre({
       </div>
       <span className="mt-1.5 block h-2 overflow-hidden rounded-full bg-muted">
         <span
-          className="block h-full rounded-full"
+          className="block h-full rounded-full transition-[width] duration-700"
           style={{
             width: `${max > 0 ? Math.max(3, (valeur / max) * 100) : 0}%`,
             background: teinte,
@@ -320,7 +399,7 @@ function Barre({
 
 function Vide({ texte }: { texte: string }) {
   return (
-    <p className="rounded-xl border border-dashed px-4 py-6 text-center text-sm text-muted-foreground">
+    <p className="rounded-2xl border border-dashed bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground">
       {texte}
     </p>
   );
@@ -391,23 +470,14 @@ function ComparaisonProfil({ profil }: { profil: Assistant["profil"] }) {
 
   return (
     <div>
-      <div className="mb-4 flex flex-wrap gap-1.5" role="tablist" aria-label="Dimension du profil">
-        {profil.map((p) => (
-          <button
-            key={p.dimension}
-            role="tab"
-            aria-selected={p.dimension === dimension}
-            onClick={() => setDimension(p.dimension)}
-            className={cn(
-              "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
-              p.dimension === dimension
-                ? "border-transparent bg-foreground text-background"
-                : "hover:bg-accent",
-            )}
-          >
-            {p.libelle}
-          </button>
-        ))}
+      <div className="mb-4">
+        <Segments
+          role="tablist"
+          label="Dimension du profil"
+          valeur={dimension}
+          onChange={setDimension}
+          options={profil.map((p) => ({ valeur: p.dimension, libelle: p.libelle }))}
+        />
       </div>
 
       <div className="mb-3 flex items-center gap-4 text-xs text-muted-foreground">
@@ -525,21 +595,21 @@ function OngletAssistant({
           libelle="Adoption"
           valeur={pourcent(i.adoption)}
           detail={`${formatNumber(i.utilisateursTotal)} comptes sur ${formatNumber(i.comptesTotal)} l'ont déjà essayé`}
-          teinte="var(--chart-1)"
+          teinte="var(--c-sky)"
         />
         <Indicateur
           icone={UserPlus}
           libelle="Nouveaux utilisateurs"
           valeur={formatNumber(i.nouveaux)}
           detail="Première question posée sur la période"
-          teinte="var(--chart-3)"
+          teinte={TEINTE_CV}
         />
         <Indicateur
           icone={Repeat}
           libelle="Utilisateurs fidèles"
           valeur={formatNumber(i.fideles)}
           detail={`Revenus au moins deux jours différents · ${pourcent(i.utilisateurs ? (i.fideles * 100) / i.utilisateurs : 0)}`}
-          teinte="var(--chart-5)"
+          teinte="var(--c-cyan)"
         />
         <Indicateur
           icone={AlertTriangle}
@@ -564,15 +634,15 @@ function OngletAssistant({
         >
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={activite} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+              <CartesianGrid strokeDasharray="4 4" stroke="var(--border)" vertical={false} />
               <XAxis dataKey="libelle" {...axe} minTickGap={18} />
               <YAxis allowDecimals={false} width={44} {...axe} />
               <Tooltip {...infobulle} cursor={{ fill: "var(--muted)" }} />
-              <Bar dataKey="questions" name="Questions" fill={TEINTE} radius={[5, 5, 0, 0]} />
+              <Bar dataKey="questions" name="Questions" fill={TEINTE} radius={[6, 6, 0, 0]} />
               <Bar
                 dataKey="utilisateurs"
                 name="Personnes"
-                fill="var(--chart-1)"
+                fill="var(--c-sky)"
                 fillOpacity={0.45}
                 radius={[5, 5, 0, 0]}
               />
@@ -612,6 +682,7 @@ function OngletAssistant({
         {/* ------------------------------------------ questions fréquentes -- */}
         <Bloc
           titre="Questions les plus posées"
+          teinte="var(--c-amber)"
           sousTitre="Regroupées quand elles sont identiques, à la ponctuation et aux accents près."
           icone={Crown}
         >
@@ -621,9 +692,7 @@ function OngletAssistant({
             <ol className="space-y-2.5">
               {a.questionsFrequentes.map((question, rang) => (
                 <li key={question.texte} className="flex min-w-0 items-start gap-3">
-                  <span className="grid size-6 shrink-0 place-items-center rounded-full bg-muted text-[11px] font-bold tabular-nums">
-                    {rang + 1}
-                  </span>
+                  <Rang rang={rang} />
                   <div className="min-w-0 flex-1">
                     <p className="text-sm leading-snug [overflow-wrap:anywhere]">
                       {question.texte}
@@ -653,6 +722,7 @@ function OngletAssistant({
         {/* ------------------------------------------------- suggestions --- */}
         <Bloc
           titre="Suggestions choisies"
+          teinte="var(--c-sky)"
           sousTitre="Les questions proposées d'un clic à l'ouverture de l'assistant."
           icone={MousePointerClick}
         >
@@ -664,7 +734,7 @@ function OngletAssistant({
                 valeur={suggestion.occurrences}
                 max={maxSuggestion}
                 detail={`${suggestion.utilisateurs} pers.`}
-                teinte="var(--chart-1)"
+                teinte="var(--c-sky)"
               />
             ))}
           </ul>
@@ -689,7 +759,7 @@ function OngletAssistant({
               {a.mots.map((mot) => (
                 <li
                   key={mot.mot}
-                  className="rounded-full border px-2.5 py-1 text-sm"
+                  className="rounded-full border px-3 py-1 text-sm transition-transform hover:-translate-y-0.5"
                   style={{
                     background: `color-mix(in oklch, ${TEINTE} ${Math.round(6 + (mot.occurrences / maxMot) * 28)}%, transparent)`,
                   }}
@@ -707,6 +777,7 @@ function OngletAssistant({
         {/* ---------------------------------------------------- lieux ----- */}
         <Bloc
           titre="Lieux mentionnés"
+          teinte="var(--c-orange)"
           sousTitre="Villes et régions citées dans les questions."
           icone={MapPin}
         >
@@ -720,7 +791,7 @@ function OngletAssistant({
                   libelle={lieu.lieu}
                   valeur={lieu.mentions}
                   max={maxLieu}
-                  teinte="var(--chart-4)"
+                  teinte="var(--c-orange)"
                 />
               ))}
             </ul>
@@ -737,8 +808,8 @@ function OngletAssistant({
           <div className="overflow-x-auto">
             <table className="w-full min-w-[40rem] text-sm">
               <thead>
-                <tr className="border-b text-left text-xs text-muted-foreground">
-                  <th className="pb-2 pr-3 font-medium">#</th>
+                <tr className="text-left text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground [&>th]:bg-muted/60 [&>th]:py-2.5 [&>th:first-child]:rounded-l-xl [&>th:last-child]:rounded-r-xl">
+                  <th className="pb-2 pl-3 pr-3 font-medium">#</th>
                   <th className="pb-2 pr-3 font-medium">Personne</th>
                   <th className="pb-2 pr-3 text-right font-medium">Questions</th>
                   <th className="pb-2 pr-3 text-right font-medium">Conversations</th>
@@ -749,9 +820,9 @@ function OngletAssistant({
               </thead>
               <tbody>
                 {a.classement.map((ligne, rang) => (
-                  <tr key={ligne.user.id} className="border-b last:border-0">
-                    <td className="py-2.5 pr-3 tabular-nums text-muted-foreground">
-                      {rang + 1}
+                  <tr key={ligne.user.id} className="border-b transition-colors last:border-0 hover:bg-muted/40">
+                    <td className="py-2.5 pl-3 pr-3">
+                      <Rang rang={rang} />
                     </td>
                     <td className="max-w-[16rem] py-2.5 pr-3">
                       <Personne
@@ -791,6 +862,7 @@ function OngletAssistant({
         {/* ------------------------------------------------- engagement --- */}
         <Bloc
           titre="Intensité d'usage"
+          teinte="var(--c-cyan)"
           sousTitre="Nombre de personnes selon le nombre de questions posées."
           icone={Repeat}
         >
@@ -802,7 +874,7 @@ function OngletAssistant({
                 valeur={tranche.utilisateurs}
                 max={maxEngagement}
                 detail={pourcent(i.utilisateurs ? (tranche.utilisateurs * 100) / i.utilisateurs : 0)}
-                teinte="var(--chart-5)"
+                teinte="var(--c-cyan)"
               />
             ))}
           </ul>
@@ -830,7 +902,10 @@ function OngletAssistant({
         >
           <ul className="space-y-2">
             {a.dernieres.map((question) => (
-              <li key={question.id} className="rounded-xl border">
+              <li
+                key={question.id}
+                className="overflow-hidden rounded-2xl border transition-colors hover:border-foreground/15 hover:bg-muted/20"
+              >
                 <details className="group">
                   <summary className="flex cursor-pointer list-none items-start gap-3 p-3.5 [&::-webkit-details-marker]:hidden">
                     <div className="min-w-0 flex-1">
@@ -909,7 +984,7 @@ function OngletExtracteur({
         libelle="Membres ayant un CV"
         valeur={pourcent(i.membresAvecCv)}
         detail={`${formatNumber(i.cvTotal)} CV enregistrés sur la plateforme`}
-        teinte="var(--chart-3)"
+        teinte={TEINTE_CV}
       />
       <Indicateur
         icone={CalendarClock}
@@ -920,7 +995,7 @@ function OngletExtracteur({
             ? "Date de la première extraction enregistrée"
             : "Les extractions sont enregistrées à partir de cette version"
         }
-        teinte="var(--chart-1)"
+        teinte="var(--c-sky)"
       />
     </div>
   );
@@ -931,7 +1006,7 @@ function OngletExtracteur({
         {contexte}
         <EmptyState
           icon={ScanText}
-          couleur="var(--chart-3)"
+          couleur={TEINTE_CV}
           title={
             e.mesureDepuis
               ? "Aucune extraction sur cette période"
@@ -962,14 +1037,14 @@ function OngletExtracteur({
           libelle="CV analysés"
           valeur={formatNumber(i.extractions)}
           detail={periode}
-          teinte="var(--chart-3)"
+          teinte={TEINTE_CV}
         />
         <Indicateur
           icone={Users}
           libelle="Personnes"
           valeur={formatNumber(i.utilisateurs)}
           detail="Ont fait analyser au moins un CV"
-          teinte="var(--chart-3)"
+          teinte={TEINTE_CV}
         />
         <Indicateur
           icone={Sparkles}
@@ -993,7 +1068,7 @@ function OngletExtracteur({
               ? `${e.richesse.formations.toLocaleString("fr-FR")} formations, ${e.richesse.competences.toLocaleString("fr-FR")} compétences par CV`
               : "Aucune analyse aboutie"
           }
-          teinte="var(--chart-3)"
+          teinte={TEINTE_CV}
         />
       </div>
 
@@ -1002,23 +1077,25 @@ function OngletExtracteur({
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Bloc
           titre="Activité"
+          teinte={TEINTE_CV}
           sousTitre={`CV analysés par ${granularite === "jour" ? "jour" : "semaine"}.`}
           icone={CalendarClock}
           large
         >
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={activite} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+              <CartesianGrid strokeDasharray="4 4" stroke="var(--border)" vertical={false} />
               <XAxis dataKey="libelle" {...axe} minTickGap={18} />
               <YAxis allowDecimals={false} width={44} {...axe} />
               <Tooltip {...infobulle} cursor={{ fill: "var(--muted)" }} />
-              <Bar dataKey="extractions" name="CV analysés" fill="var(--chart-3)" radius={[5, 5, 0, 0]} />
+              <Bar dataKey="extractions" name="CV analysés" fill={TEINTE_CV} radius={[5, 5, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </Bloc>
 
         <Bloc
           titre="Type de fichier"
+          teinte={TEINTE_CV}
           sousTitre="PDF ou photographie du CV, et part d'analyses exploitables pour chacun."
           icone={FileText}
         >
@@ -1030,7 +1107,7 @@ function OngletExtracteur({
                 valeur={type.extractions}
                 max={maxType}
                 detail={`${pourcent(type.extractions ? (type.reussies * 100) / type.extractions : 0)} de réussite`}
-                teinte="var(--chart-3)"
+                teinte={TEINTE_CV}
               />
             ))}
           </ul>
@@ -1048,7 +1125,7 @@ function OngletExtracteur({
                 libelle={LIBELLES_MODE[mode.mode] ?? mode.mode}
                 valeur={mode.extractions}
                 max={maxMode}
-                teinte="var(--chart-1)"
+                teinte="var(--c-sky)"
               />
             ))}
           </ul>
@@ -1077,6 +1154,7 @@ function OngletExtracteur({
 
         <Bloc
           titre="Échecs les plus fréquents"
+          teinte="var(--c-amber)"
           sousTitre="Ce que l'extracteur a répondu quand l'analyse n'a pas abouti."
           icone={AlertTriangle}
         >
@@ -1098,6 +1176,7 @@ function OngletExtracteur({
 
         <Bloc
           titre="Les 30 dernières analyses"
+          teinte={TEINTE_CV}
           sousTitre="Qui, quand, quel fichier, et ce qui en a été tiré."
           icone={ScanText}
           large
@@ -1105,8 +1184,8 @@ function OngletExtracteur({
           <div className="overflow-x-auto">
             <table className="w-full min-w-[42rem] text-sm">
               <thead>
-                <tr className="border-b text-left text-xs text-muted-foreground">
-                  <th className="pb-2 pr-3 font-medium">Personne</th>
+                <tr className="text-left text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground [&>th]:bg-muted/60 [&>th]:py-2.5 [&>th:first-child]:rounded-l-xl [&>th:last-child]:rounded-r-xl">
+                  <th className="pb-2 pl-3 pr-3 font-medium">Personne</th>
                   <th className="pb-2 pr-3 font-medium">Date</th>
                   <th className="pb-2 pr-3 font-medium">Fichier</th>
                   <th className="pb-2 pr-3 font-medium">Mode</th>
@@ -1115,8 +1194,8 @@ function OngletExtracteur({
               </thead>
               <tbody>
                 {e.dernieres.map((ligne) => (
-                  <tr key={ligne.id} className="border-b align-top last:border-0">
-                    <td className="max-w-[14rem] py-2.5 pr-3">
+                  <tr key={ligne.id} className="border-b align-top transition-colors last:border-0 hover:bg-muted/40">
+                    <td className="max-w-[14rem] py-2.5 pl-3 pr-3">
                       <Personne user={ligne.user} />
                     </td>
                     <td className="py-2.5 pr-3 text-xs text-muted-foreground">
@@ -1197,64 +1276,61 @@ export default function AgentsIaPage() {
                 {
                   label: "CV analysés",
                   valeur: data.extracteur.indicateurs.extractions,
-                  teinte: "var(--chart-3)",
+                  teinte: TEINTE_CV,
                 },
               ]
             : undefined
         }
       />
 
-      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex gap-1 rounded-xl border bg-card p-1" role="tablist" aria-label="Agent">
-          {(
-            [
-              { cle: "assistant", libelle: "Assistant IA", icone: Bot },
-              { cle: "extracteur", libelle: "Extracteur de CV", icone: ScanText },
-            ] as const
-          ).map(({ cle, libelle, icone: Icone }) => (
-            <button
-              key={cle}
-              role="tab"
-              aria-selected={onglet === cle}
-              onClick={() => setOnglet(cle)}
-              className={cn(
-                "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors",
-                onglet === cle
-                  ? "bg-foreground text-background"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              <Icone className="size-4" aria-hidden />
-              {libelle}
-            </button>
-          ))}
-        </div>
+      <div className="mb-5 flex flex-col gap-3 rounded-2xl border bg-card p-3 shadow-sm lg:flex-row lg:items-center lg:justify-between">
+        <Segments
+          role="tablist"
+          label="Agent"
+          valeur={onglet}
+          onChange={setOnglet}
+          options={[
+            { valeur: "assistant", libelle: "Assistant IA", icone: Bot },
+            { valeur: "extracteur", libelle: "Extracteur de CV", icone: ScanText },
+          ]}
+        />
 
-        <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Période">
+        <div className="flex min-w-0 items-center gap-2">
           {isFetching && !isLoading ? (
-            <Loader2 className="mr-1 size-4 animate-spin text-muted-foreground" aria-hidden />
-          ) : null}
-          {PERIODES.map((p) => (
-            <button
-              key={p.jours}
-              onClick={() => setJours(p.jours)}
-              aria-pressed={jours === p.jours}
-              className={cn(
-                "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
-                jours === p.jours
-                  ? "border-transparent bg-foreground text-background"
-                  : "hover:bg-accent",
-              )}
-            >
-              {p.libelle}
-            </button>
-          ))}
+            <Loader2 className="size-4 shrink-0 animate-spin text-muted-foreground" aria-hidden />
+          ) : (
+            <CalendarClock className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+          )}
+          <Segments
+            label="Période"
+            valeur={jours}
+            onChange={setJours}
+            options={PERIODES.map((p) => ({ valeur: p.jours as number, libelle: p.libelle }))}
+          />
         </div>
       </div>
 
       {isLoading ? (
-        <div className="grid place-items-center py-24">
-          <Loader2 className="size-6 animate-spin text-muted-foreground" />
+        <div className="space-y-4" aria-hidden>
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {Array.from({ length: 6 }, (_, index) => (
+              <div
+                key={index}
+                className="flex gap-3.5 rounded-3xl border bg-card p-5"
+                style={{ opacity: 1 - index * 0.1 }}
+              >
+                <div className="shimmer size-11 rounded-2xl bg-muted" />
+                <div className="flex-1 space-y-2">
+                  <div className="shimmer h-3 w-24 rounded bg-muted" />
+                  <div className="shimmer h-6 w-16 rounded bg-muted" />
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="rounded-3xl border bg-card p-5">
+            <div className="shimmer h-4 w-40 rounded bg-muted" />
+            <div className="shimmer mt-5 h-52 rounded-2xl bg-muted" />
+          </div>
         </div>
       ) : isError || !data ? (
         <EmptyState

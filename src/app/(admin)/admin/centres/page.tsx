@@ -1,33 +1,28 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
-import Link from "next/link";
+import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   BookOpen,
+  Check,
+  Eye,
   ExternalLink,
-  ImageUp,
+  Globe,
   Link2,
   Loader2,
+  MapPin,
   Pencil,
+  Phone,
   Plus,
   School,
+  Search,
   Trash2,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { ConsoleHeader } from "@/components/admin/console-header";
 import { ConsoleTable, type ColonneConsole } from "@/components/admin/console-table";
 import {
@@ -35,7 +30,18 @@ import {
   ConsoleSearch,
   ConsoleToolbar,
 } from "@/components/admin/console-ui";
+import {
+  ConsoleAction,
+  ConsoleActions,
+  ConsoleChamp,
+  ConsoleChoixImage,
+  ConsoleDialogue,
+  ConsoleInterrupteur,
+  ConsoleSection,
+  useConfirmation,
+} from "@/components/admin/console-kit";
 import { EmptyState } from "@/components/shared/empty-state";
+import { cn } from "@/lib/utils";
 import {
   adminApi,
   centresApi,
@@ -45,7 +51,7 @@ import {
   type CentrePourAdministration,
 } from "@/lib/api";
 
-const TEINTE = "var(--chart-2)";
+const TEINTE = "var(--c-teal)";
 const CLE = ["admin", "centres"] as const;
 
 function Logo({ url, grand }: { url?: string | null; grand?: boolean }) {
@@ -109,8 +115,6 @@ function DialogueCentre({
   const queryClient = useQueryClient();
   const [v, setV] = useState<Valeurs>(() => valeursInitiales(centre));
   const [logo, setLogo] = useState<File | null>(null);
-  const apercuLogo = useMemo(() => (logo ? URL.createObjectURL(logo) : null), [logo]);
-  const champLogo = useRef<HTMLInputElement>(null);
 
   const changer =
     (cle: Exclude<keyof Valeurs, "estPublie">) =>
@@ -152,116 +156,99 @@ function DialogueCentre({
   const champ = (
     id: Exclude<keyof Valeurs, "estPublie">,
     libelle: string,
-    props: React.ComponentProps<typeof Input> = {},
-  ) => (
-    <div>
-      <Label htmlFor={`centre-${id}`}>{libelle}</Label>
-      <Input
+    props: React.ComponentProps<typeof Input> & { large?: boolean; aide?: string } = {},
+  ) => {
+    const { large, aide, ...reste } = props;
+    return (
+      <ConsoleChamp
         id={`centre-${id}`}
-        className="mt-1.5"
-        value={v[id]}
-        onChange={changer(id)}
-        {...props}
-      />
-    </div>
-  );
+        libelle={libelle}
+        requis={reste.required}
+        large={large}
+        aide={aide}
+      >
+        <Input id={`centre-${id}`} value={v[id]} onChange={changer(id)} {...reste} />
+      </ConsoleChamp>
+    );
+  };
+
+  const valide = v.nom.trim().length >= 2;
 
   return (
-    <Dialog open onOpenChange={(o) => !o && onFermer()}>
-      <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-xl">
-        <DialogHeader>
-          <DialogTitle>{centre ? `Modifier ${centre.nom}` : "Nouveau centre de formation"}</DialogTitle>
-          <DialogDescription>
-            Le téléphone et l&apos;email sont publiés sur la fiche du centre : un
-            jeune doit pouvoir le joindre.
-          </DialogDescription>
-        </DialogHeader>
-
-        <form
-          className="space-y-4"
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (v.nom.trim().length >= 2) enregistrer.mutate();
-          }}
-        >
-          <div className="flex items-center gap-3">
-            {apercuLogo ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={apercuLogo} alt="" className="size-14 rounded-xl border object-contain p-1" />
+    <ConsoleDialogue
+      onFermer={onFermer}
+      icone={centre ? Pencil : Plus}
+      teinte={TEINTE}
+      taille="lg"
+      titre={centre ? `Modifier ${centre.nom}` : "Nouveau centre de formation"}
+      description="Le téléphone et l'email sont publiés sur la fiche du centre : un jeune doit pouvoir le joindre."
+      onSubmit={() => valide && enregistrer.mutate()}
+      pied={
+        <>
+          <Button type="button" variant="ghost" className="rounded-lg" onClick={onFermer}>
+            Annuler
+          </Button>
+          <Button type="submit" className="rounded-lg" disabled={enregistrer.isPending || !valide}>
+            {enregistrer.isPending ? (
+              <Loader2 className="size-4 animate-spin" />
             ) : (
-              <Logo url={centre?.logoUrl} grand />
+              <Check className="size-4" />
             )}
-            <input
-              ref={champLogo}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => setLogo(e.target.files?.[0] ?? null)}
-            />
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="rounded-lg"
-              onClick={() => champLogo.current?.click()}
-            >
-              <ImageUp className="size-4" />
-              {centre?.logoUrl || logo ? "Changer le logo" : "Ajouter un logo"}
-            </Button>
-          </div>
+            {centre ? "Enregistrer" : "Créer le centre"}
+          </Button>
+        </>
+      }
+    >
+      <ConsoleSection titre="Identité" icone={School}>
+        <ConsoleChoixImage
+          libelle="Logo du centre"
+          aide="PNG, JPG ou WebP, fond clair de préférence"
+          actuelle={centre?.logoUrl ? fileUrl(centre.logoUrl) : null}
+          fichier={logo}
+          onChange={setLogo}
+          icone={School}
+        />
+        {champ("nom", "Nom du centre", { required: true, maxLength: 160, large: true })}
+        {champ("domaines", "Domaines enseignés", {
+          placeholder: "Numérique, couture, BTP…",
+          maxLength: 300,
+          large: true,
+          aide: "Séparés par des virgules : ils servent aussi à la recherche.",
+        })}
+        <ConsoleChamp id="centre-description" libelle="Présentation" large>
+          <Textarea
+            id="centre-description"
+            rows={4}
+            value={v.description}
+            onChange={changer("description")}
+            maxLength={2000}
+            placeholder="Public visé, conditions d'admission, durée des formations…"
+          />
+        </ConsoleChamp>
+      </ConsoleSection>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="sm:col-span-2">
-              {champ("nom", "Nom du centre", { required: true, maxLength: 160 })}
-            </div>
-            <div className="sm:col-span-2">
-              {champ("domaines", "Domaines enseignés", {
-                placeholder: "Numérique, couture, BTP…",
-                maxLength: 300,
-              })}
-            </div>
-            <div className="sm:col-span-2">
-              <Label htmlFor="centre-description">Présentation</Label>
-              <Textarea
-                id="centre-description"
-                className="mt-1.5"
-                rows={4}
-                value={v.description}
-                onChange={changer("description")}
-                maxLength={2000}
-              />
-            </div>
-            <div className="sm:col-span-2">{champ("adresse", "Adresse")}</div>
-            {champ("ville", "Ville")}
-            {champ("region", "Région")}
-            {champ("telephone", "Téléphone")}
-            {champ("emailContact", "Email", { type: "email" })}
-            <div className="sm:col-span-2">
-              {champ("siteWeb", "Site web", { type: "url", placeholder: "https://" })}
-            </div>
-            <label className="flex items-center gap-2 text-sm sm:col-span-2">
-              <input
-                type="checkbox"
-                className="size-4 accent-primary"
-                checked={v.estPublie}
-                onChange={(e) => setV((avant) => ({ ...avant, estPublie: e.target.checked }))}
-              />
-              Visible du public
-            </label>
-          </div>
+      <ConsoleSection titre="Localisation" icone={MapPin}>
+        {champ("adresse", "Adresse", { large: true })}
+        {champ("ville", "Ville")}
+        {champ("region", "Région")}
+      </ConsoleSection>
 
-          <DialogFooter>
-            <Button type="button" variant="ghost" onClick={onFermer}>
-              Annuler
-            </Button>
-            <Button type="submit" disabled={enregistrer.isPending || v.nom.trim().length < 2}>
-              {enregistrer.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
-              Enregistrer
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+      <ConsoleSection titre="Contact public" icone={Phone}>
+        {champ("telephone", "Téléphone", { placeholder: "+221 …" })}
+        {champ("emailContact", "Email", { type: "email" })}
+        {champ("siteWeb", "Site web", { type: "url", placeholder: "https://", large: true })}
+      </ConsoleSection>
+
+      <ConsoleSection titre="Diffusion" icone={Globe} colonnes={1}>
+        <ConsoleInterrupteur
+          icone={Eye}
+          libelle="Visible du public"
+          description="Masqué, le centre reste éditable ici mais n'apparaît plus sur le site."
+          coche={v.estPublie}
+          onChange={(estPublie) => setV((avant) => ({ ...avant, estPublie }))}
+        />
+      </ConsoleSection>
+    </ConsoleDialogue>
   );
 }
 
@@ -308,87 +295,120 @@ function DialogueFormations({
   });
 
   return (
-    <Dialog open onOpenChange={(o) => !o && onFermer()}>
-      <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-xl">
-        <DialogHeader>
-          <DialogTitle>Formations de {centre.nom}</DialogTitle>
-          <DialogDescription>
-            Cochez les offres de formation dispensées par ce centre. Le lien
-            apparaît des deux côtés : sur la fiche du centre et sur chaque offre.
-          </DialogDescription>
-        </DialogHeader>
-
-        {choisies.size ? (
-          <ul className="flex flex-wrap gap-1.5">
-            {[...choisies].map(([id, titre]) => (
-              <li
-                key={id}
-                className="flex max-w-full items-center gap-1 rounded-full bg-primary/10 py-1 pl-3 pr-1 text-xs font-medium"
-              >
-                <span className="truncate">{titre}</span>
-                <button
-                  type="button"
-                  aria-label={`Retirer ${titre}`}
-                  onClick={() => basculer(id, titre)}
-                  className="grid size-5 shrink-0 place-items-center rounded-full hover:bg-background"
+    <ConsoleDialogue
+      onFermer={onFermer}
+      icone={Link2}
+      teinte={TEINTE}
+      taille="lg"
+      titre={`Formations de ${centre.nom}`}
+      description="Cochez les offres de formation dispensées par ce centre. Le lien apparaît des deux côtés : sur la fiche du centre et sur chaque offre."
+      pied={
+        <>
+          <span className="mr-auto hidden text-xs text-muted-foreground sm:block">
+            {choisies.size} formation{choisies.size > 1 ? "s" : ""} sélectionnée
+            {choisies.size > 1 ? "s" : ""}
+          </span>
+          <Button type="button" variant="ghost" className="rounded-lg" onClick={onFermer}>
+            Annuler
+          </Button>
+          <Button
+            className="rounded-lg"
+            disabled={enregistrer.isPending}
+            onClick={() => enregistrer.mutate()}
+          >
+            {enregistrer.isPending ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Check className="size-4" />
+            )}
+            Enregistrer ({choisies.size})
+          </Button>
+        </>
+      }
+    >
+      <div className="space-y-4">
+        <div className="rounded-xl border bg-muted/30 p-3">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Sélection
+          </p>
+          {choisies.size ? (
+            <ul className="flex flex-wrap gap-1.5">
+              {[...choisies].map(([id, titre]) => (
+                <li
+                  key={id}
+                  className="flex max-w-full items-center gap-1 rounded-full border bg-background py-1 pl-3 pr-1 text-xs font-medium shadow-sm"
                 >
-                  <X className="size-3" />
-                </button>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-sm text-muted-foreground">Aucune formation reliée.</p>
-        )}
+                  <span className="truncate">{titre}</span>
+                  <button
+                    type="button"
+                    aria-label={`Retirer ${titre}`}
+                    onClick={() => basculer(id, titre)}
+                    className="grid size-5 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                  >
+                    <X className="size-3" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-muted-foreground">Aucune formation reliée.</p>
+          )}
+        </div>
 
         <div className="relative">
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={recherche}
             onChange={(e) => setRecherche(e.target.value)}
             placeholder="Rechercher une offre de formation…"
             aria-label="Rechercher une offre de formation"
+            className="pl-9"
           />
           {isFetching ? (
             <Loader2 className="absolute right-3 top-1/2 size-4 -translate-y-1/2 animate-spin text-muted-foreground" />
           ) : null}
         </div>
 
-        <ul className="max-h-72 divide-y overflow-y-auto rounded-lg border">
+        <ul className="max-h-80 space-y-1 overflow-y-auto">
           {offres.length === 0 ? (
-            <li className="p-3 text-sm text-muted-foreground">Aucune offre de formation trouvée.</li>
+            <li className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
+              Aucune offre de formation trouvée.
+            </li>
           ) : (
-            offres.map((offre) => (
-              <li key={offre.id}>
-                <label className="flex cursor-pointer items-start gap-3 p-3 text-sm hover:bg-muted/40">
-                  <input
-                    type="checkbox"
-                    className="mt-0.5 size-4 shrink-0 accent-primary"
-                    checked={choisies.has(offre.id)}
-                    onChange={() => basculer(offre.id, offre.titre)}
-                  />
-                  <span className="min-w-0">
-                    <span className="line-clamp-2 font-medium">{offre.titre}</span>
-                    {offre.entreprise ? (
-                      <span className="block text-xs text-muted-foreground">{offre.entreprise}</span>
-                    ) : null}
-                  </span>
-                </label>
-              </li>
-            ))
+            offres.map((offre) => {
+              const coche = choisies.has(offre.id);
+              return (
+                <li key={offre.id}>
+                  <label
+                    className={cn(
+                      "flex cursor-pointer items-start gap-3 rounded-xl border p-3 text-sm transition-colors",
+                      coche
+                        ? "border-primary/40 bg-primary/[0.05]"
+                        : "border-transparent hover:bg-muted/50",
+                    )}
+                  >
+                    <input
+                      type="checkbox"
+                      className="mt-0.5 size-4 shrink-0 accent-primary"
+                      checked={coche}
+                      onChange={() => basculer(offre.id, offre.titre)}
+                    />
+                    <span className="min-w-0">
+                      <span className="line-clamp-2 font-medium">{offre.titre}</span>
+                      {offre.entreprise ? (
+                        <span className="block text-xs text-muted-foreground">
+                          {offre.entreprise}
+                        </span>
+                      ) : null}
+                    </span>
+                  </label>
+                </li>
+              );
+            })
           )}
         </ul>
-
-        <DialogFooter>
-          <Button type="button" variant="ghost" onClick={onFermer}>
-            Annuler
-          </Button>
-          <Button disabled={enregistrer.isPending} onClick={() => enregistrer.mutate()}>
-            {enregistrer.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
-            Enregistrer ({choisies.size})
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </ConsoleDialogue>
   );
 }
 
@@ -396,6 +416,7 @@ function DialogueFormations({
 
 export default function CentresConsolePage() {
   const queryClient = useQueryClient();
+  const confirmer = useConfirmation();
   const [recherche, setRecherche] = useState("");
   const [edition, setEdition] = useState<{ centre: CentrePourAdministration | null } | null>(
     null,
@@ -434,6 +455,7 @@ export default function CentresConsolePage() {
     {
       cle: "nom",
       entete: "Centre",
+      className: "w-[34%]",
       cellule: (centre) => (
         <div className="flex min-w-0 items-center gap-3">
           <Logo url={centre.logoUrl} />
@@ -461,7 +483,14 @@ export default function CentresConsolePage() {
       entete: "Formations",
       align: "right",
       cellule: (centre) => (
-        <span className="tabular-nums">{centre.formations.length}</span>
+        <span
+          className={cn(
+            "inline-flex min-w-7 justify-center rounded-md px-1.5 py-0.5 text-xs font-bold tabular-nums",
+            centre.formations.length ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground",
+          )}
+        >
+          {centre.formations.length}
+        </span>
       ),
     },
     {
@@ -479,56 +508,52 @@ export default function CentresConsolePage() {
       entete: "",
       align: "right",
       cellule: (centre) => (
-        <div className="flex items-center justify-end gap-1">
-          {centre.estPublie ? (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-8 rounded-lg"
-              aria-label={`Voir la fiche publique de ${centre.nom}`}
-              render={<Link href={`/centres-formation/${centre.id}`} target="_blank" />}
-            >
-              <ExternalLink className="size-4" />
-            </Button>
-          ) : null}
+        <ConsoleActions>
           <Button
-            variant="ghost"
-            size="icon"
-            className="size-8 rounded-lg"
-            aria-label={`Modifier ${centre.nom}`}
-            onClick={() => setEdition({ centre })}
+            variant="outline"
+            size="sm"
+            className="mr-1 h-8 rounded-lg"
+            onClick={() => setLiaison(centre)}
           >
-            <Pencil className="size-4" />
+            <Link2 className="size-3.5" />
+            Formations
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-8 rounded-lg text-destructive"
-            aria-label={`Supprimer ${centre.nom}`}
-            disabled={supprimer.isPending}
-            onClick={() => {
+          {centre.estPublie ? (
+            <ConsoleAction
+              libelle="Voir la fiche publique"
+              icone={ExternalLink}
+              href={`/centres-formation/${centre.id}`}
+              cible="_blank"
+            />
+          ) : null}
+          <ConsoleAction
+            libelle="Modifier"
+            icone={Pencil}
+            ton="primaire"
+            onClick={() => setEdition({ centre })}
+          />
+          <ConsoleAction
+            libelle="Supprimer"
+            icone={Trash2}
+            ton="danger"
+            enCours={supprimer.isPending && supprimer.variables === centre.id}
+            onClick={async () => {
               if (
-                window.confirm(
-                  `Supprimer « ${centre.nom} » ? Ses formations restent en ligne, simplement détachées du centre.`,
-                )
+                await confirmer({
+                  titre: `Supprimer « ${centre.nom} » ?`,
+                  message:
+                    "Ses formations restent en ligne, simplement détachées du centre. Cette action est définitive.",
+                  confirmer: "Supprimer",
+                  danger: true,
+                })
               ) {
                 supprimer.mutate(centre.id);
               }
             }}
-          >
-            <Trash2 className="size-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="rounded-lg"
-            onClick={() => setLiaison(centre)}
-          >
-            <Link2 className="size-4" />
-            Formations
-          </Button>
-        </div>
+          />
+        </ConsoleActions>
       ),
+      className: "w-[17rem]",
     },
   ];
 
@@ -542,7 +567,8 @@ export default function CentresConsolePage() {
         mesures={[
           { label: "Centres", valeur: centres.length },
           { label: "Publiés", valeur: publies, teinte: "var(--success)" },
-          { label: "Formations reliées", valeur: liens },
+          { label: "Masqués", valeur: centres.length - publies },
+          { label: "Formations reliées", valeur: liens, teinte: TEINTE },
         ]}
       />
 
@@ -553,7 +579,7 @@ export default function CentresConsolePage() {
           placeholder="Nom, ville, région, domaine…"
           label="Rechercher un centre de formation"
         />
-        <Button className="ml-auto rounded-lg" onClick={() => setEdition({ centre: null })}>
+        <Button className="rounded-xl sm:ml-auto" onClick={() => setEdition({ centre: null })}>
           <Plus className="size-4" />
           Nouveau centre
         </Button>
@@ -574,6 +600,14 @@ export default function CentresConsolePage() {
               recherche
                 ? "Essayez sur le nom, la ville ou un domaine."
                 : "Créez un premier centre, puis reliez-lui ses offres de formation."
+            }
+            action={
+              recherche ? undefined : (
+                <Button className="rounded-xl" onClick={() => setEdition({ centre: null })}>
+                  <Plus className="size-4" />
+                  Nouveau centre
+                </Button>
+              )
             }
           />
         }

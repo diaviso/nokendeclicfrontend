@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -8,35 +8,35 @@ import {
   Eye,
   EyeOff,
   Layers,
-  Loader2,
-  MoreHorizontal,
+  ListChecks,
   Pencil,
   Plus,
+  Search,
   Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { EmptyState } from "@/components/shared/empty-state";
 import { ConsoleHeader } from "@/components/admin/console-header";
-import { ConsolePastille } from "@/components/admin/console-ui";
+import {
+  ConsoleFiltre,
+  ConsolePastille,
+  ConsoleSearch,
+  ConsoleToolbar,
+} from "@/components/admin/console-ui";
+import {
+  ConsoleAction,
+  ConsoleActions,
+  useConfirmation,
+} from "@/components/admin/console-kit";
 import { adminTypesOffresApi, errorMessage } from "@/lib/api";
 import { styleType } from "@/lib/type-offre";
 import { formatNumber } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { TypeOffreDef } from "@/lib/types";
+
+const TEINTE = "var(--c-teal)";
+
+type FiltreEtat = "" | "actifs" | "inactifs";
 
 /**
  * Un type d'offre n'est pas une ligne de tableau : c'est une identité — une
@@ -98,48 +98,6 @@ function CarteType({
             <ConsolePastille libelle="Désactivé" discret />
           )}
 
-          <div onClick={(event) => event.stopPropagation()}>
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                render={
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="size-8 rounded-lg bg-card/70 backdrop-blur hover:bg-card"
-                    aria-label={`Actions sur ${type.libelle}`}
-                  >
-                    <MoreHorizontal className="size-4" />
-                  </Button>
-                }
-              />
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem
-                  render={<Link href={`/admin/types-offres/${type.id}`} />}
-                >
-                  <Pencil className="size-4" />
-                  Modifier le type et ses champs
-                </DropdownMenuItem>
-                <DropdownMenuItem disabled={bascule} onClick={onBasculer}>
-                  {type.estActif ? (
-                    <>
-                      <EyeOff className="size-4" />
-                      Retirer des formulaires
-                    </>
-                  ) : (
-                    <>
-                      <Eye className="size-4" />
-                      Remettre dans les formulaires
-                    </>
-                  )}
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem variant="destructive" onClick={onSupprimer}>
-                  <Trash2 className="size-4" />
-                  Supprimer
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
         </div>
       </div>
 
@@ -228,15 +186,30 @@ function CarteType({
             </div>
           </dl>
 
-          <Button
-            variant="outline"
-            size="sm"
-            className="rounded-lg"
-            render={<Link href={`/admin/types-offres/${type.id}`} />}
-          >
-            <Pencil className="size-3.5" />
-            Modifier
-          </Button>
+          <ConsoleActions>
+            <ConsoleAction
+              libelle={type.estActif ? "Retirer des formulaires" : "Remettre dans les formulaires"}
+              icone={type.estActif ? EyeOff : Eye}
+              ton={type.estActif ? "neutre" : "succes"}
+              disabled={bascule}
+              onClick={onBasculer}
+            />
+            <ConsoleAction
+              libelle="Supprimer"
+              icone={Trash2}
+              ton="danger"
+              onClick={onSupprimer}
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              className="ml-1 h-8 rounded-lg"
+              render={<Link href={`/admin/types-offres/${type.id}`} />}
+            >
+              <Pencil className="size-3.5" />
+              Modifier
+            </Button>
+          </ConsoleActions>
         </footer>
       </div>
     </article>
@@ -262,7 +235,9 @@ function CarteSquelette({ index }: { index: number }) {
 
 export default function AdminTypesOffresPage() {
   const queryClient = useQueryClient();
-  const [aSupprimer, setASupprimer] = useState<TypeOffreDef | null>(null);
+  const confirmer = useConfirmation();
+  const [recherche, setRecherche] = useState("");
+  const [etat, setEtat] = useState<FiltreEtat>("");
 
   const { data: types = [], isLoading } = useQuery({
     queryKey: ["admin", "types-offres"],
@@ -278,7 +253,6 @@ export default function AdminTypesOffresPage() {
     mutationFn: (id: number) => adminTypesOffresApi.remove(id),
     onSuccess: async () => {
       await rafraichir();
-      setASupprimer(null);
       toast.success("Type supprimé");
     },
     onError: (error) =>
@@ -304,6 +278,33 @@ export default function AdminTypesOffresPage() {
   });
 
   const actifs = types.filter((type) => type.estActif).length;
+  const totalChamps = types.reduce((total, type) => total + type.champs.length, 0);
+
+  const affiches = useMemo(() => {
+    const terme = recherche.trim().toLowerCase();
+    return types.filter((type) => {
+      if (etat === "actifs" && !type.estActif) return false;
+      if (etat === "inactifs" && type.estActif) return false;
+      if (!terme) return true;
+      return [type.libelle, type.code, type.description]
+        .filter(Boolean)
+        .some((valeur) => valeur!.toLowerCase().includes(terme));
+    });
+  }, [types, recherche, etat]);
+
+  const demanderSuppression = async (type: TypeOffreDef) => {
+    const nb = type._count?.offres ?? 0;
+    const ok = await confirmer({
+      titre: `Supprimer « ${type.libelle} » ?`,
+      message:
+        nb > 0
+          ? `Ce type est utilisé par ${nb} offre${nb > 1 ? "s" : ""}. La suppression sera refusée : retirez-le plutôt des formulaires pour cesser de le proposer, sans toucher aux offres existantes.`
+          : "Le type et sa définition de champs seront supprimés. Cette action est irréversible.",
+      confirmer: "Supprimer",
+      danger: true,
+    });
+    if (ok) supprimer.mutate(type.id);
+  };
   const offresRattachees = types.reduce(
     (total, type) => total + (type._count?.offres ?? 0),
     0,
@@ -314,14 +315,16 @@ export default function AdminTypesOffresPage() {
       <ConsoleHeader
         title="Types d'offres"
         icon={Layers}
-        teinte="var(--chart-4)"
+        teinte={TEINTE}
         description="Chaque type porte une identité — nom, icône, couleur — et la liste des informations demandées lors de la publication."
         mesures={
           isLoading
             ? undefined
             : [
-                { label: "types", valeur: types.length, teinte: "var(--chart-4)" },
+                { label: "types", valeur: types.length, teinte: TEINTE },
                 { label: "actifs", valeur: actifs, teinte: "var(--success)" },
+                { label: "désactivés", valeur: types.length - actifs },
+                { label: "champs définis", valeur: totalChamps },
                 { label: "offres rattachées", valeur: offresRattachees },
               ]
         }
@@ -336,6 +339,32 @@ export default function AdminTypesOffresPage() {
         }
       />
 
+      {!isLoading && types.length > 0 ? (
+        <ConsoleToolbar>
+          <ConsoleSearch
+            valeur={recherche}
+            onChange={setRecherche}
+            placeholder="Nom, code, description…"
+            label="Rechercher un type d'offre"
+          />
+          <ConsoleFiltre<FiltreEtat>
+            label="Filtrer par état"
+            valeur={etat}
+            onChange={setEtat}
+            options={[
+              { valeur: "", libelle: "Tous", compte: types.length },
+              { valeur: "actifs", libelle: "Actifs", compte: actifs, teinte: "var(--success)" },
+              {
+                valeur: "inactifs",
+                libelle: "Désactivés",
+                compte: types.length - actifs,
+                teinte: "var(--muted-foreground)",
+              },
+            ]}
+          />
+        </ConsoleToolbar>
+      ) : null}
+
       {isLoading ? (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {Array.from({ length: 6 }, (_, index) => (
@@ -345,7 +374,7 @@ export default function AdminTypesOffresPage() {
       ) : types.length === 0 ? (
         <EmptyState
           icon={Layers}
-          couleur="var(--chart-4)"
+          couleur={TEINTE}
           title="Aucun type d'offre"
           description="Une offre doit être rattachée à un type. Créez-en un pour ouvrir la publication."
           action={
@@ -358,67 +387,40 @@ export default function AdminTypesOffresPage() {
             </Button>
           }
         />
+      ) : affiches.length === 0 ? (
+        <EmptyState
+          icon={recherche ? Search : ListChecks}
+          couleur={TEINTE}
+          title="Aucun type ne correspond"
+          description="Modifiez la recherche ou le filtre d'état."
+          action={
+            <Button
+              variant="outline"
+              className="rounded-xl"
+              onClick={() => {
+                setRecherche("");
+                setEtat("");
+              }}
+            >
+              Réinitialiser les filtres
+            </Button>
+          }
+        />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {types.map((type, index) => (
+          {affiches.map((type, index) => (
             <CarteType
               key={type.id}
               type={type}
               index={index}
               bascule={basculerActif.isPending}
               onBasculer={() => basculerActif.mutate(type)}
-              onSupprimer={() => setASupprimer(type)}
+              onSupprimer={() => demanderSuppression(type)}
             />
           ))}
         </div>
       )}
 
-      <Dialog open={Boolean(aSupprimer)} onOpenChange={() => setASupprimer(null)}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Supprimer ce type ?</DialogTitle>
-            <DialogDescription>
-              {aSupprimer && (aSupprimer._count?.offres ?? 0) > 0 ? (
-                <>
-                  « {aSupprimer.libelle} » est utilisé par{" "}
-                  {aSupprimer._count?.offres} offre
-                  {(aSupprimer._count?.offres ?? 0) > 1 ? "s" : ""}. La
-                  suppression sera refusée : retirez-le plutôt des formulaires
-                  pour cesser de le proposer, sans toucher aux offres existantes.
-                </>
-              ) : (
-                <>
-                  « {aSupprimer?.libelle} » et sa définition de champs seront
-                  supprimés. Cette action est irréversible.
-                </>
-              )}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="flex justify-end gap-2">
-            <Button
-              variant="ghost"
-              className="rounded-xl"
-              onClick={() => setASupprimer(null)}
-            >
-              Annuler
-            </Button>
-            <Button
-              variant="destructive"
-              className="rounded-xl"
-              disabled={supprimer.isPending}
-              onClick={() => aSupprimer && supprimer.mutate(aSupprimer.id)}
-            >
-              {supprimer.isPending ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <Trash2 className="size-4" />
-              )}
-              Supprimer
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </>
   );
 }

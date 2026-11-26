@@ -1,8 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, Download, Printer } from "lucide-react";
+import { toast } from "sonner";
+import { ArrowLeft, Copy, Download, Printer, QrCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ConsoleHeader } from "@/components/admin/console-header";
+
+const LIEN_INSTALLATION = "https://www.noken.app/installer";
+
+async function copierLien() {
+  try {
+    await navigator.clipboard.writeText(LIEN_INSTALLATION);
+    toast.success("Lien copié");
+  } catch {
+    toast.error("Copie impossible", { description: LIEN_INSTALLATION });
+  }
+}
 
 /**
  * Affiche A4 à imprimer : le QR code d'installation, pour les salons, les
@@ -12,34 +25,53 @@ import { Button } from "@/components/ui/button";
 export default function AfficheQrPage() {
   return (
     <>
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-2 print:hidden">
+      {/* Tout ce qui précède l'affiche disparaît à l'impression. */}
+      <div className="print:hidden">
         <Button
           variant="ghost"
           size="sm"
-          className="-ml-2 rounded-lg"
+          className="mb-3 -ml-2 rounded-lg text-muted-foreground"
           render={<Link href="/admin/utilisateurs" />}
         >
           <ArrowLeft className="size-4" />
           Utilisateurs
         </Button>
-        <div className="flex flex-wrap gap-2">
-          <Button
-            variant="outline"
-            className="rounded-xl"
-            render={<a href="/qr-installation.svg" download="noken-qr-code.svg" />}
-          >
-            <Download className="size-4" />
-            QR code seul
-          </Button>
-          <Button className="rounded-xl" onClick={() => window.print()}>
-            <Printer className="size-4" />
-            Imprimer l&apos;affiche
-          </Button>
-        </div>
+
+        <ConsoleHeader
+          title="Affiche QR code"
+          icon={QrCode}
+          teinte="var(--c-blue)"
+          description="Affiche A4 à imprimer pour les salons, les campus et les bureaux. Le QR code ouvre la page d'installation ; il ne connecte personne et peut donc être affiché sans risque."
+          actions={
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" className="rounded-xl" onClick={() => void copierLien()}>
+                <Copy className="size-4" />
+                Copier le lien
+              </Button>
+              <Button
+                variant="outline"
+                className="rounded-xl"
+                render={<a href="/qr-installation.svg" download="noken-qr-code.svg" />}
+              >
+                <Download className="size-4" />
+                QR code seul
+              </Button>
+              <Button className="rounded-xl" onClick={() => window.print()}>
+                <Printer className="size-4" />
+                Imprimer l&apos;affiche
+              </Button>
+            </div>
+          }
+        />
+
+        <p className="mb-4 text-center text-xs text-muted-foreground">
+          Aperçu de l&apos;affiche · à l&apos;impression, choisissez le format A4 et
+          désactivez les en-têtes et pieds de page du navigateur.
+        </p>
       </div>
 
       {/* Couleurs fixes : une affiche reste noir sur blanc, même en mode sombre. */}
-      <article className="mx-auto flex aspect-[210/297] w-full max-w-2xl flex-col items-center justify-between rounded-xl border bg-white p-[6%] text-center text-neutral-900 print:aspect-auto print:min-h-[92vh] print:max-w-none print:rounded-none print:border-0">
+      <article className="mx-auto flex aspect-[210/297] w-full max-w-2xl flex-col items-center justify-between rounded-2xl border bg-white p-[6%] shadow-lg text-center text-neutral-900 print:aspect-auto print:min-h-[92vh] print:max-w-none print:rounded-none print:border-0 print:shadow-none">
         <div className="flex flex-col items-center">
           {/* Balise native, chargée d'emblée : une image différée pourrait manquer
               à l'impression. */}

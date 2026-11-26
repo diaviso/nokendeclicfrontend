@@ -9,7 +9,7 @@ import { OffreForm } from "@/components/admin/offre-form";
 
 export default function NouvelleOffrePage() {
   return (
-    <FormShell className="max-w-5xl">
+    <FormShell className="max-w-7xl">
       <Button
         variant="ghost"
         size="sm"
@@ -22,7 +22,7 @@ export default function NouvelleOffrePage() {
 
       <ConsoleHeader
         icon={Briefcase}
-        teinte="var(--chart-3)"
+        teinte="var(--c-emerald)"
         title="Nouvelle offre"
         description="Les champs proposés s'adaptent au type d'opportunité choisi."
       />

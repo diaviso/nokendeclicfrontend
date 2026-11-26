@@ -1,19 +1,21 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
-import Link from "next/link";
+import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   ArrowDown,
   ArrowUp,
+  Briefcase,
   Building2,
+  Check,
   Eye,
   EyeOff,
   ExternalLink,
-  ImageUp,
   Loader2,
+  MapPin,
   Pencil,
+  Phone,
   Plus,
   Store,
   Tags,
@@ -21,16 +23,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { ConsoleHeader } from "@/components/admin/console-header";
 import { ConsoleTable, type ColonneConsole } from "@/components/admin/console-table";
 import {
@@ -39,7 +32,17 @@ import {
   ConsoleSearch,
   ConsoleToolbar,
 } from "@/components/admin/console-ui";
+import {
+  ConsoleAction,
+  ConsoleActions,
+  ConsoleChamp,
+  ConsoleChoixImage,
+  ConsoleDialogue,
+  ConsoleSection,
+  useConfirmation,
+} from "@/components/admin/console-kit";
 import { EmptyState } from "@/components/shared/empty-state";
+import { cn } from "@/lib/utils";
 import {
   errorMessage,
   fileUrl,
@@ -51,12 +54,12 @@ import {
 import { SECTEUR_LABELS, secteurLabel } from "@/lib/enums";
 import type { Secteur } from "@/lib/types";
 
-const TEINTE = "var(--chart-3)";
+const TEINTE = "var(--c-lime)";
 const CLE = ["admin", "vitrine"] as const;
 const CLE_TYPES = ["partenaires", "types"] as const;
 
 const classeSelect =
-  "h-9 w-full rounded-md border bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:ring-2 focus-visible:ring-ring/50";
+  "h-9 w-full rounded-md border bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:ring-2 focus-visible:ring-ring/50 dark:bg-input/30";
 
 function Logo({ url }: { url?: string | null }) {
   if (!url) {
@@ -115,73 +118,78 @@ function DialogueType({
       toast.error("Enregistrement impossible", { description: errorMessage(error) }),
   });
 
+  const valide = nom.trim().length >= 2;
+
   return (
-    <Dialog open={ouvert} onOpenChange={(o) => !o && onFermer()}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{type ? "Modifier le type" : "Nouveau type de partenaire"}</DialogTitle>
-          <DialogDescription>
-            Chaque type devient une entrée du menu et une page d&apos;annuaire
-            regroupant ses structures.
-          </DialogDescription>
-        </DialogHeader>
-        <form
-          className="space-y-4"
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (nom.trim().length >= 2) enregistrer.mutate();
-          }}
+    <ConsoleDialogue
+      ouvert={ouvert}
+      onFermer={onFermer}
+      icone={type ? Pencil : Tags}
+      teinte={TEINTE}
+      titre={type ? `Modifier le type « ${type.nom} »` : "Nouveau type de partenaire"}
+      description="Chaque type devient une entrée du menu et une page d'annuaire regroupant ses structures."
+      onSubmit={() => valide && enregistrer.mutate()}
+      pied={
+        <>
+          <Button type="button" variant="ghost" className="rounded-lg" onClick={onFermer}>
+            Annuler
+          </Button>
+          <Button type="submit" className="rounded-lg" disabled={enregistrer.isPending || !valide}>
+            {enregistrer.isPending ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Check className="size-4" />
+            )}
+            {type ? "Enregistrer" : "Créer le type"}
+          </Button>
+        </>
+      }
+    >
+      <ConsoleSection colonnes={1}>
+        <ConsoleChamp id="type-nom" libelle="Nom" requis>
+          <Input
+            id="type-nom"
+            value={nom}
+            onChange={(e) => setNom(e.target.value)}
+            placeholder="Entreprises, ONG, Centres de formation…"
+            maxLength={80}
+            required
+          />
+        </ConsoleChamp>
+        <ConsoleChamp
+          id="type-description"
+          libelle="Description (facultative)"
+          aide="Affichée en tête de la page d'annuaire du type."
         >
-          <div>
-            <Label htmlFor="type-nom">Nom</Label>
-            <Input
-              id="type-nom"
-              className="mt-1.5"
-              value={nom}
-              onChange={(e) => setNom(e.target.value)}
-              placeholder="Entreprises, ONG, Centres de formation…"
-              maxLength={80}
-              required
-            />
-          </div>
-          <div>
-            <Label htmlFor="type-description">Description (facultative)</Label>
-            <Textarea
-              id="type-description"
-              className="mt-1.5"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              maxLength={500}
-              rows={3}
-            />
-          </div>
-          <div className="w-32">
-            <Label htmlFor="type-ordre">Ordre dans le menu</Label>
-            <Input
-              id="type-ordre"
-              type="number"
-              className="mt-1.5"
-              value={ordre}
-              onChange={(e) => setOrdre(e.target.value)}
-            />
-          </div>
-          <DialogFooter>
-            <Button type="button" variant="ghost" onClick={onFermer}>
-              Annuler
-            </Button>
-            <Button type="submit" disabled={enregistrer.isPending || nom.trim().length < 2}>
-              {enregistrer.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
-              Enregistrer
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+          <Textarea
+            id="type-description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            maxLength={500}
+            rows={3}
+          />
+        </ConsoleChamp>
+        <ConsoleChamp
+          id="type-ordre"
+          libelle="Ordre dans le menu"
+          aide="Les plus petits nombres apparaissent en premier."
+          className="max-w-40"
+        >
+          <Input
+            id="type-ordre"
+            type="number"
+            value={ordre}
+            onChange={(e) => setOrdre(e.target.value)}
+          />
+        </ConsoleChamp>
+      </ConsoleSection>
+    </ConsoleDialogue>
   );
 }
 
 function SectionTypes({ types }: { types: TypePartenaire[] }) {
   const queryClient = useQueryClient();
+  const confirmer = useConfirmation();
   const [edition, setEdition] = useState<{ type: TypePartenaire | null } | null>(null);
 
   const supprimer = useMutation({
@@ -198,71 +206,90 @@ function SectionTypes({ types }: { types: TypePartenaire[] }) {
   });
 
   return (
-    <section className="mb-6 rounded-2xl border bg-card p-4">
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <h2 className="flex items-center gap-2 font-semibold">
-            <Tags className="size-4 text-muted-foreground" aria-hidden />
+    <section className="mb-6 overflow-hidden rounded-2xl border bg-card shadow-sm">
+      <header className="flex flex-wrap items-center gap-3 border-b px-5 py-3.5">
+        <span
+          className="grid size-8 shrink-0 place-items-center rounded-lg"
+          style={{
+            background: `color-mix(in oklch, ${TEINTE} 14%, transparent)`,
+            color: TEINTE,
+          }}
+        >
+          <Tags className="size-4" aria-hidden />
+        </span>
+        <div className="min-w-0 flex-1">
+          <h2 className="text-sm font-bold">
             Types de partenaires
+            <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-xs font-semibold tabular-nums text-muted-foreground">
+              {types.length}
+            </span>
           </h2>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             Une structure classée dans un type apparaît dans l&apos;annuaire et
             dans le menu. Sans type, elle reste privée.
           </p>
         </div>
-        <Button size="sm" className="rounded-lg" onClick={() => setEdition({ type: null })}>
+        <Button size="sm" variant="outline" className="rounded-lg" onClick={() => setEdition({ type: null })}>
           <Plus className="size-4" />
           Nouveau type
         </Button>
-      </div>
+      </header>
 
-      {types.length === 0 ? (
-        <p className="rounded-xl bg-muted/40 p-4 text-sm text-muted-foreground">
-          Aucun type pour l&apos;instant. Créez-en un, par exemple
-          « Entreprises » ou « ONG », puis classez-y vos structures.
-        </p>
-      ) : (
-        <ul className="flex flex-wrap gap-2">
-          {types.map((type) => (
-            <li
-              key={type.id}
-              className="flex items-center gap-1 rounded-xl border bg-background py-1 pl-3 pr-1 text-sm"
-            >
-              <span className="font-medium">{type.nom}</span>
-              <span className="text-xs tabular-nums text-muted-foreground">
-                {type._count?.partenaires ?? 0}
-              </span>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-7 rounded-lg"
-                aria-label={`Modifier ${type.nom}`}
-                onClick={() => setEdition({ type })}
+      <div className="p-4">
+        {types.length === 0 ? (
+          <p className="rounded-xl border border-dashed p-5 text-center text-sm text-muted-foreground">
+            Aucun type pour l&apos;instant. Créez-en un, par exemple
+            « Entreprises » ou « ONG », puis classez-y vos structures.
+          </p>
+        ) : (
+          <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+            {types.map((type) => (
+              <li
+                key={type.id}
+                className="group flex items-center gap-3 rounded-xl border bg-background p-3 transition-shadow hover:shadow-sm"
               >
-                <Pencil className="size-3.5" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-7 rounded-lg text-destructive"
-                aria-label={`Supprimer ${type.nom}`}
-                disabled={supprimer.isPending}
-                onClick={() => {
-                  if (
-                    window.confirm(
-                      `Supprimer le type « ${type.nom} » ? Ses structures ne seront plus dans l'annuaire.`,
-                    )
-                  ) {
-                    supprimer.mutate(type.id);
-                  }
-                }}
-              >
-                <Trash2 className="size-3.5" />
-              </Button>
-            </li>
-          ))}
-        </ul>
-      )}
+                <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-muted text-sm font-bold tabular-nums text-muted-foreground">
+                  {type.ordre ?? 0}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-semibold">{type.nom}</span>
+                  <span className="block text-xs text-muted-foreground">
+                    {type._count?.partenaires ?? 0} structure
+                    {(type._count?.partenaires ?? 0) > 1 ? "s" : ""}
+                  </span>
+                </span>
+                <ConsoleActions>
+                  <ConsoleAction
+                    libelle={`Modifier ${type.nom}`}
+                    icone={Pencil}
+                    ton="primaire"
+                    onClick={() => setEdition({ type })}
+                  />
+                  <ConsoleAction
+                    libelle={`Supprimer ${type.nom}`}
+                    icone={Trash2}
+                    ton="danger"
+                    enCours={supprimer.isPending && supprimer.variables === type.id}
+                    onClick={async () => {
+                      if (
+                        await confirmer({
+                          titre: `Supprimer le type « ${type.nom} » ?`,
+                          message:
+                            "Ses structures ne seront plus dans l'annuaire, mais elles ne sont pas supprimées.",
+                          confirmer: "Supprimer",
+                          danger: true,
+                        })
+                      ) {
+                        supprimer.mutate(type.id);
+                      }
+                    }}
+                  />
+                </ConsoleActions>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
 
       {edition ? (
         <DialogueType
@@ -318,8 +345,6 @@ function DialogueFiche({
   const queryClient = useQueryClient();
   const [v, setV] = useState<ValeursFiche>(() => valeursInitiales(fiche));
   const [logo, setLogo] = useState<File | null>(null);
-  const apercuLogo = useMemo(() => (logo ? URL.createObjectURL(logo) : null), [logo]);
-  const champLogo = useRef<HTMLInputElement>(null);
 
   const changer = (cle: keyof ValeursFiche) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
@@ -358,126 +383,102 @@ function DialogueFiche({
       toast.error("Enregistrement impossible", { description: errorMessage(error) }),
   });
 
+  const valide = v.nom.trim().length >= 2;
+
   return (
-    <Dialog open onOpenChange={(o) => !o && onFermer()}>
-      <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-xl">
-        <DialogHeader>
-          <DialogTitle>{fiche ? `Modifier ${fiche.nom}` : "Nouvelle structure"}</DialogTitle>
-          <DialogDescription>
-            {fiche?.user
-              ? `Fiche du compte ${fiche.user.email}. Le partenaire peut aussi la modifier depuis son espace.`
-              : "Structure référencée par l'administration, sans compte. Vous pourrez lui rattacher des offres depuis le formulaire d'offre."}
-          </DialogDescription>
-        </DialogHeader>
-
-        <form
-          className="space-y-4"
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (v.nom.trim().length >= 2) enregistrer.mutate();
-          }}
-        >
-          <div className="flex items-center gap-3">
-            {apercuLogo ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={apercuLogo}
-                alt=""
-                className="size-14 rounded-xl border object-contain p-1"
-              />
+    <ConsoleDialogue
+      onFermer={onFermer}
+      icone={fiche ? Pencil : Plus}
+      teinte={TEINTE}
+      taille="lg"
+      titre={fiche ? `Modifier ${fiche.nom}` : "Nouvelle structure"}
+      description={
+        fiche?.user
+          ? `Fiche du compte ${fiche.user.email}. Le partenaire peut aussi la modifier depuis son espace.`
+          : "Structure référencée par l'administration, sans compte. Vous pourrez lui rattacher des offres depuis le formulaire d'offre."
+      }
+      onSubmit={() => valide && enregistrer.mutate()}
+      pied={
+        <>
+          <Button type="button" variant="ghost" className="rounded-lg" onClick={onFermer}>
+            Annuler
+          </Button>
+          <Button type="submit" className="rounded-lg" disabled={enregistrer.isPending || !valide}>
+            {enregistrer.isPending ? (
+              <Loader2 className="size-4 animate-spin" />
             ) : (
-              <span className="[&>*]:size-14">
-                <Logo url={fiche?.logoUrl} />
-              </span>
+              <Check className="size-4" />
             )}
-            <input
-              ref={champLogo}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => setLogo(e.target.files?.[0] ?? null)}
-            />
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="rounded-lg"
-              onClick={() => champLogo.current?.click()}
-            >
-              <ImageUp className="size-4" />
-              {fiche?.logoUrl || logo ? "Changer le logo" : "Ajouter un logo"}
-            </Button>
-          </div>
+            {fiche ? "Enregistrer" : "Créer la structure"}
+          </Button>
+        </>
+      }
+    >
+      <ConsoleSection titre="Identité" icone={Building2}>
+        <ConsoleChoixImage
+          libelle="Logo de la structure"
+          aide="PNG, JPG ou WebP, fond clair de préférence"
+          actuelle={fiche?.logoUrl ? fileUrl(fiche.logoUrl) : null}
+          fichier={logo}
+          onChange={setLogo}
+          icone={Building2}
+        />
+        <ConsoleChamp id="fiche-nom" libelle="Nom de la structure" requis large>
+          <Input id="fiche-nom" value={v.nom} onChange={changer("nom")} required maxLength={120} />
+        </ConsoleChamp>
+        <ConsoleChamp
+          id="fiche-type"
+          libelle="Type de partenaire"
+          aide="Sans type, la structure reste hors de l'annuaire."
+        >
+          <select id="fiche-type" className={classeSelect} value={v.typePartenaireId} onChange={changer("typePartenaireId")}>
+            <option value="">Aucun (hors annuaire)</option>
+            {types.map((type) => (
+              <option key={type.id} value={type.id}>
+                {type.nom}
+              </option>
+            ))}
+          </select>
+        </ConsoleChamp>
+        <ConsoleChamp id="fiche-secteur" libelle="Secteur">
+          <select id="fiche-secteur" className={classeSelect} value={v.secteur} onChange={changer("secteur")}>
+            <option value="">Non précisé</option>
+            {(Object.keys(SECTEUR_LABELS) as Secteur[]).map((valeur) => (
+              <option key={valeur} value={valeur}>
+                {SECTEUR_LABELS[valeur]}
+              </option>
+            ))}
+          </select>
+        </ConsoleChamp>
+        <ConsoleChamp id="fiche-description" libelle="Présentation" large>
+          <Textarea id="fiche-description" rows={4} value={v.description} onChange={changer("description")} maxLength={1500} />
+        </ConsoleChamp>
+        <ConsoleChamp id="fiche-taille" libelle="Taille" large>
+          <Input id="fiche-taille" placeholder="10 à 49 salariés" value={v.taille} onChange={changer("taille")} />
+        </ConsoleChamp>
+      </ConsoleSection>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="sm:col-span-2">
-              <Label htmlFor="fiche-nom">Nom de la structure</Label>
-              <Input id="fiche-nom" className="mt-1.5" value={v.nom} onChange={changer("nom")} required maxLength={120} />
-            </div>
-            <div>
-              <Label htmlFor="fiche-type">Type de partenaire</Label>
-              <select id="fiche-type" className={`${classeSelect} mt-1.5`} value={v.typePartenaireId} onChange={changer("typePartenaireId")}>
-                <option value="">Aucun (hors annuaire)</option>
-                {types.map((type) => (
-                  <option key={type.id} value={type.id}>
-                    {type.nom}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <Label htmlFor="fiche-secteur">Secteur</Label>
-              <select id="fiche-secteur" className={`${classeSelect} mt-1.5`} value={v.secteur} onChange={changer("secteur")}>
-                <option value="">Non précisé</option>
-                {(Object.keys(SECTEUR_LABELS) as Secteur[]).map((valeur) => (
-                  <option key={valeur} value={valeur}>
-                    {SECTEUR_LABELS[valeur]}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="sm:col-span-2">
-              <Label htmlFor="fiche-description">Présentation</Label>
-              <Textarea id="fiche-description" className="mt-1.5" rows={4} value={v.description} onChange={changer("description")} maxLength={1500} />
-            </div>
-            <div className="sm:col-span-2">
-              <Label htmlFor="fiche-site">Site web</Label>
-              <Input id="fiche-site" className="mt-1.5" type="url" placeholder="https://" value={v.siteWeb} onChange={changer("siteWeb")} />
-            </div>
-            <div>
-              <Label htmlFor="fiche-ville">Ville</Label>
-              <Input id="fiche-ville" className="mt-1.5" value={v.ville} onChange={changer("ville")} />
-            </div>
-            <div>
-              <Label htmlFor="fiche-region">Région</Label>
-              <Input id="fiche-region" className="mt-1.5" value={v.region} onChange={changer("region")} />
-            </div>
-            <div>
-              <Label htmlFor="fiche-email">Email de contact</Label>
-              <Input id="fiche-email" className="mt-1.5" type="email" value={v.emailContact} onChange={changer("emailContact")} />
-            </div>
-            <div>
-              <Label htmlFor="fiche-tel">Téléphone</Label>
-              <Input id="fiche-tel" className="mt-1.5" value={v.telephone} onChange={changer("telephone")} />
-            </div>
-            <div className="sm:col-span-2">
-              <Label htmlFor="fiche-taille">Taille</Label>
-              <Input id="fiche-taille" className="mt-1.5" placeholder="10 à 49 salariés" value={v.taille} onChange={changer("taille")} />
-            </div>
-          </div>
+      <ConsoleSection titre="Localisation" icone={MapPin}>
+        <ConsoleChamp id="fiche-ville" libelle="Ville">
+          <Input id="fiche-ville" value={v.ville} onChange={changer("ville")} />
+        </ConsoleChamp>
+        <ConsoleChamp id="fiche-region" libelle="Région">
+          <Input id="fiche-region" value={v.region} onChange={changer("region")} />
+        </ConsoleChamp>
+      </ConsoleSection>
 
-          <DialogFooter>
-            <Button type="button" variant="ghost" onClick={onFermer}>
-              Annuler
-            </Button>
-            <Button type="submit" disabled={enregistrer.isPending || v.nom.trim().length < 2}>
-              {enregistrer.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
-              Enregistrer
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+      <ConsoleSection titre="Contact" icone={Phone}>
+        <ConsoleChamp id="fiche-email" libelle="Email de contact">
+          <Input id="fiche-email" type="email" value={v.emailContact} onChange={changer("emailContact")} />
+        </ConsoleChamp>
+        <ConsoleChamp id="fiche-tel" libelle="Téléphone">
+          <Input id="fiche-tel" placeholder="+221 …" value={v.telephone} onChange={changer("telephone")} />
+        </ConsoleChamp>
+        <ConsoleChamp id="fiche-site" libelle="Site web" large>
+          <Input id="fiche-site" type="url" placeholder="https://" value={v.siteWeb} onChange={changer("siteWeb")} />
+        </ConsoleChamp>
+      </ConsoleSection>
+    </ConsoleDialogue>
   );
 }
 
@@ -485,6 +486,7 @@ function DialogueFiche({
 
 export default function PartenairesConsolePage() {
   const queryClient = useQueryClient();
+  const confirmer = useConfirmation();
   const [recherche, setRecherche] = useState("");
   const [filtreType, setFiltreType] = useState("");
   const [edition, setEdition] = useState<{ fiche: EntreprisePourAdministration | null } | null>(null);
@@ -552,6 +554,8 @@ export default function PartenairesConsolePage() {
 
   const enVitrine = fiches.filter((fiche) => fiche.estVisibleVitrine);
   const classees = fiches.filter((fiche) => fiche.typePartenaireId).length;
+  const avecCompte = fiches.filter((fiche) => fiche.userId).length;
+  const offresRattachees = fiches.reduce((somme, fiche) => somme + fiche._count.offres, 0);
 
   /**
    * Déplacement d'un cran dans la vitrine.
@@ -603,9 +607,12 @@ export default function PartenairesConsolePage() {
       entete: "Type",
       cellule: (fiche) =>
         fiche.typePartenaire ? (
-          <span className="text-sm">{fiche.typePartenaire.nom}</span>
+          <span className="inline-flex max-w-full items-center gap-1.5 truncate rounded-md border bg-background px-2 py-0.5 text-xs font-medium">
+            <Tags className="size-3 shrink-0 text-muted-foreground" aria-hidden />
+            <span className="truncate">{fiche.typePartenaire.nom}</span>
+          </span>
         ) : (
-          <span className="text-sm text-muted-foreground">Hors annuaire</span>
+          <span className="text-xs text-muted-foreground">Hors annuaire</span>
         ),
     },
     {
@@ -624,14 +631,29 @@ export default function PartenairesConsolePage() {
       entete: "Offres",
       align: "right",
       secondaire: true,
-      cellule: (fiche) => <span className="tabular-nums">{fiche._count.offres}</span>,
+      cellule: (fiche) => (
+        <span
+          className={cn(
+            "inline-flex min-w-7 items-center justify-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-bold tabular-nums",
+            fiche._count.offres ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground",
+          )}
+        >
+          <Briefcase className="size-3" aria-hidden />
+          {fiche._count.offres}
+        </span>
+      ),
     },
     {
       cle: "etat",
       entete: "Vitrine",
       cellule: (fiche) =>
         fiche.estVisibleVitrine ? (
-          <ConsolePastille libelle="En vitrine" teinte="var(--success)" />
+          <span className="inline-flex items-center gap-1.5">
+            <ConsolePastille libelle="En vitrine" teinte="var(--success)" />
+            <span className="text-xs tabular-nums text-muted-foreground">
+              #{enVitrine.findIndex((autre) => autre.id === fiche.id) + 1}
+            </span>
+          </span>
         ) : (
           <ConsolePastille libelle="Masquée" discret />
         ),
@@ -640,82 +662,13 @@ export default function PartenairesConsolePage() {
       cle: "actions",
       entete: "",
       align: "right",
+      className: "w-[19rem]",
       cellule: (fiche) => (
-        <div className="flex items-center justify-end gap-1">
-          {fiche.estVisibleVitrine ? (
-            <>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-8 rounded-lg"
-                aria-label={`Remonter ${fiche.nom}`}
-                disabled={regler.isPending || enVitrine[0]?.id === fiche.id}
-                onClick={() => deplacer(fiche, -1)}
-              >
-                <ArrowUp className="size-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-8 rounded-lg"
-                aria-label={`Descendre ${fiche.nom}`}
-                disabled={
-                  regler.isPending || enVitrine[enVitrine.length - 1]?.id === fiche.id
-                }
-                onClick={() => deplacer(fiche, 1)}
-              >
-                <ArrowDown className="size-4" />
-              </Button>
-            </>
-          ) : null}
-
-          {fiche.typePartenaireId || fiche.estVisibleVitrine ? (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-8 rounded-lg"
-              aria-label={`Voir la page publique de ${fiche.nom}`}
-              render={<Link href={`/partenaires/${fiche.id}`} target="_blank" />}
-            >
-              <ExternalLink className="size-4" />
-            </Button>
-          ) : null}
-
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-8 rounded-lg"
-            aria-label={`Modifier ${fiche.nom}`}
-            onClick={() => setEdition({ fiche })}
-          >
-            <Pencil className="size-4" />
-          </Button>
-
-          {!fiche.userId ? (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-8 rounded-lg text-destructive"
-              aria-label={`Supprimer ${fiche.nom}`}
-              disabled={supprimer.isPending}
-              onClick={() => {
-                if (
-                  window.confirm(
-                    `Supprimer « ${fiche.nom} » ? Ses offres restent en ligne, sans structure rattachée.`,
-                  )
-                ) {
-                  supprimer.mutate(fiche.id);
-                }
-              }}
-            >
-              <Trash2 className="size-4" />
-            </Button>
-          ) : null}
-
+        <ConsoleActions>
           <Button
             variant={fiche.estVisibleVitrine ? "ghost" : "outline"}
             size="sm"
-            className="rounded-lg"
+            className="mr-1 h-8 rounded-lg"
             disabled={regler.isPending}
             onClick={() =>
               regler.mutate({ id: fiche.id, estVisibleVitrine: !fiche.estVisibleVitrine })
@@ -723,17 +676,74 @@ export default function PartenairesConsolePage() {
           >
             {fiche.estVisibleVitrine ? (
               <>
-                <EyeOff className="size-4" />
+                <EyeOff className="size-3.5" />
                 Retirer
               </>
             ) : (
               <>
-                <Eye className="size-4" />
+                <Eye className="size-3.5" />
                 Vitrine
               </>
             )}
           </Button>
-        </div>
+
+          {fiche.estVisibleVitrine ? (
+            <>
+              <ConsoleAction
+                libelle="Remonter dans la vitrine"
+                icone={ArrowUp}
+                disabled={regler.isPending || enVitrine[0]?.id === fiche.id}
+                onClick={() => deplacer(fiche, -1)}
+              />
+              <ConsoleAction
+                libelle="Descendre dans la vitrine"
+                icone={ArrowDown}
+                disabled={
+                  regler.isPending || enVitrine[enVitrine.length - 1]?.id === fiche.id
+                }
+                onClick={() => deplacer(fiche, 1)}
+              />
+            </>
+          ) : null}
+
+          {fiche.typePartenaireId || fiche.estVisibleVitrine ? (
+            <ConsoleAction
+              libelle="Voir la page publique"
+              icone={ExternalLink}
+              href={`/partenaires/${fiche.id}`}
+              cible="_blank"
+            />
+          ) : null}
+
+          <ConsoleAction
+            libelle="Modifier"
+            icone={Pencil}
+            ton="primaire"
+            onClick={() => setEdition({ fiche })}
+          />
+
+          {!fiche.userId ? (
+            <ConsoleAction
+              libelle="Supprimer"
+              icone={Trash2}
+              ton="danger"
+              enCours={supprimer.isPending && supprimer.variables === fiche.id}
+              onClick={async () => {
+                if (
+                  await confirmer({
+                    titre: `Supprimer « ${fiche.nom} » ?`,
+                    message:
+                      "Ses offres restent en ligne, sans structure rattachée. Cette action est définitive.",
+                    confirmer: "Supprimer",
+                    danger: true,
+                  })
+                ) {
+                  supprimer.mutate(fiche.id);
+                }
+              }}
+            />
+          ) : null}
+        </ConsoleActions>
       ),
     },
   ];
@@ -747,8 +757,10 @@ export default function PartenairesConsolePage() {
         description="Les structures classées dans un type forment l'annuaire et le menu de l'application ; celles mises en vitrine apparaissent aussi sur la page d'accueil. Une structure peut être créée ici sans compte."
         mesures={[
           { label: "Structures", valeur: fiches.length },
-          { label: "Dans l'annuaire", valeur: classees },
+          { label: "Dans l'annuaire", valeur: classees, teinte: TEINTE },
           { label: "En vitrine", valeur: enVitrine.length, teinte: "var(--success)" },
+          { label: "Avec un compte", valeur: avecCompte },
+          { label: "Offres rattachées", valeur: offresRattachees, teinte: "var(--primary)" },
         ]}
       />
 
@@ -781,7 +793,7 @@ export default function PartenairesConsolePage() {
             ]}
           />
         ) : null}
-        <Button className="ml-auto rounded-lg" onClick={() => setEdition({ fiche: null })}>
+        <Button className="rounded-xl sm:ml-auto" onClick={() => setEdition({ fiche: null })}>
           <Plus className="size-4" />
           Nouvelle structure
         </Button>
@@ -797,11 +809,30 @@ export default function PartenairesConsolePage() {
           <EmptyState
             icon={Store}
             couleur={TEINTE}
-            title={recherche ? "Aucune structure ne correspond" : "Aucune structure partenaire"}
+            title={recherche || filtreType ? "Aucune structure ne correspond" : "Aucune structure partenaire"}
             description={
               recherche
                 ? "Essayez sur le nom de la structure ou l'email du compte."
-                : "Créez une structure avec le bouton ci-dessus, ou attendez qu'un compte partenaire renseigne la sienne."
+                : "Créez une structure, ou attendez qu'un compte partenaire renseigne la sienne."
+            }
+            action={
+              recherche || filtreType ? (
+                <Button
+                  variant="outline"
+                  className="rounded-xl"
+                  onClick={() => {
+                    setRecherche("");
+                    setFiltreType("");
+                  }}
+                >
+                  Effacer les filtres
+                </Button>
+              ) : (
+                <Button className="rounded-xl" onClick={() => setEdition({ fiche: null })}>
+                  <Plus className="size-4" />
+                  Nouvelle structure
+                </Button>
+              )
             }
           />
         }

@@ -23,12 +23,24 @@ import {
   Accessibility,
   BarChart3,
   Briefcase,
+  CalendarDays,
   Download,
   FileSpreadsheet,
   FileText,
+  GraduationCap,
+  Heart,
+  Layers,
   Loader2,
+  Map as MapIcone,
+  MapPin,
+  MessageSquare,
+  PieChart as PieIcone,
   Printer,
+  ShieldCheck,
+  Star,
   Store,
+  ThumbsUp,
+  TrendingUp,
   Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -57,7 +69,7 @@ import { styleType } from "@/lib/type-offre";
 import { formatNumber } from "@/lib/format";
 import type { Role, StatutProfessionnel } from "@/lib/types";
 
-const TEINTE = "var(--chart-1)";
+const TEINTE = "var(--c-blue)";
 
 /**
  * Exports proposés depuis cette page.
@@ -107,21 +119,21 @@ const STATUT_MODERATION_LABELS: Record<string, string> = {
 };
 
 const STATUT_MODERATION_COULEURS: Record<string, string> = {
-  PUBLIEE: "var(--success)",
-  EN_ATTENTE: "var(--warning)",
-  REFUSEE: "var(--destructive)",
+  PUBLIEE: "var(--c-emerald)",
+  EN_ATTENTE: "var(--c-amber)",
+  REFUSEE: "var(--c-rose)",
 };
 
 const COULEURS_ROLE: Record<Role, string> = {
-  MEMBRE: "var(--chart-2)",
-  PARTENAIRE: "var(--chart-4)",
-  ADMIN: "var(--chart-5)",
+  MEMBRE: "var(--c-blue)",
+  PARTENAIRE: "var(--c-orange)",
+  ADMIN: "var(--c-cyan)",
 };
 
 const COULEURS_SEXE = [
-  "var(--chart-2)",
-  "var(--chart-4)",
-  "var(--chart-5)",
+  "var(--c-blue)",
+  "var(--c-orange)",
+  "var(--c-teal)",
   "var(--muted-foreground)",
 ];
 
@@ -134,45 +146,57 @@ function moisCourt(cle: string): string {
     .replace(".", "");
 }
 
+/**
+ * Tuile chiffrée, dans le style de la vue d'ensemble : icône en pastille
+ * pleine, halo discret, valeur appuyée. À l'impression, halo et ombre
+ * disparaissent pour ne garder que le chiffre.
+ */
 function Mesure({
   label,
   valeur,
   precision,
   icone: Icone,
   teinte,
+  index = 0,
 }: {
   label: string;
   valeur: number;
   precision?: string;
   icone: typeof Users;
   teinte: string;
+  index?: number;
 }) {
   return (
-    <div className="rounded-2xl border bg-card p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="truncate text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            {label}
-          </p>
-          <p className="mt-1.5 text-2xl font-bold tabular-nums">
-            {formatNumber(valeur)}
-          </p>
-          {precision ? (
-            <p className="mt-0.5 truncate text-xs text-muted-foreground">
-              {precision}
-            </p>
-          ) : null}
-        </div>
+    <div
+      style={{ "--i": index } as React.CSSProperties}
+      className="entree group relative overflow-hidden rounded-3xl border bg-card p-5 shadow-sm transition-shadow duration-300 hover:shadow-md print:rounded-xl print:shadow-none"
+    >
+      <span
+        aria-hidden
+        className="pointer-events-none absolute -right-10 -top-12 size-32 rounded-full opacity-15 blur-2xl print:hidden"
+        style={{ background: teinte }}
+      />
+      <div className="relative flex items-start justify-between gap-3">
         <span
-          className="grid size-9 shrink-0 place-items-center rounded-xl"
+          className="grid size-11 shrink-0 place-items-center rounded-2xl text-white shadow-sm transition-transform duration-300 group-hover:scale-105"
           style={{
-            background: `color-mix(in oklch, ${teinte} 13%, transparent)`,
-            color: teinte,
+            background: `linear-gradient(135deg, ${teinte}, color-mix(in oklch, ${teinte} 70%, black))`,
           }}
         >
-          <Icone className="size-4" aria-hidden />
+          <Icone className="size-5" aria-hidden />
         </span>
       </div>
+      <p className="relative mt-4 text-3xl font-extrabold leading-none tracking-tight tabular-nums">
+        {formatNumber(valeur)}
+      </p>
+      <p className="relative mt-1.5 truncate text-sm font-medium text-muted-foreground">
+        {label}
+      </p>
+      {precision ? (
+        <p className="relative mt-0.5 truncate text-xs text-muted-foreground/80">
+          {precision}
+        </p>
+      ) : null}
     </div>
   );
 }
@@ -181,26 +205,82 @@ function Bloc({
   titre,
   sousTitre,
   large,
+  icone: Icone,
+  teinte = "var(--primary)",
   children,
 }: {
   titre: string;
   sousTitre?: string;
   /** Occupe les deux colonnes : réservé aux séries longues. */
   large?: boolean;
+  icone?: typeof Users;
+  teinte?: string;
   children: React.ReactNode;
 }) {
   return (
     <section
-      className={`rounded-2xl border bg-card ${large ? "lg:col-span-2" : ""} break-inside-avoid`}
+      className={`overflow-hidden rounded-3xl border bg-card shadow-sm print:rounded-xl print:shadow-none ${large ? "lg:col-span-2" : ""} break-inside-avoid`}
     >
-      <header className="border-b px-5 py-3.5">
-        <h2 className="text-sm font-bold">{titre}</h2>
-        {sousTitre ? (
-          <p className="mt-0.5 text-xs text-muted-foreground">{sousTitre}</p>
-        ) : null}
+      <header className="flex items-center gap-3 px-5 pb-1 pt-5">
+        {Icone ? (
+          <span
+            className="grid size-9 shrink-0 place-items-center rounded-xl"
+            style={{
+              background: `color-mix(in oklch, ${teinte} 14%, transparent)`,
+              color: teinte,
+            }}
+          >
+            <Icone className="size-4.5" aria-hidden />
+          </span>
+        ) : (
+          <span
+            aria-hidden
+            className="h-5 w-1 shrink-0 rounded-full"
+            style={{ background: teinte }}
+          />
+        )}
+        <div className="min-w-0">
+          <h2 className="text-[15px] font-bold">{titre}</h2>
+          {sousTitre ? (
+            <p className="mt-0.5 text-xs text-muted-foreground">{sousTitre}</p>
+          ) : null}
+        </div>
       </header>
       <div className="p-5">{children}</div>
     </section>
+  );
+}
+
+/** Squelette affiché pendant le calcul du rapport. */
+function SqueletteRapport() {
+  return (
+    <div className="mx-auto max-w-5xl space-y-4" aria-hidden>
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {Array.from({ length: 4 }, (_, index) => (
+          <div
+            key={index}
+            className="rounded-3xl border bg-card p-5"
+            style={{ opacity: 1 - index * 0.12 }}
+          >
+            <div className="shimmer size-11 rounded-2xl bg-muted" />
+            <div className="shimmer mt-4 h-8 w-24 rounded bg-muted" />
+            <div className="shimmer mt-2 h-3 w-28 rounded bg-muted" />
+          </div>
+        ))}
+      </div>
+      <div className="rounded-3xl border bg-card p-5">
+        <div className="shimmer h-4 w-48 rounded bg-muted" />
+        <div className="shimmer mt-5 h-64 rounded-2xl bg-muted" />
+      </div>
+      <div className="grid gap-4 lg:grid-cols-2">
+        {Array.from({ length: 2 }, (_, index) => (
+          <div key={index} className="rounded-3xl border bg-card p-5">
+            <div className="shimmer h-4 w-40 rounded bg-muted" />
+            <div className="shimmer mt-5 h-48 rounded-2xl bg-muted" />
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -420,12 +500,95 @@ export default function StatistiquesPage() {
     year: "numeric",
   });
 
+  const entete = (
+      <div className="print:hidden">
+        <ConsoleHeader
+          title="Statistiques"
+          icon={BarChart3}
+          teinte={TEINTE}
+          description="Activité de la plateforme sur une période glissante, et composition du public inscrit. Le rapport imprimé reprend l'intégralité de cette page."
+          actions={
+            <div className="flex flex-wrap items-center gap-2">
+              <div
+                role="group"
+                aria-label="Période du rapport"
+                className="flex gap-0.5 rounded-xl bg-muted/70 p-1"
+              >
+                {PERIODES.map((periode) => (
+                  <button
+                    key={periode.mois}
+                    type="button"
+                    aria-pressed={mois === periode.mois}
+                    onClick={() => setMois(periode.mois)}
+                    className={`rounded-lg px-3 py-1.5 text-sm transition-all duration-200 ${
+                      mois === periode.mois
+                        ? "bg-card font-semibold text-foreground shadow-sm"
+                        : "font-medium text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {periode.libelle}
+                  </button>
+                ))}
+              </div>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  render={
+                    <Button
+                      variant="outline"
+                      className="rounded-xl"
+                      disabled={exportEnCours !== null}
+                    >
+                      {exportEnCours ? (
+                        <Loader2 className="size-4 animate-spin" />
+                      ) : (
+                        <Download className="size-4" />
+                      )}
+                      {exportEnCours ? "Préparation…" : "Exporter en Excel"}
+                    </Button>
+                  }
+                />
+                <DropdownMenuContent align="end" className="w-80">
+                  {EXPORTS.map((choix) => (
+                    <DropdownMenuItem
+                      key={choix.nature}
+                      onClick={() => void exporter(choix.nature)}
+                      className="flex items-start gap-2.5 py-2"
+                    >
+                      <FileSpreadsheet
+                        className="mt-0.5 size-4 shrink-0 text-muted-foreground"
+                        aria-hidden
+                      />
+                      <span className="min-w-0">
+                        <span className="block text-sm font-medium">
+                          {choix.libelle}
+                        </span>
+                        <span className="block text-xs text-muted-foreground">
+                          {choix.detail}
+                        </span>
+                      </span>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <Button className="rounded-xl" onClick={() => window.print()}>
+                <Printer className="size-4" />
+                Rapport PDF
+              </Button>
+            </div>
+          }
+        />
+      </div>
+  );
+
   if (isLoading || !rapport) {
     return (
-      <div className="grid place-items-center py-24">
-        <Loader2 className="size-5 animate-spin text-muted-foreground" />
+      <>
+        {entete}
+        <SqueletteRapport />
         <span className="sr-only">Chargement du rapport…</span>
-      </div>
+      </>
     );
   }
 
@@ -575,85 +738,7 @@ export default function StatistiquesPage() {
         }
       `}</style>
 
-      <div className="print:hidden">
-        <ConsoleHeader
-          title="Statistiques"
-          icon={BarChart3}
-          teinte={TEINTE}
-          description="Activité de la plateforme sur une période glissante, et composition du public inscrit. Le rapport imprimé reprend l'intégralité de cette page."
-          actions={
-            <div className="flex flex-wrap items-center gap-2">
-              <div
-                role="group"
-                aria-label="Période du rapport"
-                className="flex rounded-xl border p-0.5"
-              >
-                {PERIODES.map((periode) => (
-                  <button
-                    key={periode.mois}
-                    type="button"
-                    aria-pressed={mois === periode.mois}
-                    onClick={() => setMois(periode.mois)}
-                    className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-                      mois === periode.mois
-                        ? "bg-foreground text-background"
-                        : "text-muted-foreground hover:bg-muted"
-                    }`}
-                  >
-                    {periode.libelle}
-                  </button>
-                ))}
-              </div>
-
-              <DropdownMenu>
-                <DropdownMenuTrigger
-                  render={
-                    <Button
-                      variant="outline"
-                      className="rounded-xl"
-                      disabled={exportEnCours !== null}
-                    >
-                      {exportEnCours ? (
-                        <Loader2 className="size-4 animate-spin" />
-                      ) : (
-                        <Download className="size-4" />
-                      )}
-                      {exportEnCours ? "Préparation…" : "Exporter en Excel"}
-                    </Button>
-                  }
-                />
-                <DropdownMenuContent align="end" className="w-80">
-                  {EXPORTS.map((choix) => (
-                    <DropdownMenuItem
-                      key={choix.nature}
-                      onClick={() => void exporter(choix.nature)}
-                      className="flex items-start gap-2.5 py-2"
-                    >
-                      <FileSpreadsheet
-                        className="mt-0.5 size-4 shrink-0 text-muted-foreground"
-                        aria-hidden
-                      />
-                      <span className="min-w-0">
-                        <span className="block text-sm font-medium">
-                          {choix.libelle}
-                        </span>
-                        <span className="block text-xs text-muted-foreground">
-                          {choix.detail}
-                        </span>
-                      </span>
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              <Button className="rounded-xl" onClick={() => window.print()}>
-                <Printer className="size-4" />
-                Rapport PDF
-              </Button>
-            </div>
-          }
-        />
-      </div>
+      {entete}
 
       <div className="rapport mx-auto max-w-5xl space-y-4">
         {/* En-tête réservé au document imprimé : sans lui, la page sortie de
@@ -674,33 +759,39 @@ export default function StatistiquesPage() {
             valeur={stats?.totals.users ?? 0}
             precision={`+ ${formatNumber(rapport.engagement.inscriptionsPeriode)} sur la période`}
             icone={Users}
-            teinte="var(--chart-2)"
+            teinte="var(--c-blue)"
+            index={0}
           />
           <Mesure
             label="Offres"
             valeur={stats?.totals.offres ?? 0}
             precision={`${formatNumber(rapport.engagement.offresOuvertes)} encore ouvertes`}
             icone={Briefcase}
-            teinte="var(--chart-3)"
+            teinte="var(--c-emerald)"
+            index={1}
           />
           <Mesure
             label="CV renseignés"
             valeur={rapport.engagement.cvTotal}
             precision={`${formatNumber(rapport.engagement.cvPublics)} visibles des recruteurs`}
             icone={FileText}
-            teinte="var(--chart-1)"
+            teinte="var(--c-indigo)"
+            index={2}
           />
           <Mesure
             label="Structures partenaires"
             valeur={rapport.engagement.partenaires}
             precision="Fiches renseignées"
             icone={Store}
-            teinte="var(--chart-4)"
+            teinte="var(--c-lime)"
+            index={3}
           />
         </div>
 
         <Bloc
           titre="Évolution de l'activité"
+            icone={TrendingUp}
+            teinte="var(--c-blue)"
           sousTitre={`Inscriptions, publications et retours, mois par mois sur ${rapport.periode.mois} mois.`}
           large
         >
@@ -712,9 +803,9 @@ export default function StatistiquesPage() {
               <defs>
                 {(
                   [
-                    ["inscriptions", "var(--chart-2)"],
-                    ["publications", "var(--chart-3)"],
-                    ["retours", "var(--chart-5)"],
+                    ["inscriptions", "var(--c-blue)"],
+                    ["publications", "var(--c-emerald)"],
+                    ["retours", "var(--c-orange)"],
                   ] as const
                 ).map(([cle, couleur]) => (
                   <linearGradient
@@ -731,7 +822,7 @@ export default function StatistiquesPage() {
                 ))}
               </defs>
               <CartesianGrid
-                strokeDasharray="3 3"
+                strokeDasharray="4 4"
                 stroke="var(--border)"
                 vertical={false}
               />
@@ -746,25 +837,28 @@ export default function StatistiquesPage() {
                 type="monotone"
                 dataKey="inscriptions"
                 name="Inscriptions"
-                stroke="var(--chart-2)"
-                strokeWidth={2}
+                stroke="var(--c-blue)"
+                strokeWidth={2.5}
                 fill="url(#degrade-inscriptions)"
+                activeDot={{ r: 5, strokeWidth: 2, stroke: "var(--card)" }}
               />
               <Area
                 type="monotone"
                 dataKey="publications"
                 name="Offres publiées"
-                stroke="var(--chart-3)"
-                strokeWidth={2}
+                stroke="var(--c-emerald)"
+                strokeWidth={2.5}
                 fill="url(#degrade-publications)"
+                activeDot={{ r: 5, strokeWidth: 2, stroke: "var(--card)" }}
               />
               <Area
                 type="monotone"
                 dataKey="retours"
                 name="Retours"
-                stroke="var(--chart-5)"
-                strokeWidth={2}
+                stroke="var(--c-orange)"
+                strokeWidth={2.5}
                 fill="url(#degrade-retours)"
+                activeDot={{ r: 5, strokeWidth: 2, stroke: "var(--card)" }}
               />
             </AreaChart>
           </ResponsiveContainer>
@@ -773,6 +867,8 @@ export default function StatistiquesPage() {
         <div className="grid gap-4 lg:grid-cols-2">
           <Bloc
             titre="Répartition des comptes"
+            icone={Users}
+            teinte="var(--c-blue)"
             sousTitre={`Par rôle. ${baseLisible(totalRoles, "comptes")}`}
           >
             <ResponsiveContainer width="100%" height={240}>
@@ -804,6 +900,8 @@ export default function StatistiquesPage() {
 
           <Bloc
             titre="Offres par état de validation"
+            icone={ShieldCheck}
+            teinte="var(--c-amber)"
             sousTitre="Les offres des partenaires passent par une relecture avant publication."
           >
             <ResponsiveContainer width="100%" height={240}>
@@ -812,7 +910,7 @@ export default function StatistiquesPage() {
                 margin={{ top: 8, right: 8, left: -18, bottom: 0 }}
               >
                 <CartesianGrid
-                  strokeDasharray="3 3"
+                  strokeDasharray="4 4"
                   stroke="var(--border)"
                   vertical={false}
                 />
@@ -837,6 +935,8 @@ export default function StatistiquesPage() {
 
           <Bloc
             titre="Offres par type"
+            icone={Layers}
+            teinte="var(--c-emerald)"
             sousTitre={`Toutes périodes confondues. ${baseLisible(totalTypes, "offres")}`}
           >
             <ResponsiveContainer width="100%" height={Math.max(200, parType.length * 34)}>
@@ -846,7 +946,7 @@ export default function StatistiquesPage() {
                 margin={{ top: 4, right: 16, left: 8, bottom: 4 }}
               >
                 <CartesianGrid
-                  strokeDasharray="3 3"
+                  strokeDasharray="4 4"
                   stroke="var(--border)"
                   horizontal={false}
                 />
@@ -879,6 +979,8 @@ export default function StatistiquesPage() {
 
           <Bloc
             titre="Secteurs les plus représentés"
+            icone={Briefcase}
+            teinte="var(--c-teal)"
             sousTitre={`Les huit premiers. ${baseLisible(totalSecteurs, "offres dont le secteur est renseigné")}`}
           >
             <ResponsiveContainer width="100%" height={Math.max(200, parSecteur.length * 34)}>
@@ -888,7 +990,7 @@ export default function StatistiquesPage() {
                 margin={{ top: 4, right: 16, left: 8, bottom: 4 }}
               >
                 <CartesianGrid
-                  strokeDasharray="3 3"
+                  strokeDasharray="4 4"
                   stroke="var(--border)"
                   horizontal={false}
                 />
@@ -907,7 +1009,7 @@ export default function StatistiquesPage() {
                 <Bar
                   dataKey="valeur"
                   name="Offres"
-                  fill="var(--chart-3)"
+                  fill="var(--c-teal)"
                   radius={[0, 6, 6, 0]}
                 >
                   <LabelList position="right" content={etiquetteBarre(parSecteur)} />
@@ -918,6 +1020,8 @@ export default function StatistiquesPage() {
 
           <Bloc
             titre="Répartition par sexe"
+            icone={PieIcone}
+            teinte="var(--c-orange)"
             sousTitre={`Déclaré à l'inscription. ${baseLisible(totalSexe, "comptes")}`}
           >
             <ResponsiveContainer width="100%" height={240}>
@@ -952,6 +1056,8 @@ export default function StatistiquesPage() {
 
           <Bloc
             titre="Tranches d'âge"
+            icone={CalendarDays}
+            teinte="var(--c-sky)"
             sousTitre={`${baseLisible(totalAge, "membres ayant renseigné leur date de naissance")}`}
           >
             <ResponsiveContainer width="100%" height={240}>
@@ -960,7 +1066,7 @@ export default function StatistiquesPage() {
                 margin={{ top: 8, right: 8, left: -18, bottom: 0 }}
               >
                 <CartesianGrid
-                  strokeDasharray="3 3"
+                  strokeDasharray="4 4"
                   stroke="var(--border)"
                   vertical={false}
                 />
@@ -970,7 +1076,7 @@ export default function StatistiquesPage() {
                 <Bar
                   dataKey="valeur"
                   name="Membres"
-                  fill="var(--chart-1)"
+                  fill="var(--c-sky)"
                   radius={[6, 6, 0, 0]}
                 >
                   <LabelList
@@ -987,6 +1093,8 @@ export default function StatistiquesPage() {
 
           <Bloc
             titre="Statut professionnel"
+            icone={GraduationCap}
+            teinte="var(--c-indigo)"
             sousTitre={`Situation déclarée. ${baseLisible(totalStatutPro, "membres")}`}
           >
             <ResponsiveContainer
@@ -999,7 +1107,7 @@ export default function StatistiquesPage() {
                 margin={{ top: 4, right: 16, left: 8, bottom: 4 }}
               >
                 <CartesianGrid
-                  strokeDasharray="3 3"
+                  strokeDasharray="4 4"
                   stroke="var(--border)"
                   horizontal={false}
                 />
@@ -1027,6 +1135,8 @@ export default function StatistiquesPage() {
 
           <Bloc
             titre="Situation de handicap"
+            icone={Accessibility}
+            teinte="var(--c-cyan)"
             sousTitre="Déclaration facultative, utile au suivi de l'inclusion."
           >
             <div className="flex h-[240px] flex-col justify-center gap-4">
@@ -1035,8 +1145,8 @@ export default function StatistiquesPage() {
                   className="grid size-11 shrink-0 place-items-center rounded-xl"
                   style={{
                     background:
-                      "color-mix(in oklch, var(--chart-4) 13%, transparent)",
-                    color: "var(--chart-4)",
+                      "color-mix(in oklch, var(--c-cyan) 14%, transparent)",
+                    color: "var(--c-cyan)",
                   }}
                 >
                   <Accessibility className="size-5" aria-hidden />
@@ -1060,7 +1170,7 @@ export default function StatistiquesPage() {
                     className="block h-full rounded-full transition-[width] duration-700"
                     style={{
                       width: `${Math.max(2, partHandicap)}%`,
-                      background: "var(--chart-4)",
+                      background: "var(--c-cyan)",
                     }}
                   />
                 </span>
@@ -1074,6 +1184,8 @@ export default function StatistiquesPage() {
 
           <Bloc
             titre="Répartition géographique"
+            icone={MapPin}
+            teinte="var(--c-teal)"
             sousTitre="Domicile déclaré par les membres, par région."
             large
           >
@@ -1085,6 +1197,8 @@ export default function StatistiquesPage() {
 
           <Bloc
             titre="Départements"
+            icone={MapIcone}
+            teinte="var(--c-sky)"
             sousTitre={`Les dix premiers. ${baseLisible(totalDepartements, "membres localisés")}`}
           >
             <ResponsiveContainer
@@ -1097,7 +1211,7 @@ export default function StatistiquesPage() {
                 margin={{ top: 4, right: 16, left: 8, bottom: 4 }}
               >
                 <CartesianGrid
-                  strokeDasharray="3 3"
+                  strokeDasharray="4 4"
                   stroke="var(--border)"
                   horizontal={false}
                 />
@@ -1116,7 +1230,7 @@ export default function StatistiquesPage() {
                 <Bar
                   dataKey="valeur"
                   name="Membres"
-                  fill="var(--chart-4)"
+                  fill="var(--c-blue)"
                   radius={[0, 6, 6, 0]}
                 >
                   <LabelList position="right" content={etiquetteBarre(departements)} />
@@ -1128,6 +1242,8 @@ export default function StatistiquesPage() {
 
         <Bloc
           titre="Engagement sur la période"
+            icone={Heart}
+            teinte="var(--c-rose)"
           sousTitre={`Gestes des membres sur ${rapport.periode.mois} mois.`}
           large
         >
@@ -1136,27 +1252,49 @@ export default function StatistiquesPage() {
               {
                 label: "Retours déposés",
                 valeur: rapport.engagement.retoursPeriode,
+                icone: MessageSquare,
+                teinte: "var(--c-orange)",
               },
               {
                 label: "Offres aimées",
                 valeur: rapport.engagement.likesPeriode,
+                icone: ThumbsUp,
+                teinte: "var(--c-sky)",
               },
               {
                 label: "Offres mises en favori",
                 valeur: rapport.engagement.favorisPeriode,
+                icone: Star,
+                teinte: "var(--c-amber)",
               },
               {
                 label: "Offres publiées",
                 valeur: rapport.engagement.publicationsPeriode,
+                icone: Briefcase,
+                teinte: "var(--c-emerald)",
               },
             ].map((ligne) => (
-              <div key={ligne.label} className="rounded-xl bg-muted/50 p-4">
-                <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  {ligne.label}
-                </dt>
-                <dd className="mt-1 text-2xl font-bold tabular-nums">
-                  {formatNumber(ligne.valeur)}
-                </dd>
+              <div
+                key={ligne.label}
+                className="flex items-center gap-3 rounded-2xl border bg-background/60 p-4"
+              >
+                <span
+                  className="grid size-10 shrink-0 place-items-center rounded-xl"
+                  style={{
+                    background: `color-mix(in oklch, ${ligne.teinte} 14%, transparent)`,
+                    color: ligne.teinte,
+                  }}
+                >
+                  <ligne.icone className="size-5" aria-hidden />
+                </span>
+                <div className="min-w-0">
+                  <dd className="text-2xl font-extrabold leading-none tabular-nums">
+                    {formatNumber(ligne.valeur)}
+                  </dd>
+                  <dt className="mt-1 truncate text-xs text-muted-foreground">
+                    {ligne.label}
+                  </dt>
+                </div>
               </div>
             ))}
           </dl>
@@ -1165,16 +1303,31 @@ export default function StatistiquesPage() {
         {stats && stats.topOffres.length > 0 ? (
           <Bloc
             titre="Offres les plus commentées"
+            icone={MessageSquare}
+            teinte="var(--c-orange)"
             sousTitre="Celles qui suscitent le plus de retours."
             large
           >
-            <ol className="space-y-2">
+            <ol className="grid gap-2 md:grid-cols-2">
               {stats.topOffres.map((offre, rang) => (
                 <li
                   key={offre.id}
-                  className="flex items-center gap-3 rounded-xl border px-4 py-2.5"
+                  className="flex items-center gap-3 rounded-2xl border bg-background/60 px-4 py-2.5 transition-colors hover:bg-muted/50"
                 >
-                  <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-muted text-xs font-bold tabular-nums">
+                  <span
+                    className={`grid size-7 shrink-0 place-items-center rounded-lg text-xs font-bold tabular-nums ${
+                      rang < 3 ? "text-white" : "bg-muted text-muted-foreground"
+                    }`}
+                    style={
+                      rang < 3
+                        ? {
+                            background: ["var(--c-amber)", "var(--c-sky)", "var(--c-orange)"][
+                              rang
+                            ],
+                          }
+                        : undefined
+                    }
+                  >
                     {rang + 1}
                   </span>
                   <div className="min-w-0 flex-1">

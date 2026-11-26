@@ -4,12 +4,11 @@ import Link from "next/link";
 import { ArrowLeft, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ConsoleHeader } from "@/components/admin/console-header";
-import { FormShell } from "@/components/shared/form-shell";
 import { TypeOffreForm } from "@/components/admin/type-offre-form";
 
 export default function NouveauTypeOffrePage() {
   return (
-    <FormShell>
+    <div className="mx-auto w-full max-w-6xl">
       <Button
         variant="ghost"
         size="sm"
@@ -22,12 +21,11 @@ export default function NouveauTypeOffrePage() {
 
       <ConsoleHeader
         icon={Layers}
-        teinte="var(--chart-4)"
         title="Nouveau type d'offre"
-        description="Définissez le nom du type et les informations demandées lors de la publication."
+        description="Définissez le nom du type et les informations demandées lors de la publication. L'aperçu se met à jour au fil de la saisie."
       />
 
       <TypeOffreForm />
-    </FormShell>
+    </div>
   );
 }
