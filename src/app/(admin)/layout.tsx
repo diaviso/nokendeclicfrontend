@@ -11,7 +11,7 @@ export default function AdminLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <ConsoleShell>
-      <div id="contenu">{children}</div>
+      <>{children}</>
     </ConsoleShell>
   );
 }

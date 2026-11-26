@@ -216,7 +216,19 @@ export function ConsolePastille({
   );
 }
 
-/** Pagination compacte, affichée seulement au-delà d'une page. */
+/** Pages à afficher : la première, la dernière et les voisines de la courante. */
+function pagesVisibles(page: number, total: number): (number | "…")[] {
+  const pages = new Set([1, total, page - 1, page, page + 1]);
+  const triees = [...pages].filter((p) => p >= 1 && p <= total).sort((a, b) => a - b);
+  const resultat: (number | "…")[] = [];
+  triees.forEach((p, index) => {
+    if (index > 0 && p - triees[index - 1] > 1) resultat.push("…");
+    resultat.push(p);
+  });
+  return resultat;
+}
+
+/** Pagination numérotée, affichée seulement au-delà d'une page. */
 export function ConsolePagination({
   page,
   total,
@@ -231,30 +243,54 @@ export function ConsolePagination({
   return (
     <nav
       aria-label="Pagination"
-      className="mt-4 flex items-center justify-center gap-2"
+      className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-card px-3 py-2 shadow-sm"
     >
-      <Button
-        variant="outline"
-        size="sm"
-        className="rounded-lg"
-        disabled={page <= 1}
-        onClick={() => onChange(Math.max(1, page - 1))}
-      >
-        Précédent
-      </Button>
-      <span className="px-2 text-sm tabular-nums text-muted-foreground">
+      <span className="px-1 text-xs tabular-nums text-muted-foreground">
         Page <span className="font-semibold text-foreground">{page}</span> sur{" "}
-        {total}
+        <span className="font-semibold text-foreground">{total}</span>
       </span>
-      <Button
-        variant="outline"
-        size="sm"
-        className="rounded-lg"
-        disabled={page >= total}
-        onClick={() => onChange(page + 1)}
-      >
-        Suivant
-      </Button>
+      <div className="flex items-center gap-1">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="rounded-lg"
+          disabled={page <= 1}
+          onClick={() => onChange(Math.max(1, page - 1))}
+        >
+          Précédent
+        </Button>
+        {pagesVisibles(page, total).map((entree, index) =>
+          entree === "…" ? (
+            <span key={`e-${index}`} className="px-1 text-sm text-muted-foreground">
+              …
+            </span>
+          ) : (
+            <button
+              key={entree}
+              type="button"
+              onClick={() => onChange(entree)}
+              aria-current={entree === page ? "page" : undefined}
+              className={cn(
+                "hidden h-8 min-w-8 rounded-lg px-2 text-sm font-semibold tabular-nums transition-colors sm:block",
+                entree === page
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground",
+              )}
+            >
+              {entree}
+            </button>
+          ),
+        )}
+        <Button
+          variant="ghost"
+          size="sm"
+          className="rounded-lg"
+          disabled={page >= total}
+          onClick={() => onChange(page + 1)}
+        >
+          Suivant
+        </Button>
+      </div>
     </nav>
   );
 }

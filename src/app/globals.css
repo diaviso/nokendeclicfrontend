@@ -135,6 +135,20 @@
   --chart-4: oklch(0.6 0.15 30);
   --chart-5: oklch(0.72 0.14 200);
 
+  /* Palette de la console : une teinte franche par rubrique. */
+  --c-indigo: oklch(0.58 0.21 275);
+  --c-violet: oklch(0.6 0.22 300);
+  --c-fuchsia: oklch(0.62 0.24 330);
+  --c-rose: oklch(0.63 0.21 10);
+  --c-orange: oklch(0.68 0.18 45);
+  --c-amber: oklch(0.74 0.16 75);
+  --c-lime: oklch(0.7 0.18 130);
+  --c-emerald: oklch(0.64 0.16 160);
+  --c-teal: oklch(0.64 0.12 185);
+  --c-cyan: oklch(0.68 0.13 215);
+  --c-sky: oklch(0.64 0.17 240);
+  --c-blue: oklch(0.58 0.2 258);
+
   --radius: 0.5rem;
 
   --sidebar: oklch(0.988 0.002 285);
@@ -181,6 +195,19 @@
   --chart-3: oklch(0.7 0.15 149);
   --chart-4: oklch(0.68 0.14 30);
   --chart-5: oklch(0.76 0.12 200);
+
+  --c-indigo: oklch(0.7 0.17 275);
+  --c-violet: oklch(0.72 0.17 300);
+  --c-fuchsia: oklch(0.74 0.19 330);
+  --c-rose: oklch(0.72 0.18 10);
+  --c-orange: oklch(0.76 0.15 45);
+  --c-amber: oklch(0.8 0.14 75);
+  --c-lime: oklch(0.8 0.17 130);
+  --c-emerald: oklch(0.75 0.14 160);
+  --c-teal: oklch(0.76 0.11 185);
+  --c-cyan: oklch(0.78 0.11 215);
+  --c-sky: oklch(0.75 0.14 240);
+  --c-blue: oklch(0.72 0.15 258);
 
   --sidebar: oklch(0.185 0.005 285);
   --sidebar-foreground: oklch(0.96 0.002 285);

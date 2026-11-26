@@ -86,7 +86,7 @@ export function ConsoleTable<T>({
        * appartient à la fois à l'en-tête et à la première ligne, et se détache de
        * l'en-tête dès qu'il se décolle.
        */}
-      <div className="hidden rounded-2xl border bg-card shadow-sm md:block">
+      <div className="hidden rounded-2xl border bg-card shadow-sm shadow-black/[0.03] md:block">
         {/*
          * `table-fixed` : les largeurs viennent des colonnes déclarées, pas du
          * contenu. Sans lui, un titre d'offre de cent caractères élargit la
@@ -101,7 +101,7 @@ export function ConsoleTable<T>({
                   key={colonne.cle}
                   scope="col"
                   className={cn(
-                    "border-b bg-muted/85 px-4 py-3 text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground backdrop-blur",
+                    "border-b bg-muted/90 px-4 py-3 text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground backdrop-blur-md",
                     colonne.align === "right" ? "text-right" : "text-left",
                     colonne.secondaire && "hidden lg:table-cell",
                     indexColonne === 0 && "rounded-tl-2xl",
@@ -138,7 +138,7 @@ export function ConsoleTable<T>({
                         !derniere && "border-b",
                         colonne.align === "right" && "text-right",
                         colonne.secondaire && "hidden lg:table-cell",
-                        onLigneClick && "group-hover:bg-muted/50",
+                        onLigneClick ? "group-hover:bg-primary/[0.04]" : "group-hover:bg-muted/30",
                         colonne.className,
                       )}
                     >

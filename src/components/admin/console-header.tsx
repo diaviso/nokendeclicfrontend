@@ -1,23 +1,22 @@
+"use client";
+
+import { usePathname } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
+import { consoleItemActif } from "@/lib/console-nav";
 import { cn } from "@/lib/utils";
 import { formatNumber } from "@/lib/format";
 
 /**
  * En-tête d'une page de la console.
  *
- * Plus resserré que celui de l'espace membre : en administration, l'écran sert
- * à travailler des listes, et chaque ligne gagnée en haut est une ligne de
- * données visible sans défiler. La teinte de la rubrique porte l'identité — la
- * même que celle de l'onglet qui a mené ici.
- *
- * Les mesures sont posées dans l'en-tête plutôt que dans des tuiles séparées :
- * ce sont des repères de lecture (« combien y en a-t-il ? »), pas des
- * indicateurs à surveiller, et elles n'ont pas à occuper une bande entière.
+ * Un bandeau lavé de la teinte de la rubrique — la même que dans la barre
+ * latérale, ce qui relie le menu à la page qu'il ouvre — et, dessous, les
+ * mesures de la page en petites tuiles colorées.
  */
 export interface MesureConsole {
   label: string;
   valeur: number | string;
-  /** Teinte du point ; à défaut, la mesure reste neutre. */
+  /** Teinte de la tuile ; à défaut, la mesure reste neutre. */
   teinte?: string;
 }
 
@@ -25,7 +24,7 @@ export function ConsoleHeader({
   title,
   description,
   icon: Icon,
-  teinte = "var(--chart-1)",
+  teinte: teinteDemandee,
   mesures,
   actions,
   className,
@@ -38,82 +37,65 @@ export function ConsoleHeader({
   actions?: React.ReactNode;
   className?: string;
 }) {
+  const pathname = usePathname();
+  // La teinte de la rubrique prime : le menu et la page parlent la même
+  // couleur. Hors rubrique connue, celle demandée par la page.
+  const teinte =
+    consoleItemActif(pathname)?.teinte ?? teinteDemandee ?? "var(--c-indigo)";
+
   return (
     <header
       className={cn(
-        "relative mb-5 overflow-hidden rounded-2xl border bg-card",
+        "entree relative mb-6 overflow-hidden rounded-3xl border bg-card shadow-sm",
         className,
       )}
     >
-      {/* Bande de teinte : elle identifie la rubrique sans colorer le fond,
-          qui doit rester neutre pour que les statuts se détachent. */}
+      {/* Lavis de couleur et motif : donnent l'identité de la rubrique. */}
       <span
         aria-hidden
-        className="absolute inset-x-0 top-0 h-1"
+        className="pointer-events-none absolute inset-0"
         style={{
-          background: `linear-gradient(90deg, ${teinte}, color-mix(in oklch, ${teinte} 25%, transparent))`,
+          background: `linear-gradient(115deg, color-mix(in oklch, ${teinte} 16%, transparent) 0%, color-mix(in oklch, ${teinte} 5%, transparent) 45%, transparent 75%)`,
         }}
       />
       <span
         aria-hidden
-        className="pointer-events-none absolute -right-20 -top-24 size-64 rounded-full opacity-[0.07] blur-3xl"
+        className="pointer-events-none absolute -right-16 -top-24 size-72 rounded-full opacity-20 blur-3xl"
         style={{ background: teinte }}
       />
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-y-0 right-0 hidden w-1/2 opacity-[0.5] md:block"
+        style={{
+          backgroundImage: `radial-gradient(color-mix(in oklch, ${teinte} 30%, transparent) 1px, transparent 1px)`,
+          backgroundSize: "18px 18px",
+          maskImage: "linear-gradient(90deg, transparent, black 70%)",
+          WebkitMaskImage: "linear-gradient(90deg, transparent, black 70%)",
+        }}
+      />
 
-      <div className="relative flex flex-col gap-4 p-5 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex min-w-0 items-start gap-3.5">
+      <div className="relative flex flex-col gap-5 p-5 sm:p-6 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex min-w-0 items-start gap-4">
           {Icon ? (
             <span
-              className="grid size-11 shrink-0 place-items-center rounded-xl"
+              className="grid size-13 shrink-0 place-items-center rounded-2xl text-white"
               style={{
-                background: `color-mix(in oklch, ${teinte} 12%, transparent)`,
-                color: teinte,
-                // Le filet est posé en ombre interne plutôt qu'en `ring` : la
-                // teinte est calculée à l'exécution, et Tailwind ne peut pas
-                // générer une classe d'anneau à partir d'une valeur inconnue
-                // à la compilation.
-                boxShadow: `inset 0 0 0 1px color-mix(in oklch, ${teinte} 22%, transparent)`,
+                background: `linear-gradient(135deg, ${teinte}, color-mix(in oklch, ${teinte} 65%, black))`,
+                boxShadow: `0 10px 24px -8px color-mix(in oklch, ${teinte} 75%, transparent)`,
               }}
             >
-              <Icon className="size-5.5" aria-hidden />
+              <Icon className="size-6" aria-hidden />
             </span>
           ) : null}
 
           <div className="min-w-0">
-            <h1 className="text-xl font-bold tracking-tight sm:text-2xl">
+            <h1 className="text-2xl font-extrabold tracking-tight sm:text-[1.7rem]">
               {title}
             </h1>
             {description ? (
               <p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted-foreground">
                 {description}
               </p>
-            ) : null}
-
-            {mesures?.length ? (
-              <dl className="mt-3.5 flex flex-wrap items-center gap-x-5 gap-y-2">
-                {mesures.map((mesure) => (
-                  <div
-                    key={mesure.label}
-                    className="flex items-baseline gap-1.5"
-                  >
-                    <span
-                      aria-hidden
-                      className="size-1.5 shrink-0 translate-y-[-1px] rounded-full"
-                      style={{
-                        background: mesure.teinte ?? "var(--muted-foreground)",
-                      }}
-                    />
-                    <dd className="text-sm font-bold tabular-nums">
-                      {typeof mesure.valeur === "number"
-                        ? formatNumber(mesure.valeur)
-                        : mesure.valeur}
-                    </dd>
-                    <dt className="text-xs text-muted-foreground">
-                      {mesure.label}
-                    </dt>
-                  </div>
-                ))}
-              </dl>
             ) : null}
           </div>
         </div>
@@ -124,6 +106,39 @@ export function ConsoleHeader({
           </div>
         ) : null}
       </div>
+
+      {mesures?.length ? (
+        <dl className="relative flex flex-wrap gap-px border-t bg-border/60">
+          {mesures.map((mesure) => {
+            const couleur = mesure.teinte ?? "var(--muted-foreground)";
+            return (
+              <div
+                key={mesure.label}
+                className="flex min-w-0 grow basis-[calc(50%-1px)] items-center gap-3 bg-card/90 px-5 py-3.5 backdrop-blur sm:basis-[calc(33.333%-1px)] lg:basis-0"
+              >
+                <span
+                  aria-hidden
+                  className="h-8 w-1 shrink-0 rounded-full"
+                  style={{ background: couleur }}
+                />
+                <div className="min-w-0">
+                  <dd
+                    className="text-xl font-extrabold leading-none tabular-nums"
+                    style={mesure.teinte ? { color: couleur } : undefined}
+                  >
+                    {typeof mesure.valeur === "number"
+                      ? formatNumber(mesure.valeur)
+                      : mesure.valeur}
+                  </dd>
+                  <dt className="mt-1 truncate text-xs text-muted-foreground">
+                    {mesure.label}
+                  </dt>
+                </div>
+              </div>
+            );
+          })}
+        </dl>
+      ) : null}
     </header>
   );
 }
