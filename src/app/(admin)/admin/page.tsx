@@ -51,14 +51,14 @@ import { cn } from "@/lib/utils";
 import type { Role, StatutProfessionnel } from "@/lib/types";
 
 const COULEURS_SEXE = [
-  "var(--c-sky)",
-  "var(--c-fuchsia)",
-  "var(--c-amber)",
+  "var(--c-blue)",
+  "var(--c-orange)",
+  "var(--c-teal)",
   "var(--muted-foreground)",
 ];
 
 const COULEURS_ROLE: Record<Role, string> = {
-  MEMBRE: "var(--c-violet)",
+  MEMBRE: "var(--c-blue)",
   PARTENAIRE: "var(--c-orange)",
   ADMIN: "var(--c-cyan)",
 };
@@ -71,10 +71,10 @@ const STATUT_MODERATION: Record<string, { libelle: string; couleur: string }> = 
 
 /** Séries de la courbe d'activité. */
 const SERIES = [
-  { cle: "inscriptions", libelle: "Inscriptions", couleur: "var(--c-violet)" },
+  { cle: "inscriptions", libelle: "Inscriptions", couleur: "var(--c-blue)" },
   { cle: "publications", libelle: "Publications", couleur: "var(--c-emerald)" },
   { cle: "retours", libelle: "Retours", couleur: "var(--c-orange)" },
-  { cle: "favoris", libelle: "Favoris", couleur: "var(--c-fuchsia)" },
+  { cle: "favoris", libelle: "Favoris", couleur: "var(--c-amber)" },
   { cle: "likes", libelle: "J'aime", couleur: "var(--c-sky)" },
 ] as const;
 
@@ -616,18 +616,18 @@ export default function AdminDashboardPage() {
   return (
     <>
       {/* Accueil */}
-      <section className="entree relative mb-6 overflow-hidden rounded-3xl p-6 text-white shadow-xl shadow-indigo-950/10 sm:p-8">
+      <section className="entree relative mb-6 overflow-hidden rounded-3xl p-6 text-white shadow-lg shadow-black/5 sm:p-8">
         <span
           aria-hidden
           className="absolute inset-0"
           style={{
             background:
-              "linear-gradient(125deg, oklch(0.42 0.2 278) 0%, oklch(0.48 0.22 300) 40%, oklch(0.58 0.22 340) 75%, oklch(0.68 0.18 40) 100%)",
+              "linear-gradient(125deg, oklch(0.32 0.06 255) 0%, oklch(0.4 0.1 252) 60%, oklch(0.48 0.12 248) 100%)",
           }}
         />
         <span
           aria-hidden
-          className="absolute inset-0 opacity-30"
+          className="absolute inset-0 opacity-20"
           style={{
             backgroundImage:
               "radial-gradient(oklch(1 0 0 / 0.25) 1px, transparent 1px)",
@@ -638,11 +638,11 @@ export default function AdminDashboardPage() {
         />
         <span
           aria-hidden
-          className="absolute -right-10 -top-20 size-72 rounded-full bg-white/15 blur-3xl"
+          className="absolute -right-10 -top-20 size-72 rounded-full bg-white/8 blur-3xl"
         />
         <span
           aria-hidden
-          className="absolute -bottom-28 left-1/3 size-72 rounded-full bg-[var(--c-cyan)] opacity-30 blur-3xl"
+          className="absolute -bottom-28 left-1/3 size-72 rounded-full bg-[var(--c-sky)] opacity-15 blur-3xl"
         />
 
         <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
@@ -653,7 +653,7 @@ export default function AdminDashboardPage() {
             </p>
             <h1 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">
               {salutation()}
-              {user?.firstName ? `, ${user.firstName}` : ""} 👋
+              {user?.firstName ? `, ${user.firstName}` : ""}
             </h1>
             <p className="mt-2 text-pretty text-white/85">
               {aTraiter.total > 0 ? (
@@ -684,7 +684,7 @@ export default function AdminDashboardPage() {
             ))}
             <Link
               href="/admin/statistiques"
-              className="flex items-center gap-2 rounded-xl bg-white px-3.5 py-2 text-sm font-bold text-[oklch(0.42_0.2_278)] shadow-lg transition-all hover:-translate-y-0.5"
+              className="flex items-center gap-2 rounded-xl bg-white px-3.5 py-2 text-sm font-bold text-[oklch(0.36_0.08_255)] shadow-lg transition-all hover:-translate-y-0.5"
             >
               <BarChart3 className="size-4" aria-hidden />
               Rapport complet
@@ -707,7 +707,7 @@ export default function AdminDashboardPage() {
               valeur={stats?.totals.users ?? 0}
               variation={stats?.thisMonth.newUsers}
               icone={Users}
-              teinte="var(--c-violet)"
+              teinte="var(--c-blue)"
               href="/admin/utilisateurs"
               tendance={tendance("inscriptions")}
             />
@@ -883,7 +883,7 @@ export default function AdminDashboardPage() {
               className="group rounded-2xl p-4 text-white shadow-md transition-transform hover:-translate-y-0.5"
               style={{
                 background:
-                  "linear-gradient(135deg, var(--c-amber), var(--c-orange))",
+                  "var(--c-amber)",
               }}
             >
               <ShieldCheck className="size-5 opacity-90" aria-hidden />
@@ -897,7 +897,7 @@ export default function AdminDashboardPage() {
               className="group rounded-2xl p-4 text-white shadow-md transition-transform hover:-translate-y-0.5"
               style={{
                 background:
-                  "linear-gradient(135deg, var(--c-rose), var(--c-fuchsia))",
+                  "var(--c-rose)",
               }}
             >
               <MessageCircle className="size-5 opacity-90" aria-hidden />
@@ -1070,7 +1070,7 @@ export default function AdminDashboardPage() {
               <BarChart data={parAge} margin={{ left: -20 }}>
                 <defs>
                   <linearGradient id="degrade-age" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--c-violet)" />
+                    <stop offset="0%" stopColor="var(--c-sky)" />
                     <stop offset="100%" stopColor="var(--c-indigo)" />
                   </linearGradient>
                 </defs>
@@ -1195,9 +1195,9 @@ export default function AdminDashboardPage() {
                           rang < 3
                             ? {
                                 background: [
-                                  "linear-gradient(135deg, var(--c-amber), var(--c-orange))",
-                                  "linear-gradient(135deg, var(--c-sky), var(--c-indigo))",
-                                  "linear-gradient(135deg, var(--c-orange), var(--c-rose))",
+                                  "var(--c-amber)",
+                                  "var(--c-sky)",
+                                  "var(--c-orange)",
                                 ][rang],
                               }
                             : undefined

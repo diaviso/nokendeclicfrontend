@@ -57,7 +57,7 @@ import type { User } from "@/lib/types";
 
 /** Fond de la barre latérale : identique dans les deux thèmes. */
 const FOND_LATERAL =
-  "linear-gradient(180deg, oklch(0.24 0.07 278) 0%, oklch(0.19 0.05 275) 45%, oklch(0.16 0.035 265) 100%)";
+  "linear-gradient(180deg, oklch(0.23 0.025 255) 0%, oklch(0.19 0.02 255) 100%)";
 
 const CLE_REPLI = "noken-console-replie";
 
@@ -187,7 +187,7 @@ export function ConsoleShell({ children }: { children: React.ReactNode }) {
       {/* Barre latérale fixe — grand écran */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 hidden flex-col text-white shadow-2xl shadow-indigo-950/20 transition-[width] duration-300 lg:flex print:hidden",
+          "fixed inset-y-0 left-0 z-40 hidden flex-col text-white shadow-xl shadow-black/10 transition-[width] duration-300 lg:flex print:hidden",
           replie ? "w-[4.75rem]" : "w-[17rem]",
         )}
         style={{ background: FOND_LATERAL }}
@@ -240,7 +240,7 @@ export function ConsoleShell({ children }: { children: React.ReactNode }) {
             className="absolute inset-x-0 top-0 h-[2px]"
             style={{
               background:
-                "linear-gradient(90deg, var(--c-indigo), var(--c-violet), var(--c-fuchsia), var(--c-orange), var(--c-amber), var(--c-emerald), var(--c-cyan))",
+                "var(--primary)",
             }}
           />
           <div className="flex h-16 items-center gap-2 px-3 sm:px-5">
@@ -473,13 +473,13 @@ function ContenuLateral({
       {/* Halos de couleur : donnent de la profondeur sans gêner la lecture. */}
       <span
         aria-hidden
-        className="pointer-events-none absolute -left-16 -top-20 size-56 rounded-full opacity-40 blur-3xl"
-        style={{ background: "var(--c-violet)" }}
+        className="pointer-events-none absolute -left-16 -top-20 size-56 rounded-full opacity-15 blur-3xl"
+        style={{ background: "var(--c-blue)" }}
       />
       <span
         aria-hidden
-        className="pointer-events-none absolute -bottom-24 -right-20 size-56 rounded-full opacity-25 blur-3xl"
-        style={{ background: "var(--c-cyan)" }}
+        className="pointer-events-none absolute -bottom-24 -right-20 size-56 rounded-full opacity-10 blur-3xl"
+        style={{ background: "var(--c-sky)" }}
       />
 
       {/* Marque */}
@@ -498,7 +498,7 @@ function ContenuLateral({
             height={28}
             className="size-7 object-contain"
           />
-          <span className="absolute -bottom-1 -right-1 grid size-4.5 place-items-center rounded-full bg-[var(--c-fuchsia)] ring-2 ring-[oklch(0.24_0.07_278)]">
+          <span className="absolute -bottom-1 -right-1 grid size-4.5 place-items-center rounded-full bg-primary ring-2 ring-[oklch(0.23_0.025_255)]">
             <ShieldCheck className="size-2.5 text-white" aria-hidden />
           </span>
         </span>
@@ -507,7 +507,7 @@ function ContenuLateral({
             <span className="block text-[15px] font-bold tracking-tight">
               Noken
             </span>
-            <span className="block bg-gradient-to-r from-[var(--c-cyan)] via-[var(--c-violet)] to-[var(--c-fuchsia)] bg-clip-text text-[11px] font-bold uppercase tracking-[0.2em] text-transparent">
+            <span className="block text-[11px] font-semibold uppercase tracking-[0.2em] text-white/50">
               Console admin
             </span>
           </span>
@@ -580,7 +580,6 @@ function ContenuLateral({
                           className="absolute -left-3 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full"
                           style={{
                             background: item.teinte,
-                            boxShadow: `0 0 12px ${item.teinte}`,
                           }}
                         />
                       ) : null}
@@ -593,9 +592,6 @@ function ContenuLateral({
                             ? item.teinte
                             : `color-mix(in oklch, ${item.teinte} 22%, transparent)`,
                           color: courant ? "white" : item.teinte,
-                          boxShadow: courant
-                            ? `0 4px 14px -2px color-mix(in oklch, ${item.teinte} 70%, transparent)`
-                            : undefined,
                         }}
                       >
                         <Icone className="size-4" aria-hidden />
@@ -631,9 +627,9 @@ function ContenuLateral({
         {!replie ? (
           <Link
             href="/dashboard"
-            className="mb-3 flex items-center gap-3 rounded-xl bg-gradient-to-br from-[var(--c-indigo)] to-[var(--c-fuchsia)] p-3 text-white shadow-lg shadow-black/20 transition-transform hover:-translate-y-0.5"
+            className="mb-3 flex items-center gap-3 rounded-xl bg-white/8 p-3 text-white ring-1 ring-inset ring-white/10 transition-colors hover:bg-white/12"
           >
-            <span className="grid size-8 place-items-center rounded-lg bg-white/20">
+            <span className="grid size-8 place-items-center rounded-lg bg-white/10">
               <Sparkles className="size-4" aria-hidden />
             </span>
             <span className="min-w-0 flex-1 leading-tight">
@@ -654,7 +650,7 @@ function ContenuLateral({
         >
           <Avatar className="size-9 ring-2 ring-white/15">
             <AvatarImage src={fileUrl(user.pictureUrl)} alt="" />
-            <AvatarFallback className="bg-gradient-to-br from-[var(--c-violet)] to-[var(--c-cyan)] text-xs font-bold text-white">
+            <AvatarFallback className="bg-primary text-xs font-bold text-primary-foreground">
               {initiale(user)}
             </AvatarFallback>
           </Avatar>
@@ -812,7 +808,7 @@ function MenuCompte({
       >
         <Avatar className="size-8">
           <AvatarImage src={fileUrl(user.pictureUrl)} alt="" />
-          <AvatarFallback className="bg-gradient-to-br from-[var(--c-violet)] to-[var(--c-cyan)] text-xs font-bold text-white">
+          <AvatarFallback className="bg-primary text-xs font-bold text-primary-foreground">
             {initiale(user)}
           </AvatarFallback>
         </Avatar>

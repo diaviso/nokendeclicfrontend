@@ -119,7 +119,7 @@ export const CONSOLE_GROUPES: ConsoleNavGroupe[] = [
         label: "Utilisateurs",
         href: "/admin/utilisateurs",
         icon: Users,
-        teinte: "var(--c-violet)",
+        teinte: "var(--c-blue)",
         resume: "Comptes, rôles et accès",
       },
       {
@@ -133,7 +133,7 @@ export const CONSOLE_GROUPES: ConsoleNavGroupe[] = [
         label: "Centres de formation",
         href: "/admin/centres",
         icon: School,
-        teinte: "var(--c-fuchsia)",
+        teinte: "var(--c-teal)",
         resume: "Centres et formations dispensées",
       },
       {
