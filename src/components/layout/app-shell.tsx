@@ -77,6 +77,16 @@ const CLE_REPLI = "noken-espace-replie";
 const teinteDe = (item?: NavItem) => item?.teinte ?? TEINTE_DEFAUT;
 
 /**
+ * Rubrique d'une page publique ouverte depuis l'espace : la fiche d'une offre
+ * relève de la recherche. Le préfixe de langue (`/en/…`) est ignoré.
+ */
+function cheminDeRubrique(pathname: string) {
+  const chemin = pathname.replace(/^\/(fr|en)(?=\/|$)/, "") || "/";
+  if (chemin.startsWith("/offres")) return "/recherche";
+  return chemin;
+}
+
+/**
  * Menu complet de l'utilisateur : sections de son rôle, plus les types de
  * partenaires créés dans la console (une entrée chacun, sans déploiement).
  */
@@ -85,6 +95,7 @@ function useSections(role?: Role): NavSection[] {
     queryKey: ["partenaires", "types"],
     queryFn: partenaireApi.types,
     staleTime: 10 * 60_000,
+    enabled: Boolean(role),
   });
 
   const sections = visibleSections(role);
@@ -148,9 +159,16 @@ const compteDe = (item: NavItem, compteurs: Compteurs) =>
 export function AppShell({
   children,
   requiredRole,
+  horsSession,
 }: {
   children: React.ReactNode;
   requiredRole?: Role;
+  /**
+   * Rendu sans session, pour une page publique : au lieu de renvoyer vers la
+   * connexion, la coquille s'efface et laisse la page dans son habillage
+   * public. Un visiteur, comme un moteur de recherche, ne voit rien changer.
+   */
+  horsSession?: React.ReactNode;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -219,6 +237,7 @@ export function AppShell({
   }, []);
 
   useEffect(() => {
+    if (horsSession !== undefined) return;
     if (denied) {
       router.replace("/dashboard");
       return;
@@ -230,7 +249,9 @@ export function AppShell({
     // casserait le prérendu de toutes les pages de l'espace connecté.
     const destination = window.location.pathname + window.location.search;
     router.replace(`/login?next=${encodeURIComponent(destination)}`);
-  }, [hasToken, isLoading, user, denied, router]);
+  }, [hasToken, isLoading, user, denied, router, horsSession]);
+
+  if (horsSession !== undefined && !user) return <>{horsSession}</>;
 
   if (isLoading || !user || denied) {
     return (
@@ -248,7 +269,7 @@ export function AppShell({
   }
 
   const tousItems = sections.flatMap((section) => section.items);
-  const actif = navItemActif(pathname, tousItems);
+  const actif = navItemActif(cheminDeRubrique(pathname), tousItems);
   const sectionActive = sections.find((section) =>
     section.items.some((item) => item.href === actif?.href),
   );
@@ -414,6 +435,7 @@ export function AppShell({
           {/* pb-20 laisse la place à la navigation basse mobile */}
           <main
             id="contenu"
+            data-espace
             className="mx-auto w-full max-w-[100rem] flex-1 px-4 pb-20 pt-5 sm:px-6 lg:px-8 lg:pb-10 print:max-w-none print:p-0"
           >
             {children}

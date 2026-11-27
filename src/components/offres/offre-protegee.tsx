@@ -1,10 +1,13 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useState, useSyncExternalStore } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import {
   CalendarClock,
   ExternalLink,
   FileText,
+  Heart,
   Loader2,
   LockKeyhole,
   Mail,
@@ -13,7 +16,7 @@ import {
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
-import { offresApi, tokenStore } from "@/lib/api";
+import { errorMessage, favoritesApi, offresApi, tokenStore } from "@/lib/api";
 import { champsRenseignes, formatValeurChamp } from "@/lib/type-offre";
 import { formatSalaryRange } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -32,13 +35,25 @@ import type { Offre } from "@/lib/types";
  * rien.
  */
 
+const sansAbonnement = () => () => {};
+
+/**
+ * Présence d'une session. Le rendu serveur n'en a jamais : la valeur vaut
+ * `false` à l'hydratation, puis la vraie valeur juste après. Lire le jeton
+ * directement au rendu faisait diverger le HTML du serveur et celui du
+ * navigateur, et React rejetait l'hydratation de toute la page.
+ */
+function useASession() {
+  return useSyncExternalStore(
+    sansAbonnement,
+    () => Boolean(tokenStore.access),
+    () => false,
+  );
+}
+
 /** Une seule requête pour les deux blocs, grâce à la clé partagée. */
 function useOffreComplete(offreId: number) {
-  // Lu au rendu et non dans un effet : la présence d'un jeton ne change pas
-  // pendant la vie de la page, et un état supplémentaire ferait clignoter la
-  // porte de connexion avant l'affichage du contenu.
-  const aUneSession =
-    typeof window !== "undefined" && Boolean(tokenStore.access);
+  const aUneSession = useASession();
 
   const requete = useQuery({
     queryKey: ["offre", offreId, "complet"],
@@ -321,7 +336,7 @@ export function BarreCandidature({
           : t("joursRestants", { n: restants });
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[0_-8px_24px_-12px_rgb(0_0_0/0.25)] backdrop-blur lg:hidden">
+    <div className="barre-candidature fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[0_-8px_24px_-12px_rgb(0_0_0/0.25)] backdrop-blur lg:hidden">
       <div className="mx-auto flex max-w-5xl items-center gap-3">
         <p
           className={cn(
@@ -345,5 +360,71 @@ export function BarreCandidature({
         {action}
       </div>
     </div>
+  );
+}
+
+/**
+ * Mise en favori depuis la fiche. Sans session, le bouton mène à la
+ * connexion ; avec, il bascule le favori sur place.
+ */
+export function BoutonFavoriOffre({ offreId }: { offreId: number }) {
+  const t = useTranslations("offre");
+  const queryClient = useQueryClient();
+  const aUneSession = useASession();
+
+  const { data } = useQuery({
+    queryKey: ["favorites", offreId, "check"],
+    queryFn: () => favoritesApi.check(offreId),
+    enabled: aUneSession,
+  });
+  const [optimiste, setOptimiste] = useState<boolean | null>(null);
+  const actif = optimiste ?? data?.isFavorite ?? false;
+
+  const mutation = useMutation({
+    mutationFn: (prochain: boolean) =>
+      prochain ? favoritesApi.add(offreId) : favoritesApi.remove(offreId),
+    onSuccess: (_donnees, prochain) => {
+      void queryClient.invalidateQueries({ queryKey: ["favorites"] });
+      void queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      toast.success(prochain ? "Ajouté aux favoris" : "Retiré des favoris");
+    },
+    onError: (error) => {
+      setOptimiste(null);
+      toast.error("Action impossible", { description: errorMessage(error) });
+    },
+  });
+
+  if (!aUneSession) {
+    return (
+      <Button
+        variant="outline"
+        className="w-full rounded-xl"
+        render={<Link href={`/login?next=/offres/${offreId}`} />}
+      >
+        <Heart className="size-4" />
+        {t("favoris")}
+      </Button>
+    );
+  }
+
+  return (
+    <Button
+      variant="outline"
+      aria-pressed={actif}
+      disabled={mutation.isPending}
+      onClick={() => {
+        const prochain = !actif;
+        setOptimiste(prochain);
+        mutation.mutate(prochain);
+      }}
+      className={cn(
+        "w-full rounded-xl transition-colors",
+        actif &&
+          "border-[color-mix(in_oklch,var(--c-rose)_40%,transparent)] bg-[color-mix(in_oklch,var(--c-rose)_10%,transparent)] text-[var(--c-rose)] hover:bg-[color-mix(in_oklch,var(--c-rose)_16%,transparent)]",
+      )}
+    >
+      <Heart className={cn("size-4 transition-transform", actif && "scale-110 fill-current")} />
+      {actif ? "Dans mes favoris" : t("favoris")}
+    </Button>
   );
 }

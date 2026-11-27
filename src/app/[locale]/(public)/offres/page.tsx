@@ -167,7 +167,7 @@ export default async function OffresPage(props: {
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+    <div className="page-publique mx-auto max-w-6xl px-4 py-8 sm:px-6">
       {/* Dans la catégorie Formation, deux portes : les offres, ou les
           centres où se former. */}
       {typeDemande?.code === "FORMATION" ? (

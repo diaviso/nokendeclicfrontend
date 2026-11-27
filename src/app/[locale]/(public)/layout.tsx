@@ -5,6 +5,7 @@ import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { PublicActions } from "@/components/layout/public-actions";
 import { SelecteurLangue } from "@/components/layout/selecteur-langue";
 import { Link } from "@/i18n/navigation";
+import { BasculeEspace } from "@/components/layout/bascule-espace";
 
 export default async function PublicLayout({
   children,
@@ -17,7 +18,7 @@ export default async function PublicLayout({
   const t = await getTranslations("entete");
   const p = await getTranslations("pied");
 
-  return (
+  const publique = (
     <div className="flex min-h-dvh flex-col">
       <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
         <div className="mx-auto flex h-14 max-w-6xl items-center gap-4 px-4 sm:px-6">
@@ -130,4 +131,6 @@ export default async function PublicLayout({
       </footer>
     </div>
   );
+
+  return <BasculeEspace publique={publique}>{children}</BasculeEspace>;
 }

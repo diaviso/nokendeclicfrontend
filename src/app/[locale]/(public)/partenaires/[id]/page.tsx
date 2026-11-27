@@ -82,7 +82,7 @@ export default async function VitrinePartenairePage(props: {
   );
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+    <div className="page-publique mx-auto max-w-6xl px-4 py-8 sm:px-6">
       <Button
         variant="ghost"
         size="sm"

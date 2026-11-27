@@ -666,6 +666,21 @@
     }
   }
 
+  /*
+   * Page publique affichée dans l'espace membre : la coquille fournit déjà
+   * les marges, et la navigation basse occupe le bas de l'écran.
+   */
+  [data-espace] .page-publique {
+    max-width: 72rem;
+    padding-inline: 0;
+    padding-top: 0;
+  }
+  [data-espace] .barre-candidature {
+    bottom: calc(4rem + 1px + env(safe-area-inset-bottom));
+    padding-bottom: 0.75rem;
+    z-index: 30;
+  }
+
   .entree {
     animation: noken-entree 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards;
     animation-delay: calc(var(--i, 0) * 55ms);

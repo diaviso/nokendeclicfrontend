@@ -9,7 +9,6 @@ import {
   CalendarClock,
   Eye,
   FileText,
-  Heart,
   MapPin,
   Maximize2,
   Paperclip,
@@ -35,6 +34,7 @@ import {
 import {
   ActionsOffre,
   BarreCandidature,
+  BoutonFavoriOffre,
   CorpsOffre,
 } from "@/components/offres/offre-protegee";
 import { OffreCard } from "@/components/shared/offre-card";
@@ -235,7 +235,7 @@ export default async function OffreDetailPage(props: {
 
       <div
         data-rappel-profil
-        className="mx-auto max-w-5xl px-4 pt-8 pb-28 sm:px-6 lg:pb-8"
+        className="page-publique mx-auto max-w-5xl px-4 pt-8 pb-28 sm:px-6 lg:pb-8"
       >
         <Button
           variant="ghost"
@@ -247,9 +247,9 @@ export default async function OffreDetailPage(props: {
           Toutes les offres
         </Button>
 
-        <div className="grid gap-6 lg:grid-cols-[1fr_21rem]">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_21rem]">
           <div className="min-w-0">
-            <header className="overflow-hidden rounded-2xl border bg-card shadow-sm">
+            <header className="entree overflow-hidden rounded-3xl border bg-card shadow-sm">
               {/* Avec une couverture, l'image est montrée entière et le titre
                   passe dessous. La plupart des couvertures sont des affiches
                   pleines de texte : recadrées en bandeau, elles n'en gardaient
@@ -401,8 +401,16 @@ export default async function OffreDetailPage(props: {
               </div>
             </header>
 
-            <section className="mt-4 rounded-2xl border bg-card p-5 shadow-sm">
-              <h2 className="mb-3 text-sm font-bold uppercase tracking-wider text-muted-foreground">
+            <section
+              className="entree mt-4 rounded-3xl border bg-card p-5 shadow-sm sm:p-6"
+              style={{ "--i": 1 } as React.CSSProperties}
+            >
+              <h2 className="mb-4 flex items-center gap-2.5 text-sm font-bold uppercase tracking-wider text-muted-foreground">
+                <span
+                  aria-hidden
+                  className="h-4 w-1 rounded-full"
+                  style={{ background: style.teinte }}
+                />
                 {t("description")}
               </h2>
               {/* Mesure limitée à 68 caractères environ : au-delà, l'œil
@@ -424,7 +432,7 @@ export default async function OffreDetailPage(props: {
             />
 
             {offre.fichiers?.length ? (
-              <section className="mt-4 rounded-2xl border bg-card p-5 shadow-sm">
+              <section className="mt-4 rounded-3xl border bg-card p-5 shadow-sm">
                 <h2 className="mb-3 flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-muted-foreground">
                   <Paperclip className="size-4" aria-hidden />
                   Pièces jointes
@@ -452,14 +460,22 @@ export default async function OffreDetailPage(props: {
           </div>
 
           {/* Colonne latérale — récapitulatif et appel à l'action */}
-          <aside className="lg:sticky lg:top-20 lg:self-start">
-            <div className="rounded-2xl border bg-card p-5 shadow-sm">
+          <aside className="lg:sticky lg:top-[calc(var(--console-entete,3.5rem)+1.25rem)] lg:self-start">
+            <div
+              className="entree relative overflow-hidden rounded-3xl border bg-card p-5 shadow-sm"
+              style={{ "--i": 2 } as React.CSSProperties}
+            >
+              <span
+                aria-hidden
+                className="pointer-events-none absolute -right-16 -top-20 size-48 rounded-full opacity-15 blur-3xl"
+                style={{ background: style.teinte }}
+              />
               {/* Compte à rebours en tête de colonne : c'est l'information qui
                   décide de l'action, elle passe donc avant le récapitulatif. */}
               {remaining !== null ? (
                 <div
                   className={cn(
-                    "mb-5 flex items-center gap-3 rounded-xl border px-4 py-3",
+                    "relative mb-5 flex items-center gap-3 rounded-2xl border px-4 py-3",
                     remaining < 0
                       ? "bg-muted/50 text-muted-foreground"
                       : remaining === 0
@@ -491,7 +507,7 @@ export default async function OffreDetailPage(props: {
                 </div>
               ) : null}
 
-              <dl className="divide-y">
+              <dl className="relative divide-y">
                 <DetailRow
                   label={t("secteur")}
                   value={offre.secteur ? secteurLabel(offre.secteur) : null}
@@ -510,7 +526,7 @@ export default async function OffreDetailPage(props: {
                 />
               </dl>
 
-              <div className="mt-5 flex flex-col gap-2">
+              <div className="relative mt-5 flex flex-col gap-2">
                 <ActionsOffre apercu={offre} />
                 {/* Partager est proposé au même endroit que Postuler : c'est
                     là que la décision se prend, et une offre se transmet
@@ -522,14 +538,7 @@ export default async function OffreDetailPage(props: {
                   pleineLargeur
                 />
 
-                <Button
-                  variant="outline"
-                  className="w-full rounded-xl"
-                  render={<Link href={`/login?next=/offres/${offre.id}`} />}
-                >
-                  <Heart className="size-4" />
-                  {t("favoris")}
-                </Button>
+                <BoutonFavoriOffre offreId={offre.id} />
               </div>
 
               <p className="mt-4 flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
@@ -540,7 +549,7 @@ export default async function OffreDetailPage(props: {
 
             {/* Formation : où la suivre. Le centre se contacte depuis sa fiche. */}
             {offre.centresFormation?.length ? (
-              <div className="mt-4 rounded-2xl border bg-card p-5 shadow-sm">
+              <div className="mt-4 rounded-3xl border bg-card p-5 shadow-sm">
                 <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold">
                   <School className="size-4 text-primary" aria-hidden />
                   {tc("dispenseePar")}
@@ -600,7 +609,7 @@ export default async function OffreDetailPage(props: {
               <Button
                 variant="outline"
                 size="sm"
-                className="shrink-0 rounded-lg"
+                className="shrink-0 rounded-xl"
                 render={<Link href={`/recherche?typeOffre=${offre.typeOffre}`} />}
               >
                 Tout voir
@@ -608,11 +617,13 @@ export default async function OffreDetailPage(props: {
             </div>
 
             <div className="grid gap-4 md:grid-cols-3">
-              {similaires.map((autre) => (
+              {similaires.map((autre, index) => (
                 <OffreCard
                   key={autre.id}
                   offre={autre}
                   href={`/offres/${autre.id}`}
+                  className="entree"
+                  style={{ "--i": index } as React.CSSProperties}
                 />
               ))}
             </div>

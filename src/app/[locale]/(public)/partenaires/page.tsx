@@ -54,7 +54,7 @@ export default async function AnnuairePage(props: {
     : partenaires;
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+    <div className="page-publique mx-auto max-w-6xl px-4 py-10 sm:px-6">
       <header className="max-w-2xl">
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
           {t("surtitre")}
