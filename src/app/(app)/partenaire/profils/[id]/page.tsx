@@ -49,7 +49,7 @@ function periode(debut: string, fin?: string | null, enCours?: boolean): string 
 function Panneau({
   titre,
   icone: Icone,
-  teinte = "var(--chart-2)",
+  teinte = "var(--c-cyan)",
   index = 0,
   className,
   children,
@@ -65,16 +65,20 @@ function Panneau({
     <section
       style={{ "--i": index } as React.CSSProperties}
       className={cn(
-        "entree overflow-hidden rounded-2xl border bg-card shadow-sm",
+        "entree overflow-hidden rounded-2xl border bg-card shadow-sm transition-shadow duration-300 hover:shadow-md",
         className,
       )}
     >
-      <header className="flex items-center gap-2.5 border-b px-5 py-3.5">
+      <header
+        className="flex items-center gap-2.5 border-b px-5 py-3.5"
+        style={{
+          background: `linear-gradient(90deg, color-mix(in oklch, ${teinte} 7%, transparent), transparent 60%)`,
+        }}
+      >
         <span
-          className="grid size-7 shrink-0 place-items-center rounded-lg"
+          className="grid size-7 shrink-0 place-items-center rounded-lg text-white shadow-sm"
           style={{
-            background: `color-mix(in oklch, ${teinte} 13%, transparent)`,
-            color: teinte,
+            background: `linear-gradient(135deg, ${teinte}, color-mix(in oklch, ${teinte} 65%, black))`,
           }}
         >
           <Icone className="size-3.5" aria-hidden />
@@ -94,7 +98,7 @@ function ListeMots({ valeurs }: { valeurs?: string[] }) {
   return (
     <ul className="flex flex-wrap gap-1.5">
       {valeurs.map((valeur, rang) => (
-        <li key={`${valeur}-${rang}`} className="rounded-md bg-muted px-2 py-0.5 text-sm">
+        <li key={`${valeur}-${rang}`} className="rounded-lg border bg-muted/50 px-2.5 py-0.5 text-sm transition-colors hover:bg-muted">
           {valeur}
         </li>
       ))}
@@ -158,7 +162,7 @@ export default function ProfilCandidatPage(props: {
     return (
       <EmptyState
         icon={UserSearch}
-        couleur="var(--chart-2)"
+        couleur="var(--c-cyan)"
         title="Profil introuvable"
         description="Ce membre a peut-être retiré la visibilité de son CV depuis votre recherche."
         action={
@@ -191,18 +195,33 @@ export default function ProfilCandidatPage(props: {
         Rechercher un profil
       </Button>
 
-      <header className="entree relative mb-4 overflow-hidden rounded-2xl border bg-card shadow-sm">
+      <header className="entree relative mb-4 overflow-hidden rounded-3xl border bg-card shadow-sm">
         <span
           aria-hidden
-          className="absolute inset-x-0 top-0 h-20"
+          className="pointer-events-none absolute inset-0"
           style={{
             background:
-              "linear-gradient(135deg, color-mix(in oklch, var(--chart-2) 16%, transparent), transparent 70%)",
+              "linear-gradient(115deg, color-mix(in oklch, var(--c-cyan) 16%, transparent) 0%, color-mix(in oklch, var(--c-cyan) 5%, transparent) 45%, transparent 75%)",
+          }}
+        />
+        <span
+          aria-hidden
+          className="pointer-events-none absolute -right-16 -top-24 size-72 rounded-full bg-[var(--c-cyan)] opacity-20 blur-3xl"
+        />
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-y-0 right-0 hidden w-1/2 opacity-50 md:block"
+          style={{
+            backgroundImage:
+              "radial-gradient(color-mix(in oklch, var(--c-cyan) 30%, transparent) 1px, transparent 1px)",
+            backgroundSize: "18px 18px",
+            maskImage: "linear-gradient(90deg, transparent, black 70%)",
+            WebkitMaskImage: "linear-gradient(90deg, transparent, black 70%)",
           }}
         />
 
         <div className="relative flex flex-col gap-4 p-5 pt-8 sm:flex-row sm:items-end">
-          <Avatar className="size-20 shrink-0 border-4 border-card shadow-sm">
+          <Avatar className="size-20 shrink-0 border-4 border-card shadow-lg ring-2 ring-[color-mix(in_oklch,var(--c-cyan)_35%,transparent)]">
             <AvatarImage src={fileUrl(cv.user.pictureUrl)} alt="" />
             <AvatarFallback className="text-2xl font-bold">
               {(cv.user.firstName?.[0] ?? cv.user.username[0] ?? "?").toUpperCase()}
@@ -210,7 +229,7 @@ export default function ProfilCandidatPage(props: {
           </Avatar>
 
           <div className="min-w-0 flex-1 pb-1">
-            <h1 className="truncate text-2xl font-bold tracking-tight">{nom}</h1>
+            <h1 className="truncate text-2xl font-extrabold tracking-tight sm:text-[1.7rem]">{nom}</h1>
             {cv.titreProfessionnel ? (
               <p className="mt-0.5 truncate text-base font-medium text-muted-foreground">
                 {cv.titreProfessionnel}
@@ -262,8 +281,14 @@ export default function ProfilCandidatPage(props: {
 
       {/* Le recruteur doit savoir pourquoi il n'a ni numéro ni adresse : sans
           cette phrase, l'absence passe pour un défaut de l'outil. */}
-      <p className="entree mb-4 flex items-start gap-2.5 rounded-2xl border border-dashed px-4 py-3 text-sm text-muted-foreground">
-        <ShieldCheck className="mt-0.5 size-4 shrink-0" aria-hidden />
+      <p
+        className="entree mb-4 flex items-start gap-2.5 rounded-2xl border px-4 py-3 text-sm"
+        style={{
+          background: "color-mix(in oklch, var(--c-emerald) 8%, transparent)",
+          borderColor: "color-mix(in oklch, var(--c-emerald) 25%, transparent)",
+        }}
+      >
+        <ShieldCheck className="mt-0.5 size-4 shrink-0 text-[var(--c-emerald)]" aria-hidden />
         Les coordonnées personnelles ne sont pas communiquées. Écrivez au
         candidat par la messagerie de la plateforme : il choisit de vous
         répondre, et vos échanges restent au même endroit.
@@ -301,14 +326,14 @@ export default function ProfilCandidatPage(props: {
           </Panneau>
         ) : null}
 
-        <Panneau titre="Compétences" icone={Award} teinte="var(--chart-1)" index={1}>
+        <Panneau titre="Compétences" icone={Award} teinte="var(--c-violet)" index={1}>
           <ListeMots valeurs={cv.competences} />
         </Panneau>
 
         <Panneau
           titre="Langues"
           icone={Languages}
-          teinte="var(--chart-5)"
+          teinte="var(--c-sky)"
           index={2}
         >
           <ListeMots valeurs={cv.langues} />
@@ -317,7 +342,7 @@ export default function ProfilCandidatPage(props: {
         <Panneau
           titre="Expériences"
           icone={Briefcase}
-          teinte="var(--chart-3)"
+          teinte="var(--c-teal)"
           index={3}
         >
           {!cv.experiences?.length ? (
@@ -328,7 +353,7 @@ export default function ProfilCandidatPage(props: {
                 <li key={experience.id ?? rang} className="relative pl-4">
                   <span
                     aria-hidden
-                    className="absolute left-0 top-1.5 size-2 rounded-full bg-[var(--chart-3)]"
+                    className="absolute left-0 top-1.5 size-2 rounded-full bg-[var(--c-teal)]"
                   />
                   <p className="text-sm font-bold">{experience.poste}</p>
                   <p className="text-sm text-muted-foreground">
@@ -356,7 +381,7 @@ export default function ProfilCandidatPage(props: {
         <Panneau
           titre="Formations"
           icone={GraduationCap}
-          teinte="var(--chart-4)"
+          teinte="var(--c-amber)"
           index={4}
         >
           {!cv.formations?.length ? (
@@ -367,7 +392,7 @@ export default function ProfilCandidatPage(props: {
                 <li key={formation.id ?? rang} className="relative pl-4">
                   <span
                     aria-hidden
-                    className="absolute left-0 top-1.5 size-2 rounded-full bg-[var(--chart-4)]"
+                    className="absolute left-0 top-1.5 size-2 rounded-full bg-[var(--c-amber)]"
                   />
                   <p className="text-sm font-bold">{formation.diplome}</p>
                   <p className="text-sm text-muted-foreground">
@@ -391,7 +416,7 @@ export default function ProfilCandidatPage(props: {
           <Panneau
             titre="Certifications et centres d'intérêt"
             icone={Heart}
-            teinte="var(--chart-5)"
+            teinte="var(--c-rose)"
             index={5}
           >
             <div className="space-y-3">
@@ -419,7 +444,7 @@ export default function ProfilCandidatPage(props: {
           <Panneau
             titre="Autres rubriques"
             icone={Layers}
-            teinte="var(--chart-1)"
+            teinte="var(--c-violet)"
             index={6}
             className="lg:col-span-2"
           >

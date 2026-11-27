@@ -2,17 +2,21 @@
 
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { MessageSquare, Search, Star, Trash2 } from "lucide-react";
+import { ExternalLink, MessageSquare, Search, Star, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useConfirmation } from "@/components/admin/console-kit";
 import { errorMessage, retoursApi } from "@/lib/api";
 import { formatRelative } from "@/lib/format";
 
+const TEINTE = "var(--c-amber)";
+
 export default function RetoursPage() {
   const queryClient = useQueryClient();
+  const confirmer = useConfirmation();
 
   const { data, isLoading } = useQuery({
     queryKey: ["retours", "mine"],
@@ -30,6 +34,18 @@ export default function RetoursPage() {
   });
 
   const retours = data ?? [];
+  const avecReponse = retours.filter((retour) => retour.reponses?.length).length;
+  const reponses = retours.reduce((total, retour) => total + (retour.reponses?.length ?? 0), 0);
+
+  async function supprimer(id: number) {
+    const ok = await confirmer({
+      titre: "Supprimer ce retour ?",
+      message: "Il disparaîtra de la fiche de l'offre, avec les réponses qu'il a reçues.",
+      confirmer: "Supprimer",
+      danger: true,
+    });
+    if (ok) remove.mutate(id);
+  }
 
   return (
     <>
@@ -37,13 +53,22 @@ export default function RetoursPage() {
         title="Mes retours"
         surtitre="Ma contribution"
         icon={Star}
-        couleur="var(--chart-3)"
+        couleur={TEINTE}
         description="Vos témoignages sur les opportunités auxquelles vous avez candidaté."
         actions={
-          <Button variant="outline" className="rounded-xl" render={<Link href="/recherche" />}>
+          <Button variant="outline" className="rounded-xl bg-card/70" render={<Link href="/recherche" />}>
             <Search className="size-4" />
             Rechercher
           </Button>
+        }
+        mesures={
+          retours.length
+            ? [
+                { label: "Retours publiés", valeur: retours.length, teinte: TEINTE },
+                { label: "Avec une réponse", valeur: avecReponse, teinte: "var(--c-sky)" },
+                { label: "Réponses reçues", valeur: reponses, teinte: "var(--c-violet)" },
+              ]
+            : undefined
         }
       />
 
@@ -61,7 +86,7 @@ export default function RetoursPage() {
       ) : retours.length === 0 ? (
         <EmptyState
           icon={Star}
-          couleur="var(--chart-3)"
+          couleur={TEINTE}
           title="Vous n'avez encore rien partagé"
           description="Racontez comment s'est passée une candidature : délais, processus, ressenti. C'est ce qui aide les suivants à se préparer."
           action={
@@ -75,17 +100,32 @@ export default function RetoursPage() {
           {retours.map((retour, index) => (
             <li
               key={retour.id}
-              className="entree rounded-2xl border bg-card p-5 shadow-sm transition-shadow hover:shadow-md"
-              style={{ "--i": index } as React.CSSProperties}
+              className="entree group relative overflow-hidden rounded-2xl border bg-card p-5 pl-6 shadow-sm transition-shadow duration-200 hover:shadow-md"
+              style={{ "--i": index % 8 } as React.CSSProperties}
             >
+              <span
+                aria-hidden
+                className="absolute inset-y-0 left-0 w-1 transition-all duration-300 group-hover:w-1.5"
+                style={{ background: TEINTE }}
+              />
               <div className="flex items-start justify-between gap-3">
+                <span
+                  className="hidden size-10 shrink-0 place-items-center rounded-xl sm:grid"
+                  style={{
+                    background: `color-mix(in oklch, ${TEINTE} 15%, transparent)`,
+                    color: TEINTE,
+                  }}
+                >
+                  <Star className="size-4.5" aria-hidden />
+                </span>
                 <div className="min-w-0 flex-1">
                   {retour.offre ? (
                     <Link
                       href={`/offres/${retour.offre.id}`}
-                      className="text-base font-bold hover:text-primary hover:underline"
+                      className="inline-flex items-center gap-1.5 text-base font-bold hover:text-primary"
                     >
                       {retour.offre.titre}
+                      <ExternalLink className="size-3.5 opacity-0 transition-opacity group-hover:opacity-60" aria-hidden />
                     </Link>
                   ) : (
                     <span className="text-sm font-medium text-muted-foreground">
@@ -100,28 +140,28 @@ export default function RetoursPage() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="size-8 shrink-0 text-muted-foreground hover:text-destructive"
+                  className="size-8 shrink-0 rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                   aria-label="Supprimer ce retour"
                   disabled={remove.isPending}
-                  onClick={() => remove.mutate(retour.id)}
+                  onClick={() => void supprimer(retour.id)}
                 >
                   <Trash2 className="size-4" />
                 </Button>
               </div>
 
-              <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed">
+              <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed sm:pl-[3.25rem]">
                 {retour.contenu}
               </p>
 
               {retour.reponses?.length ? (
-                <div className="mt-3 space-y-2 border-t pt-3">
+                <div className="mt-4 space-y-2 border-t pt-3 sm:ml-[3.25rem]">
                   {retour.reponses.map((reponse) => (
                     <div
                       key={reponse.id}
-                      className="rounded-xl border-l-2 border-l-primary bg-muted/30 p-3.5"
+                      className="rounded-xl border-l-2 border-l-[var(--c-sky)] bg-[color-mix(in_oklch,var(--c-sky)_6%,transparent)] p-3.5"
                     >
                       <p className="flex items-center gap-1.5 text-xs font-medium">
-                        <MessageSquare className="size-3.5" aria-hidden />
+                        <MessageSquare className="size-3.5 text-[var(--c-sky)]" aria-hidden />
                         {reponse.auteur.username}
                         <span className="font-normal text-muted-foreground">
                           · {formatRelative(reponse.dateCreation)}

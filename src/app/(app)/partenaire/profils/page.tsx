@@ -8,9 +8,7 @@ import {
   Briefcase,
   GraduationCap,
   Languages,
-  Loader2,
   MapPin,
-  Search,
   Sparkles,
   UserSearch,
   X,
@@ -20,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/shared/page-header";
+import { ConsolePagination, ConsoleSearch } from "@/components/admin/console-ui";
 import { EmptyState } from "@/components/shared/empty-state";
 import {
   BoutonFavori,
@@ -121,10 +120,14 @@ function CarteProfil({
 
       <Link
         href={`/partenaire/profils/${cv.userId}`}
-        className="group block rounded-2xl border bg-card p-5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg"
+        className="group relative block overflow-hidden rounded-2xl border bg-card p-5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-[color-mix(in_oklch,var(--c-cyan)_45%,transparent)] hover:shadow-lg"
       >
+        <span
+          aria-hidden
+          className="absolute inset-y-0 left-0 w-1 bg-[var(--c-cyan)] opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+        />
         <div className="flex items-start gap-3.5">
-          <Avatar className="size-12 shrink-0">
+          <Avatar className="size-12 shrink-0 ring-2 ring-[color-mix(in_oklch,var(--c-cyan)_25%,transparent)] transition-transform duration-300 group-hover:scale-105">
             <AvatarImage src={fileUrl(cv.user.pictureUrl)} alt="" />
             <AvatarFallback className="text-sm font-semibold">
               {(cv.user.firstName?.[0] ?? cv.user.username[0] ?? "?").toUpperCase()}
@@ -194,7 +197,7 @@ function CarteProfil({
                       className={cn(
                         "rounded-md px-2 py-0.5 text-xs",
                         retenue
-                          ? "bg-primary/12 font-semibold text-primary"
+                          ? "bg-[color-mix(in_oklch,var(--c-cyan)_15%,transparent)] font-semibold text-[var(--c-cyan)]"
                           : "bg-muted text-muted-foreground",
                       )}
                     >
@@ -212,7 +215,7 @@ function CarteProfil({
 
             {profil.raisons.length > 0 ? (
               <p className="mt-3 flex items-center gap-1.5 border-t pt-2.5 text-xs text-muted-foreground">
-                <Sparkles className="size-3.5 shrink-0" aria-hidden />
+                <Sparkles className="size-3.5 shrink-0 text-[var(--c-cyan)]" aria-hidden />
                 {profil.raisons.join(" · ")}
                 <span className="ml-auto shrink-0">
                   CV {formatRelative(cv.dateModification)}
@@ -282,34 +285,35 @@ export default function RechercheProfilsPage() {
         title="Rechercher un profil"
         surtitre="Recrutement"
         icon={UserSearch}
-        couleur="var(--chart-2)"
+        couleur="var(--c-cyan)"
         description="Parmi les membres qui ont rendu leur CV visible aux recruteurs. Les profils les plus proches de vos critères apparaissent en premier."
+        mesures={
+          data
+            ? [
+                {
+                  label: aDesCriteres ? "Profils correspondants" : "Profils visibles",
+                  valeur: data.total,
+                  teinte: "var(--c-cyan)",
+                },
+                { label: "Compétences dans le vivier", valeur: vivier.length, teinte: "var(--c-violet)" },
+                { label: "Candidats retenus", valeur: identifiantsFavoris.length, teinte: "var(--c-orange)" },
+              ]
+            : undefined
+        }
       />
 
-      <div className="mb-4 space-y-3 rounded-2xl border bg-card p-4 shadow-sm">
+      <div className="entree mb-4 space-y-3 rounded-2xl border bg-card p-3 shadow-sm sm:p-4">
         <div className="flex flex-col gap-2 sm:flex-row">
-          <div className="relative min-w-0 flex-1">
-            <Search
-              className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
-              aria-hidden
-            />
-            <Input
-              value={requete}
-              onChange={(event) => {
-                setRequete(event.target.value);
-                setPage(1);
-              }}
-              placeholder="Métier, compétence, école…"
-              aria-label="Rechercher un profil"
-              className="h-10 rounded-xl border-transparent bg-muted/60 pl-9 shadow-none focus-visible:border-input focus-visible:bg-background"
-            />
-            {isFetching && !isLoading ? (
-              <Loader2
-                className="absolute right-3 top-1/2 size-4 -translate-y-1/2 animate-spin text-muted-foreground"
-                aria-hidden
-              />
-            ) : null}
-          </div>
+          <ConsoleSearch
+            valeur={requete}
+            onChange={(valeur) => {
+              setRequete(valeur);
+              setPage(1);
+            }}
+            placeholder="Métier, compétence, école…"
+            label="Rechercher un profil"
+            enCours={isFetching && !isLoading}
+          />
 
           <div className="relative sm:w-56">
             <MapPin
@@ -348,8 +352,8 @@ export default function RechercheProfilsPage() {
                         "flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs transition-all duration-200",
                         "outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
                         active
-                          ? "border-primary/40 bg-primary/10 font-semibold text-primary"
-                          : "text-muted-foreground hover:bg-muted",
+                          ? "border-[color-mix(in_oklch,var(--c-cyan)_45%,transparent)] bg-[color-mix(in_oklch,var(--c-cyan)_13%,transparent)] font-semibold text-[var(--c-cyan)] shadow-sm"
+                          : "text-muted-foreground hover:-translate-y-px hover:bg-muted hover:text-foreground",
                       )}
                     >
                       {competence.libelle}
@@ -407,7 +411,7 @@ export default function RechercheProfilsPage() {
       ) : profils.length === 0 ? (
         <EmptyState
           icon={UserSearch}
-          couleur="var(--chart-2)"
+          couleur="var(--c-cyan)"
           title={
             aDesCriteres ? "Aucun profil ne correspond" : "Aucun profil visible"
           }
@@ -432,35 +436,11 @@ export default function RechercheProfilsPage() {
             ))}
           </ul>
 
-          {data && data.totalPages > 1 ? (
-            <nav
-              aria-label="Pagination"
-              className="mt-4 flex items-center justify-center gap-2"
-            >
-              <Button
-                variant="outline"
-                size="sm"
-                className="rounded-lg"
-                disabled={page <= 1}
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-              >
-                Précédent
-              </Button>
-              <span className="px-2 text-sm tabular-nums text-muted-foreground">
-                Page <span className="font-semibold text-foreground">{page}</span>{" "}
-                sur {data.totalPages}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                className="rounded-lg"
-                disabled={page >= data.totalPages}
-                onClick={() => setPage((p) => p + 1)}
-              >
-                Suivant
-              </Button>
-            </nav>
-          ) : null}
+          <ConsolePagination
+            page={page}
+            total={data?.totalPages ?? 0}
+            onChange={setPage}
+          />
         </>
       )}
     </>

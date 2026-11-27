@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarClock, Heart, Search } from "lucide-react";
+import { CalendarClock, Heart, Search, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/shared/page-header";
 import { OffreCard } from "@/components/shared/offre-card";
@@ -13,7 +13,8 @@ import { favoritesApi } from "@/lib/api";
 import { daysUntil } from "@/lib/format";
 import type { Offre } from "@/lib/types";
 
-const TEINTE = "var(--chart-4)";
+const TEINTE = "var(--c-rose)";
+const TEINTE_URGENT = "var(--c-amber)";
 
 /**
  * Répartit les favoris entre ceux dont l'échéance approche et les autres.
@@ -46,6 +47,7 @@ export default function FavorisPage() {
 
   const favoris = data ?? [];
   const { urgents, autres } = repartir(favoris);
+  const cloturees = favoris.filter(({ offre }) => offre.estCloturee).length;
 
   return (
     <>
@@ -62,10 +64,20 @@ export default function FavorisPage() {
               : `${favoris.length} opportunité${favoris.length > 1 ? "s" : ""} mise${favoris.length > 1 ? "s" : ""} de côté`
         }
         actions={
-          <Button variant="outline" className="rounded-xl" render={<Link href="/recherche" />}>
+          <Button variant="outline" className="rounded-xl bg-card/70" render={<Link href="/recherche" />}>
             <Search className="size-4" />
             Rechercher
           </Button>
+        }
+        mesures={
+          favoris.length
+            ? [
+                { label: "Offres gardées", valeur: favoris.length, teinte: TEINTE },
+                { label: "Échéance sous 7 jours", valeur: urgents.length, teinte: TEINTE_URGENT },
+                { label: "Encore ouvertes", valeur: favoris.length - cloturees, teinte: "var(--c-emerald)" },
+                { label: "Clôturées", valeur: cloturees },
+              ]
+            : undefined
         }
       />
 
@@ -87,15 +99,13 @@ export default function FavorisPage() {
         <div className="space-y-8">
           {urgents.length ? (
             <section>
-              <div className="mb-4 flex items-center gap-2.5">
-                <span className="grid size-8 place-items-center rounded-lg bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300">
-                  <CalendarClock className="size-4" aria-hidden />
-                </span>
-                <h2 className="text-lg font-bold">Ça se termine bientôt</h2>
-                <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-semibold tabular-nums text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300">
-                  {urgents.length}
-                </span>
-              </div>
+              <TitreSection
+                icone={CalendarClock}
+                teinte={TEINTE_URGENT}
+                titre="Ça se termine bientôt"
+                compte={urgents.length}
+                detail="Date limite dans les sept prochains jours"
+              />
 
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {urgents.map((offre, index) => (
@@ -115,7 +125,12 @@ export default function FavorisPage() {
           {autres.length ? (
             <section>
               {urgents.length ? (
-                <h2 className="mb-4 text-lg font-bold">Le reste de ma sélection</h2>
+                <TitreSection
+                  icone={Heart}
+                  teinte={TEINTE}
+                  titre="Le reste de ma sélection"
+                  compte={autres.length}
+                />
               ) : null}
 
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -135,5 +150,50 @@ export default function FavorisPage() {
         </div>
       )}
     </>
+  );
+}
+
+/** Titre de groupe : pastille teintée, intitulé, compteur. */
+function TitreSection({
+  icone: Icone,
+  teinte,
+  titre,
+  compte,
+  detail,
+}: {
+  icone: LucideIcon;
+  teinte: string;
+  titre: string;
+  compte: number;
+  detail?: string;
+}) {
+  return (
+    <div className="mb-4 flex items-center gap-3">
+      <span
+        className="grid size-9 shrink-0 place-items-center rounded-xl"
+        style={{
+          background: `color-mix(in oklch, ${teinte} 15%, transparent)`,
+          color: teinte,
+        }}
+      >
+        <Icone className="size-4" aria-hidden />
+      </span>
+      <div className="min-w-0">
+        <h2 className="flex items-center gap-2 text-base font-bold">
+          {titre}
+          <span
+            className="rounded-full px-2 py-0.5 text-[11px] font-bold tabular-nums"
+            style={{
+              background: `color-mix(in oklch, ${teinte} 13%, transparent)`,
+              color: teinte,
+            }}
+          >
+            {compte}
+          </span>
+        </h2>
+        {detail ? <p className="text-xs text-muted-foreground">{detail}</p> : null}
+      </div>
+      <span aria-hidden className="ml-2 h-px flex-1 bg-border" />
+    </div>
   );
 }

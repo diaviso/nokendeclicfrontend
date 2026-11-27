@@ -24,7 +24,7 @@ export default function NouvelleOffrePartenairePage() {
         title="Publier une offre"
         surtitre="Recrutement"
         icon={Building2}
-        couleur="var(--chart-3)"
+        couleur="var(--c-teal)"
         description="Votre annonce sera relue par l'équipe Noken avant sa mise en ligne. Plus elle est précise, plus la relecture est rapide."
       />
 

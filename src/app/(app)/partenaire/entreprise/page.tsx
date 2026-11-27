@@ -6,9 +6,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   Building2,
+  Contact,
   ImagePlus,
   Loader2,
   Save,
+  Sparkles,
   Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -26,6 +28,43 @@ import {
 } from "@/lib/api";
 import { SECTEUR_LABELS } from "@/lib/enums";
 import type { Secteur } from "@/lib/types";
+
+/** En-tête de bloc : pastille en dégradé, lavis discret de la teinte. */
+function EnteteSection({
+  icone: Icone,
+  teinte,
+  titre,
+  description,
+}: {
+  icone: typeof Building2;
+  teinte: string;
+  titre: string;
+  description?: string;
+}) {
+  return (
+    <header
+      className="flex items-start gap-3 border-b px-5 py-3.5"
+      style={{
+        background: `linear-gradient(90deg, color-mix(in oklch, ${teinte} 8%, transparent), transparent 60%)`,
+      }}
+    >
+      <span
+        className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-lg text-white shadow-sm"
+        style={{
+          background: `linear-gradient(135deg, ${teinte}, color-mix(in oklch, ${teinte} 65%, black))`,
+        }}
+      >
+        <Icone className="size-3.5" aria-hidden />
+      </span>
+      <div className="min-w-0">
+        <h2 className="text-sm font-bold">{titre}</h2>
+        {description ? (
+          <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
+        ) : null}
+      </div>
+    </header>
+  );
+}
 
 const TAILLES = [
   "1 à 9 salariés",
@@ -156,7 +195,7 @@ export default function EntreprisePartenairePage() {
         title="Ma structure"
         surtitre="Recrutement"
         icon={Building2}
-        couleur="var(--chart-3)"
+        couleur="var(--c-lime)"
         description="Ces informations apparaissent auprès de vos offres et, si l'équipe Noken le décide, sur la page d'accueil."
       />
 
@@ -173,14 +212,12 @@ export default function EntreprisePartenairePage() {
         noValidate
       >
         {/* ─────────────────────────────────────────────────────── Identité */}
-        <section className="rounded-2xl border bg-card">
-          <header className="border-b px-5 py-3.5">
-            <h2 className="text-sm font-bold">Identité</h2>
-          </header>
+        <section className="entree overflow-hidden rounded-2xl border bg-card shadow-sm">
+          <EnteteSection icone={Building2} teinte="var(--c-lime)" titre="Identité" />
 
           <div className="space-y-4 p-5">
             <div className="flex flex-wrap items-center gap-4">
-              <span className="grid size-20 shrink-0 place-items-center overflow-hidden rounded-2xl border bg-muted/40">
+              <span className="grid size-20 shrink-0 place-items-center overflow-hidden rounded-2xl border bg-[color-mix(in_oklch,var(--c-lime)_8%,transparent)] shadow-sm transition-transform duration-300 hover:scale-105">
                 {entreprise?.logoUrl ? (
                   /* Balise native plutôt que `next/image` : le logo peut venir
                      du stockage distant comme du dossier local selon
@@ -193,7 +230,7 @@ export default function EntreprisePartenairePage() {
                     className="size-full object-contain"
                   />
                 ) : (
-                  <Building2 className="size-7 text-muted-foreground" aria-hidden />
+                  <Building2 className="size-7 text-[var(--c-lime)]" aria-hidden />
                 )}
               </span>
 
@@ -320,14 +357,16 @@ export default function EntreprisePartenairePage() {
         </section>
 
         {/* ──────────────────────────────────────────────────── Coordonnées */}
-        <section className="rounded-2xl border bg-card">
-          <header className="border-b px-5 py-3.5">
-            <h2 className="text-sm font-bold">Coordonnées</h2>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              Celles de la structure, distinctes de celles de votre compte. Elles
-              accompagnent vos offres.
-            </p>
-          </header>
+        <section
+          style={{ "--i": 1 } as React.CSSProperties}
+          className="entree overflow-hidden rounded-2xl border bg-card shadow-sm"
+        >
+          <EnteteSection
+            icone={Contact}
+            teinte="var(--c-sky)"
+            titre="Coordonnées"
+            description="Celles de la structure, distinctes de celles de votre compte. Elles accompagnent vos offres."
+          />
 
           <div className="grid gap-4 p-5 sm:grid-cols-2">
             <div className="sm:col-span-2">
@@ -375,15 +414,26 @@ export default function EntreprisePartenairePage() {
         </section>
 
         {entreprise?.estVisibleVitrine ? (
-          <p className="rounded-2xl border border-dashed px-4 py-3 text-sm text-muted-foreground">
+          <p
+            className="flex items-start gap-2.5 rounded-2xl border px-4 py-3 text-sm"
+            style={{
+              background: "color-mix(in oklch, var(--c-lime) 8%, transparent)",
+              borderColor: "color-mix(in oklch, var(--c-lime) 25%, transparent)",
+            }}
+          >
+            <Sparkles className="mt-0.5 size-4 shrink-0 text-[var(--c-lime)]" aria-hidden />
             Votre structure figure actuellement sur la vitrine de la page
             d&apos;accueil.
           </p>
         ) : null}
 
-        <div className="sticky bottom-16 z-10 flex items-center justify-end gap-2 rounded-2xl border bg-background/95 p-3 backdrop-blur lg:bottom-4">
+        <div className="sticky bottom-16 z-10 flex items-center justify-end gap-2 rounded-2xl border bg-background/90 p-3 shadow-lg backdrop-blur-xl lg:bottom-4">
           {form.formState.isDirty ? (
-            <span className="mr-auto text-sm text-muted-foreground">
+            <span className="mr-auto flex items-center gap-2 text-sm text-muted-foreground">
+              <span className="relative flex size-2">
+                <span className="absolute inline-flex size-full animate-ping rounded-full bg-[var(--c-amber)] opacity-60" />
+                <span className="relative inline-flex size-2 rounded-full bg-[var(--c-amber)]" />
+              </span>
               Non enregistré
             </span>
           ) : null}

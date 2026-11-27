@@ -166,15 +166,25 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="overflow-hidden rounded-2xl border bg-card shadow-sm">
-      <header className="flex items-start justify-between gap-3 border-b bg-muted/25 px-5 py-4">
+    <section className="overflow-hidden rounded-2xl border bg-card shadow-sm transition-shadow duration-300 hover:shadow-md">
+      <header
+        className="relative flex items-start justify-between gap-3 border-b px-5 py-4"
+        style={{
+          background: `linear-gradient(110deg, color-mix(in oklch, ${couleur} 10%, transparent), transparent 60%)`,
+        }}
+      >
+        <span
+          aria-hidden
+          className="absolute inset-y-3 left-0 w-1 rounded-r-full"
+          style={{ background: couleur }}
+        />
         <div className="flex min-w-0 items-center gap-3">
           {Icon ? (
             <span
-              className="grid size-9 shrink-0 place-items-center rounded-xl"
+              className="grid size-9 shrink-0 place-items-center rounded-xl text-white"
               style={{
-                background: `color-mix(in oklch, ${couleur} 14%, transparent)`,
-                color: couleur,
+                background: `linear-gradient(135deg, ${couleur}, color-mix(in oklch, ${couleur} 65%, black))`,
+                boxShadow: `0 6px 14px -6px color-mix(in oklch, ${couleur} 75%, transparent)`,
               }}
             >
               <Icon className="size-4.5" aria-hidden />
@@ -429,42 +439,42 @@ export default function CVPage() {
       cle: "profil",
       libelle: "Profil",
       icone: UserRound,
-      couleur: "var(--chart-2)",
+      couleur: "var(--c-blue)",
       renseignee: Boolean(valeurs.titreProfessionnel?.trim() || valeurs.resume?.trim()),
     },
     {
       cle: "competences",
       libelle: "Compétences",
       icone: Award,
-      couleur: "var(--chart-5)",
+      couleur: "var(--c-violet)",
       renseignee: valeurs.competences.length > 0 || valeurs.langues.length > 0,
     },
     {
       cle: "experiences",
       libelle: "Expériences",
       icone: Briefcase,
-      couleur: "var(--chart-3)",
+      couleur: "var(--c-emerald)",
       renseignee: valeurs.experiences.length > 0,
     },
     {
       cle: "formations",
       libelle: "Formations",
       icone: GraduationCap,
-      couleur: "var(--chart-4)",
+      couleur: "var(--c-amber)",
       renseignee: valeurs.formations.length > 0,
     },
     {
       cle: "rubriques",
       libelle: "Autres",
       icone: Layers,
-      couleur: "var(--chart-1)",
+      couleur: "var(--c-teal)",
       renseignee: valeurs.rubriques.length > 0,
     },
     {
       cle: "visibilite",
       libelle: "Visibilité",
       icone: Eye,
-      couleur: "var(--chart-1)",
+      couleur: "var(--c-teal)",
       renseignee: valeurs.estPublic,
     },
   ];
@@ -483,8 +493,29 @@ export default function CVPage() {
         title="Mon CV"
         surtitre="Mes outils"
         icon={FileText}
-        couleur="var(--chart-2)"
         description="Ces informations alimentent les recommandations de l'assistant et vos candidatures."
+        mesures={[
+          {
+            label: "Compétences",
+            valeur: valeurs.competences.length,
+            teinte: "var(--c-violet)",
+          },
+          {
+            label: "Expériences",
+            valeur: valeurs.experiences.length,
+            teinte: "var(--c-emerald)",
+          },
+          {
+            label: "Formations",
+            valeur: valeurs.formations.length,
+            teinte: "var(--c-amber)",
+          },
+          {
+            label: "Visibilité",
+            valeur: valeurs.estPublic ? "Public" : "Privé",
+            teinte: valeurs.estPublic ? "var(--c-sky)" : undefined,
+          },
+        ]}
         actions={
           <>
             <input
@@ -557,7 +588,7 @@ export default function CVPage() {
         noValidate
       >
         <EtapeVisible actif={etape === 0}>
-        <Section title="Profil" icon={UserRound} couleur="var(--chart-2)">
+        <Section title="Profil" icon={UserRound} couleur="var(--c-blue)">
           <div>
             <Label htmlFor="titreProfessionnel">Titre professionnel</Label>
             <Input
@@ -599,7 +630,7 @@ export default function CVPage() {
         </EtapeVisible>
 
         <EtapeVisible actif={etape === 1}>
-        <Section title="Compétences et langues" icon={Award} couleur="var(--chart-5)">
+        <Section title="Compétences et langues" icon={Award} couleur="var(--c-violet)">
           <div>
             <Label htmlFor="competences">Compétences</Label>
             <TagInput
@@ -648,7 +679,7 @@ export default function CVPage() {
         <Section
           title="Expériences professionnelles"
           icon={Briefcase}
-          couleur="var(--chart-3)"
+          couleur="var(--c-emerald)"
           action={
             <Button
               type="button"
@@ -682,7 +713,7 @@ export default function CVPage() {
                 key={field.id}
                 dernier={index === experiences.fields.length - 1}
                 icon={Briefcase}
-                couleur="var(--chart-3)"
+                couleur="var(--c-emerald)"
                 actif={form.watch(`experiences.${index}.enCours`)}
                 titre={
                   form.watch(`experiences.${index}.poste`) ||
@@ -760,7 +791,7 @@ export default function CVPage() {
         <Section
           title="Formations"
           icon={GraduationCap}
-          couleur="var(--chart-4)"
+          couleur="var(--c-amber)"
           action={
             <Button
               type="button"
@@ -794,7 +825,7 @@ export default function CVPage() {
                 key={field.id}
                 dernier={index === formations.fields.length - 1}
                 icon={GraduationCap}
-                couleur="var(--chart-4)"
+                couleur="var(--c-amber)"
                 actif={form.watch(`formations.${index}.enCours`)}
                 titre={
                   form.watch(`formations.${index}.diplome`) ||
@@ -866,7 +897,7 @@ export default function CVPage() {
           title="Autres rubriques"
           description="Publications, projets, bénévolat, distinctions — tout ce qui ne rentre pas dans les sections précédentes."
           icon={Layers}
-          couleur="var(--chart-1)"
+          couleur="var(--c-teal)"
         >
           <RubriquesLibres
             valeur={form.watch("rubriques")}
@@ -878,7 +909,7 @@ export default function CVPage() {
         </EtapeVisible>
 
         <EtapeVisible actif={etape === 5}>
-        <Section title="Visibilité" icon={Eye} couleur="var(--chart-1)">
+        <Section title="Visibilité" icon={Eye} couleur="var(--c-teal)">
           <div className="flex items-center justify-between gap-4">
             <div className="min-w-0">
               <Label htmlFor="estPublic" className="text-sm">

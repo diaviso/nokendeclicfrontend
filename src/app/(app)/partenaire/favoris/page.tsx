@@ -32,10 +32,15 @@ function Carte({ favori, index }: { favori: FavoriCandidat; index: number }) {
   return (
     <li
       style={{ "--i": index } as React.CSSProperties}
-      className="entree rounded-2xl border bg-card p-5 shadow-sm"
+      className="entree group relative overflow-hidden rounded-2xl border bg-card p-5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg"
     >
+      <span
+        aria-hidden
+        className="absolute inset-y-0 left-0 w-1 transition-all duration-200 group-hover:w-1.5"
+        style={{ background: favori.profilToujoursVisible ? "var(--c-orange)" : "var(--muted-foreground)" }}
+      />
       <div className="flex items-start gap-3.5">
-        <Avatar className="size-12 shrink-0">
+        <Avatar className="size-12 shrink-0 ring-2 ring-[color-mix(in_oklch,var(--c-orange)_25%,transparent)] transition-transform duration-300 group-hover:scale-105">
           <AvatarImage src={fileUrl(candidat.pictureUrl)} alt="" />
           <AvatarFallback className="text-sm font-semibold">
             {initiale}
@@ -85,7 +90,7 @@ function Carte({ favori, index }: { favori: FavoriCandidat; index: number }) {
                   {cv.competences.slice(0, 6).map((competence, rang) => (
                     <li
                       key={`${competence}-${rang}`}
-                      className="rounded-md bg-muted px-2 py-0.5 text-xs text-muted-foreground"
+                      className="rounded-md bg-[color-mix(in_oklch,var(--c-orange)_10%,transparent)] px-2 py-0.5 text-xs text-foreground/80"
                     >
                       {competence}
                     </li>
@@ -111,8 +116,8 @@ function Carte({ favori, index }: { favori: FavoriCandidat; index: number }) {
           )}
 
           {favori.note ? (
-            <p className="mt-3 flex items-start gap-2 rounded-xl bg-muted/60 px-3 py-2 text-sm">
-              <Quote className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" aria-hidden />
+            <p className="mt-3 flex items-start gap-2 rounded-xl border-l-2 border-[var(--c-amber)] bg-[color-mix(in_oklch,var(--c-amber)_8%,transparent)] px-3 py-2 text-sm">
+              <Quote className="mt-0.5 size-3.5 shrink-0 text-[var(--c-amber)]" aria-hidden />
               <span className="min-w-0 whitespace-pre-wrap">{favori.note}</span>
             </p>
           ) : null}
@@ -161,8 +166,25 @@ export default function FavorisPartenairePage() {
         title="Candidats retenus"
         surtitre="Recrutement"
         icon={BookmarkCheck}
-        couleur="var(--chart-4)"
+        couleur="var(--c-orange)"
         description="Les profils que vous avez mis de côté pendant vos recherches, avec vos annotations privées."
+        mesures={
+          favoris.length > 0
+            ? [
+                { label: "Profils retenus", valeur: favoris.length, teinte: "var(--c-orange)" },
+                {
+                  label: "Annotés",
+                  valeur: favoris.filter((favori) => Boolean(favori.note)).length,
+                  teinte: "var(--c-amber)",
+                },
+                {
+                  label: "Toujours consultables",
+                  valeur: favoris.filter((favori) => favori.profilToujoursVisible).length,
+                  teinte: "var(--c-emerald)",
+                },
+              ]
+            : undefined
+        }
       />
 
       {isLoading ? (
@@ -183,7 +205,7 @@ export default function FavorisPartenairePage() {
       ) : favoris.length === 0 ? (
         <EmptyState
           icon={BookmarkCheck}
-          couleur="var(--chart-4)"
+          couleur="var(--c-orange)"
           title="Aucun candidat retenu"
           description="Pendant une recherche, le signet au coin d'un profil le met de côté. Vous le retrouverez ici, avec la note que vous lui aurez attachée."
           action={
@@ -193,17 +215,11 @@ export default function FavorisPartenairePage() {
           }
         />
       ) : (
-        <>
-          <p className="mb-3 text-sm text-muted-foreground">
-            {favoris.length} profil{favoris.length > 1 ? "s" : ""} retenu
-            {favoris.length > 1 ? "s" : ""}
-          </p>
-          <ul className="space-y-3">
-            {favoris.map((favori, index) => (
-              <Carte key={favori.id} favori={favori} index={index} />
-            ))}
-          </ul>
-        </>
+        <ul className="space-y-3">
+          {favoris.map((favori, index) => (
+            <Carte key={favori.id} favori={favori} index={index} />
+          ))}
+        </ul>
       )}
     </>
   );

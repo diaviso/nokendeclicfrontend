@@ -258,7 +258,7 @@ function Thread({
 
   return (
     <div className="flex h-full flex-col">
-      <header className="flex h-14 shrink-0 items-center gap-2 border-b px-3">
+      <header className="flex h-16 shrink-0 items-center gap-2.5 border-b bg-card/70 px-3 backdrop-blur">
         <Button
           variant="ghost"
           size="icon"
@@ -268,14 +268,14 @@ function Thread({
         >
           <ArrowLeft className="size-4" />
         </Button>
-        <Avatar className="size-8">
+        <Avatar className="size-9 ring-2 ring-[color-mix(in_oklch,var(--c-sky)_35%,transparent)] ring-offset-2 ring-offset-card">
           <AvatarImage src={fileUrl(conversation.otherUser.pictureUrl)} alt="" />
           <AvatarFallback className="text-[11px]">
             {initials(conversation.otherUser)}
           </AvatarFallback>
         </Avatar>
         <div className="min-w-0">
-          <p className="truncate text-sm font-medium">
+          <p className="truncate text-sm font-semibold">
             {fullName(conversation.otherUser)}
           </p>
           <p className="text-xs text-muted-foreground">
@@ -284,16 +284,20 @@ function Thread({
         </div>
       </header>
 
-      <ScrollArea className="min-h-0 flex-1">
+      <ScrollArea className="min-h-0 flex-1 bg-[radial-gradient(color-mix(in_oklch,var(--c-sky)_12%,transparent)_1px,transparent_1px)] bg-[size:20px_20px]">
         <div className="space-y-2 p-4">
           {isLoading ? (
             <div className="grid place-items-center py-10">
               <Loader2 className="size-5 animate-spin text-muted-foreground" />
             </div>
           ) : messages.length === 0 ? (
-            <p className="py-10 text-center text-sm text-muted-foreground">
-              Aucun message. Écrivez le premier.
-            </p>
+            <div className="mx-auto mt-10 max-w-xs rounded-2xl border bg-card/90 p-6 text-center shadow-sm backdrop-blur">
+              <span className="mx-auto grid size-11 place-items-center rounded-xl bg-[color-mix(in_oklch,var(--c-sky)_15%,transparent)] text-[var(--c-sky)]">
+                <MessagesSquare className="size-5" aria-hidden />
+              </span>
+              <p className="mt-3 text-sm font-semibold">Aucun message</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">Écrivez le premier : un bonjour suffit.</p>
+            </div>
           ) : (
             messages.map((message) => {
               const mine = message.senderId === user?.id;
@@ -306,7 +310,7 @@ function Thread({
                     className={cn(
                       "max-w-[80%] px-4 py-2.5 shadow-sm",
                       mine
-                        ? "rounded-2xl rounded-br-md bg-primary text-primary-foreground"
+                        ? "rounded-2xl rounded-br-md bg-gradient-to-br from-primary to-[color-mix(in_oklch,var(--primary)_70%,var(--c-sky))] text-primary-foreground shadow-md shadow-primary/20"
                         : "rounded-2xl rounded-bl-md border bg-card",
                     )}
                   >
@@ -335,7 +339,7 @@ function Thread({
           e.preventDefault();
           if (draft.trim()) send.mutate(draft.trim());
         }}
-        className="flex shrink-0 items-end gap-2 border-t p-3"
+        className="flex shrink-0 items-end gap-2 border-t bg-card/70 p-3 backdrop-blur"
       >
         <EmojiPicker
           onChoisir={(symbole) =>
@@ -359,11 +363,12 @@ function Thread({
           rows={1}
           placeholder="Votre message…"
           aria-label="Votre message"
-          className="max-h-32 min-h-9 resize-none"
+          className="max-h-32 min-h-10 resize-none rounded-xl border-transparent bg-muted/60 shadow-none focus-visible:border-input focus-visible:bg-background"
         />
         <Button
           type="submit"
           size="icon"
+          className="size-10 rounded-xl shadow-md shadow-primary/25 transition-transform active:scale-95"
           disabled={!draft.trim() || send.isPending}
           aria-label="Envoyer"
         >
@@ -404,7 +409,7 @@ function Extrait({ texte, requete }: { texte: string; requete: string }) {
 
 function TitreSection({ children }: { children: React.ReactNode }) {
   return (
-    <p className="px-3 pt-3 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+    <p className="px-3 pt-3 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground/80">
       {children}
     </p>
   );
@@ -480,7 +485,7 @@ function ResultatsRecherche({
                   className={cn(
                     ligne,
                     "items-center",
-                    actif("prive", discussion.id) ? "bg-accent" : "hover:bg-accent/60",
+                    actif("prive", discussion.id) ? "bg-[color-mix(in_oklch,var(--c-sky)_13%,transparent)] ring-1 ring-inset ring-[color-mix(in_oklch,var(--c-sky)_30%,transparent)]" : "hover:bg-muted/70",
                   )}
                 >
                   <Avatar className="size-9 shrink-0">
@@ -515,11 +520,11 @@ function ResultatsRecherche({
                   className={cn(
                     ligne,
                     "items-center",
-                    actif("groupe", groupe.id) ? "bg-accent" : "hover:bg-accent/60",
+                    actif("groupe", groupe.id) ? "bg-[color-mix(in_oklch,var(--c-sky)_13%,transparent)] ring-1 ring-inset ring-[color-mix(in_oklch,var(--c-sky)_30%,transparent)]" : "hover:bg-muted/70",
                   )}
                 >
-                  <span className="grid size-9 shrink-0 place-items-center rounded-full bg-primary/10">
-                    <UsersRound className="size-4 text-primary" aria-hidden />
+                  <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-[color-mix(in_oklch,var(--c-teal)_15%,transparent)] text-[var(--c-teal)]">
+                    <UsersRound className="size-4" aria-hidden />
                   </span>
                   <span className="min-w-0 flex-1 truncate text-sm font-semibold">
                     {groupe.nom}
@@ -545,8 +550,8 @@ function ResultatsRecherche({
                     ligne,
                     "items-start",
                     actif("prive", message.conversationId)
-                      ? "bg-accent"
-                      : "hover:bg-accent/60",
+                      ? "bg-[color-mix(in_oklch,var(--c-sky)_13%,transparent)] ring-1 ring-inset ring-[color-mix(in_oklch,var(--c-sky)_30%,transparent)]"
+                      : "hover:bg-muted/70",
                   )}
                 >
                   <span className="min-w-0 flex-1">
@@ -584,8 +589,8 @@ function ResultatsRecherche({
                     ligne,
                     "items-start",
                     actif("groupe", message.groupeId)
-                      ? "bg-accent"
-                      : "hover:bg-accent/60",
+                      ? "bg-[color-mix(in_oklch,var(--c-sky)_13%,transparent)] ring-1 ring-inset ring-[color-mix(in_oklch,var(--c-sky)_30%,transparent)]"
+                      : "hover:bg-muted/70",
                   )}
                 >
                   <span className="min-w-0 flex-1">
@@ -620,7 +625,7 @@ function ResultatsRecherche({
                 <button
                   onClick={() => onDemarrer(personne.id)}
                   disabled={demarrageEnCours}
-                  className={cn(ligne, "items-center hover:bg-accent/60")}
+                  className={cn(ligne, "items-center hover:bg-muted/70")}
                 >
                   <Avatar className="size-9 shrink-0">
                     <AvatarImage src={fileUrl(personne.pictureUrl)} alt="" />
@@ -744,12 +749,30 @@ function Messagerie() {
       {/* Liste : plein écran sur mobile tant qu'aucun fil n'est ouvert */}
       <aside
         className={cn(
-          "w-full shrink-0 flex-col border-r md:flex md:w-72",
+          "w-full shrink-0 flex-col border-r bg-card/70 md:flex md:w-80",
           ouvert ? "hidden md:flex" : "flex",
         )}
       >
-        <header className="flex h-14 shrink-0 items-center justify-between gap-2 border-b px-3">
-          <h1 className="text-base font-bold">Messagerie</h1>
+        <header
+          className="flex h-16 shrink-0 items-center justify-between gap-2 border-b px-3"
+          style={{
+            background:
+              "linear-gradient(100deg, color-mix(in oklch, var(--c-sky) 12%, transparent), transparent 75%)",
+          }}
+        >
+          <div className="flex min-w-0 items-center gap-2.5">
+            <span
+              className="grid size-9 shrink-0 place-items-center rounded-xl text-white"
+              style={{
+                background:
+                  "linear-gradient(135deg, var(--c-sky), color-mix(in oklch, var(--c-sky) 65%, black))",
+                boxShadow: "0 8px 18px -8px color-mix(in oklch, var(--c-sky) 80%, transparent)",
+              }}
+            >
+              <MessagesSquare className="size-4.5" aria-hidden />
+            </span>
+            <h1 className="truncate text-base font-extrabold tracking-tight">Messagerie</h1>
+          </div>
           <div className="flex shrink-0 items-center gap-1.5">
             <CreerGroupe
               onCree={(id) => setSelection({ genre: "groupe", id })}
@@ -770,7 +793,7 @@ function Messagerie() {
             onChange={(e) => setRecherche(e.target.value)}
             placeholder="Personne, groupe, message…"
             aria-label="Rechercher dans la messagerie"
-            className="h-9 rounded-lg pl-8 pr-8"
+            className="h-9 rounded-xl border-transparent bg-muted/60 pl-8 pr-8 shadow-none focus-visible:border-input focus-visible:bg-background"
           />
           {recherche ? (
             <button
@@ -806,7 +829,7 @@ function Messagerie() {
             <div className="p-4">
               <EmptyState
                 icon={MessagesSquare}
-                couleur="var(--chart-3)"
+                couleur="var(--c-sky)"
                 title="Aucune conversation"
                 description="Écrivez à l'équipe ou à une structure, ou créez un groupe : tout arrive ici."
               />
@@ -815,7 +838,7 @@ function Messagerie() {
             <>
               {groupes.length > 0 ? (
                 <>
-                  <p className="px-3 pt-3 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  <p className="px-3 pt-3 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground/80">
                     Groupes
                   </p>
                   <ul className="p-2 pt-1">
@@ -829,15 +852,12 @@ function Messagerie() {
                             "flex w-full items-center gap-3 rounded-xl p-2.5 text-left transition-all duration-200",
                             selection?.genre === "groupe" &&
                               selection.id === groupe.id
-                              ? "bg-accent"
-                              : "hover:bg-accent/60",
+                              ? "bg-[color-mix(in_oklch,var(--c-sky)_13%,transparent)] ring-1 ring-inset ring-[color-mix(in_oklch,var(--c-sky)_30%,transparent)]"
+                              : "hover:bg-muted/70",
                           )}
                         >
-                          <span className="grid size-9 shrink-0 place-items-center rounded-full bg-primary/10">
-                            <UsersRound
-                              className="size-4 text-primary"
-                              aria-hidden
-                            />
+                          <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-[color-mix(in_oklch,var(--c-teal)_15%,transparent)] text-[var(--c-teal)]">
+                            <UsersRound className="size-4" aria-hidden />
                           </span>
 
                           <span className="min-w-0 flex-1">
@@ -865,7 +885,7 @@ function Messagerie() {
                                     }`}
                               </span>
                               {groupe.nonLus > 0 ? (
-                                <span className="ml-auto inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground shadow-sm shadow-primary/40">
+                                <span className="ml-auto inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-[var(--c-sky)] px-1.5 text-[10px] font-bold text-white shadow-sm shadow-[color-mix(in_oklch,var(--c-sky)_45%,transparent)]">
                                   {groupe.nonLus}
                                 </span>
                               ) : null}
@@ -881,7 +901,7 @@ function Messagerie() {
               {conversations.length > 0 ? (
                 <>
                   {groupes.length > 0 ? (
-                    <p className="px-3 pt-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    <p className="px-3 pt-2 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground/80">
                       Discussions
                     </p>
                   ) : null}
@@ -896,8 +916,8 @@ function Messagerie() {
                             "group flex items-center rounded-xl transition-all duration-200",
                             selection?.genre === "prive" &&
                               selection.id === conversation.id
-                              ? "bg-accent"
-                              : "hover:bg-accent/60",
+                              ? "bg-[color-mix(in_oklch,var(--c-sky)_13%,transparent)] ring-1 ring-inset ring-[color-mix(in_oklch,var(--c-sky)_30%,transparent)]"
+                              : "hover:bg-muted/70",
                           )}
                         >
                           <button
@@ -934,7 +954,7 @@ function Messagerie() {
                                     "Aucun message"}
                                 </span>
                                 {conversation.unreadCount > 0 ? (
-                                  <span className="ml-auto inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground shadow-sm shadow-primary/40">
+                                  <span className="ml-auto inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-[var(--c-sky)] px-1.5 text-[10px] font-bold text-white shadow-sm shadow-[color-mix(in_oklch,var(--c-sky)_45%,transparent)]">
                                     {conversation.unreadCount}
                                   </span>
                                 ) : null}
@@ -976,7 +996,7 @@ function Messagerie() {
         </ScrollArea>
       </aside>
 
-      <div className={cn("min-w-0 flex-1", ouvert ? "flex" : "hidden md:flex")}>
+      <div className={cn("min-w-0 flex-1 bg-background/60", ouvert ? "flex" : "hidden md:flex")}>
         {conversationActive ? (
           <div className="w-full">
             <Thread
@@ -993,12 +1013,30 @@ function Messagerie() {
             />
           </div>
         ) : (
-          <div className="grid w-full place-items-center p-6">
-            <div className="text-center">
-              <span className="mx-auto grid size-16 place-items-center rounded-2xl bg-primary/10">
-                <MessagesSquare className="size-7 text-primary" aria-hidden />
+          <div className="relative grid w-full place-items-center overflow-hidden p-6">
+            <span
+              aria-hidden
+              className="pointer-events-none absolute inset-0 bg-[radial-gradient(color-mix(in_oklch,var(--c-sky)_14%,transparent)_1px,transparent_1px)] bg-[size:20px_20px] [mask-image:radial-gradient(circle_at_center,black,transparent_70%)]"
+            />
+            <span
+              aria-hidden
+              className="pointer-events-none absolute left-1/2 top-1/2 size-80 -translate-x-1/2 -translate-y-1/2 rounded-full opacity-20 blur-3xl"
+              style={{ background: "var(--c-sky)" }}
+            />
+            <div className="entree relative text-center">
+              <span className="relative mx-auto grid size-18 place-items-center">
+                <span className="absolute inset-0 rotate-6 rounded-3xl bg-[color-mix(in_oklch,var(--c-violet)_20%,transparent)]" />
+                <span
+                  className="relative grid size-16 place-items-center rounded-2xl text-white shadow-lg"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, var(--c-sky), color-mix(in oklch, var(--c-sky) 60%, black))",
+                  }}
+                >
+                  <MessagesSquare className="size-7" aria-hidden />
+                </span>
               </span>
-              <p className="mt-4 text-lg font-bold">Vos échanges</p>
+              <p className="mt-5 text-lg font-extrabold tracking-tight">Vos échanges</p>
               <p className="mx-auto mt-1 max-w-xs text-sm text-muted-foreground">
                 Choisissez une conversation à gauche, ou démarrez-en une nouvelle.
               </p>

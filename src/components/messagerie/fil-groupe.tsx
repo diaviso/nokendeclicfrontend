@@ -83,7 +83,7 @@ export function FilGroupe({
 
   return (
     <div className="flex h-full flex-col">
-      <header className="flex h-14 shrink-0 items-center gap-2 border-b px-3">
+      <header className="flex h-16 shrink-0 items-center gap-2.5 border-b bg-card/70 px-3 backdrop-blur">
         <Button
           variant="ghost"
           size="icon"
@@ -94,8 +94,8 @@ export function FilGroupe({
           <ArrowLeft className="size-4" />
         </Button>
 
-        <span className="grid size-8 shrink-0 place-items-center rounded-full bg-primary/10">
-          <UsersRound className="size-4 text-primary" aria-hidden />
+        <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-[color-mix(in_oklch,var(--c-teal)_15%,transparent)] text-[var(--c-teal)]">
+          <UsersRound className="size-4" aria-hidden />
         </span>
 
         <button
@@ -118,7 +118,7 @@ export function FilGroupe({
         </Button>
       </header>
 
-      <ScrollArea className="min-h-0 flex-1">
+      <ScrollArea className="min-h-0 flex-1 bg-[radial-gradient(color-mix(in_oklch,var(--c-sky)_12%,transparent)_1px,transparent_1px)] bg-[size:20px_20px]">
         <div className="space-y-2 p-4">
           {isLoading ? (
             <div className="grid place-items-center py-10">
@@ -162,12 +162,12 @@ export function FilGroupe({
                     className={cn(
                       "max-w-[80%] px-4 py-2.5 shadow-sm",
                       mien
-                        ? "rounded-2xl rounded-br-md bg-primary text-primary-foreground"
+                        ? "rounded-2xl rounded-br-md bg-gradient-to-br from-primary to-[color-mix(in_oklch,var(--primary)_70%,var(--c-sky))] text-primary-foreground shadow-md shadow-primary/20"
                         : "rounded-2xl rounded-bl-md border bg-card",
                     )}
                   >
                     {!mien && !memeAuteur ? (
-                      <p className="mb-0.5 text-[11px] font-semibold text-primary">
+                      <p className="mb-0.5 text-[11px] font-semibold text-[var(--c-teal)]">
                         {message.auteur
                           ? fullName(message.auteur)
                           : "Compte supprimé"}
@@ -212,7 +212,7 @@ export function FilGroupe({
           e.preventDefault();
           soumettre();
         }}
-        className="flex shrink-0 items-end gap-2 border-t p-3"
+        className="flex shrink-0 items-end gap-2 border-t bg-card/70 p-3 backdrop-blur"
       >
         <EmojiPicker
           onChoisir={(symbole) =>
@@ -236,11 +236,12 @@ export function FilGroupe({
           rows={1}
           placeholder={`Message à ${groupe.nom}…`}
           aria-label="Votre message"
-          className="max-h-32 min-h-9 resize-none"
+          className="max-h-32 min-h-10 resize-none rounded-xl border-transparent bg-muted/60 shadow-none focus-visible:border-input focus-visible:bg-background"
         />
         <Button
           type="submit"
           size="icon"
+          className="size-10 rounded-xl shadow-md shadow-primary/25 transition-transform active:scale-95"
           disabled={!brouillon.trim() || envoyer.isPending}
           aria-label="Envoyer"
         >

@@ -352,7 +352,7 @@
     margin-top: -1.25rem;
     /* Annule le `pb-20` de `main`, déjà remplacé par le calcul de hauteur. */
     margin-bottom: -5rem;
-    height: calc(100dvh - 3.5rem - var(--barre-basse));
+    height: calc(100dvh - var(--console-entete, 4rem) - var(--barre-basse));
   }
 
   @media (width >= 40rem) {
@@ -667,7 +667,7 @@
   }
 
   .entree {
-    animation: noken-entree 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: noken-entree 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards;
     animation-delay: calc(var(--i, 0) * 55ms);
   }
 

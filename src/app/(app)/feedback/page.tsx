@@ -7,12 +7,21 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Loader2, MessageCircle, Plus } from "lucide-react";
+import {
+  Bug,
+  ChevronRight,
+  HelpCircle,
+  Lightbulb,
+  Loader2,
+  MessageCircle,
+  MessagesSquare,
+  Plus,
+  type LucideIcon,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -22,6 +31,11 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { PageHeader } from "@/components/shared/page-header";
+import {
+  ConsoleFiltre,
+  ConsolePastille,
+  type OptionFiltre,
+} from "@/components/admin/console-ui";
 import { EmptyState } from "@/components/shared/empty-state";
 import {
   EmojiPicker,
@@ -31,12 +45,27 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { errorMessage, feedbackApi } from "@/lib/api";
 import {
   FEEDBACK_CATEGORY_LABELS,
-  FEEDBACK_STATUS_BADGE,
   FEEDBACK_STATUS_LABELS,
 } from "@/lib/enums";
 import { formatRelative } from "@/lib/format";
-import { cn } from "@/lib/utils";
-import type { FeedbackCategory } from "@/lib/types";
+import type { FeedbackCategory, FeedbackStatus } from "@/lib/types";
+
+/** Teinte de chaque état : la même pastille que dans la console. */
+const TEINTE_STATUT_FEEDBACK: Record<FeedbackStatus, string | undefined> = {
+  OUVERT: "var(--c-blue)",
+  EN_COURS: "var(--c-orange)",
+  RESOLU: "var(--c-emerald)",
+  FERME: undefined,
+};
+
+const CATEGORIES: Record<FeedbackCategory, { icone: LucideIcon; teinte: string }> = {
+  BUG: { icone: Bug, teinte: "var(--c-rose)" },
+  AMELIORATION: { icone: Lightbulb, teinte: "var(--c-amber)" },
+  QUESTION: { icone: HelpCircle, teinte: "var(--c-violet)" },
+  AUTRE: { icone: MessageCircle, teinte: "var(--c-sky)" },
+};
+
+type Filtre = "" | "actifs" | "RESOLU" | "FERME";
 
 const schema = z.object({
   titre: z.string().trim().min(4, "Au moins 4 caractères").max(150),
@@ -182,12 +211,34 @@ function NewFeedbackDialog() {
 }
 
 export default function FeedbackPage() {
+  const [filtre, setFiltre] = useState<Filtre>("");
   const { data, isLoading } = useQuery({
     queryKey: ["feedback", "mine"],
     queryFn: feedbackApi.mine,
   });
 
   const feedbacks = data ?? [];
+  const actifs = feedbacks.filter(
+    (f) => f.statut === "OUVERT" || f.statut === "EN_COURS",
+  ).length;
+  const resolus = feedbacks.filter((f) => f.statut === "RESOLU").length;
+  const fermes = feedbacks.filter((f) => f.statut === "FERME").length;
+  const reponses = feedbacks.reduce((n, f) => n + (f.reponses?.length ?? 0), 0);
+
+  const visibles = feedbacks.filter((f) =>
+    filtre === ""
+      ? true
+      : filtre === "actifs"
+        ? f.statut === "OUVERT" || f.statut === "EN_COURS"
+        : f.statut === filtre,
+  );
+
+  const options: OptionFiltre<Filtre>[] = [
+    { valeur: "", libelle: "Tous", compte: feedbacks.length },
+    { valeur: "actifs", libelle: "En attente", compte: actifs, teinte: "var(--c-orange)" },
+    { valeur: "RESOLU", libelle: "Résolus", compte: resolus, teinte: "var(--c-emerald)" },
+    { valeur: "FERME", libelle: "Fermés", compte: fermes },
+  ];
 
   return (
     <>
@@ -195,9 +246,18 @@ export default function FeedbackPage() {
         title="Signalements"
         surtitre="Mon compte"
         icon={MessageCircle}
-        couleur="var(--chart-1)"
         description="Vos anomalies, suggestions et questions adressées à l'équipe. Chacune reçoit une réponse."
         actions={<NewFeedbackDialog />}
+        mesures={
+          feedbacks.length
+            ? [
+                { label: "Signalements", valeur: feedbacks.length },
+                { label: "En attente", valeur: actifs, teinte: "var(--c-orange)" },
+                { label: "Résolus", valeur: resolus, teinte: "var(--c-emerald)" },
+                { label: "Réponses reçues", valeur: reponses, teinte: "var(--c-sky)" },
+              ]
+            : undefined
+        }
       />
 
       {isLoading ? (
@@ -213,48 +273,88 @@ export default function FeedbackPage() {
       ) : feedbacks.length === 0 ? (
         <EmptyState
           icon={MessageCircle}
-          couleur="var(--chart-1)"
+          couleur="var(--c-orange)"
           title="Aucun signalement"
           description="Une offre erronée, un bug, une idée d'amélioration ? Dites-le à l'équipe : chaque message est lu et reçoit une réponse."
           action={<NewFeedbackDialog />}
         />
       ) : (
-        <ul className="space-y-3">
-          {feedbacks.map((feedback, index) => (
-            <li key={feedback.id} style={{ "--i": index } as React.CSSProperties}>
-              <Link
-                href={`/feedback/${feedback.id}`}
-                className="entree block rounded-2xl border bg-card p-5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
-              >
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <Badge
-                    variant="outline"
-                    className={cn("h-6 rounded-full px-2.5 text-[11px] font-semibold", FEEDBACK_STATUS_BADGE[feedback.statut])}
-                  >
-                    {FEEDBACK_STATUS_LABELS[feedback.statut]}
-                  </Badge>
-                  <Badge variant="secondary" className="h-6 rounded-full px-2.5 text-[11px]">
-                    {FEEDBACK_CATEGORY_LABELS[feedback.categorie]}
-                  </Badge>
-                  {feedback.reponses?.length ? (
-                    <span className="ml-auto text-xs text-muted-foreground">
-                      {feedback.reponses.length} réponse
-                      {feedback.reponses.length > 1 ? "s" : ""}
-                    </span>
-                  ) : null}
-                </div>
+        <>
+          <ConsoleFiltre
+            options={options}
+            valeur={filtre}
+            onChange={setFiltre}
+            label="Filtrer par état"
+            className="mb-4 w-fit max-w-full"
+          />
 
-                <p className="mt-2.5 text-base font-bold">{feedback.titre}</p>
-                <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
-                  {feedback.description}
-                </p>
-                <p className="mt-2 text-xs text-muted-foreground">
-                  {formatRelative(feedback.createdAt)}
-                </p>
-              </Link>
-            </li>
-          ))}
-        </ul>
+          {visibles.length === 0 ? (
+            <p className="dashed-frame py-10 text-center text-sm text-muted-foreground">
+              Aucun signalement dans cet état.
+            </p>
+          ) : (
+            <ul className="space-y-3">
+              {visibles.map((feedback, index) => {
+                const categorie = CATEGORIES[feedback.categorie] ?? CATEGORIES.AUTRE;
+                const Icone = categorie.icone;
+                const nbReponses = feedback.reponses?.length ?? 0;
+
+                return (
+                  <li key={feedback.id} style={{ "--i": index } as React.CSSProperties}>
+                    <Link
+                      href={`/feedback/${feedback.id}`}
+                      className="entree group flex items-start gap-4 rounded-2xl border bg-card p-4 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md sm:p-5"
+                    >
+                      <span
+                        className="grid size-11 shrink-0 place-items-center rounded-xl transition-transform duration-300 group-hover:scale-110"
+                        style={{
+                          background: `color-mix(in oklch, ${categorie.teinte} 15%, transparent)`,
+                          color: categorie.teinte,
+                        }}
+                      >
+                        <Icone className="size-5" aria-hidden />
+                      </span>
+
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <ConsolePastille
+                            libelle={FEEDBACK_STATUS_LABELS[feedback.statut]}
+                            teinte={TEINTE_STATUT_FEEDBACK[feedback.statut]}
+                          />
+                          <span className="text-xs font-medium text-muted-foreground">
+                            {FEEDBACK_CATEGORY_LABELS[feedback.categorie]}
+                          </span>
+                        </div>
+
+                        <p className="mt-2 text-base font-bold leading-snug">{feedback.titre}</p>
+                        <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
+                          {feedback.description}
+                        </p>
+                        <p className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                          <span>{formatRelative(feedback.createdAt)}</span>
+                          {nbReponses ? (
+                            <span
+                              className="inline-flex items-center gap-1 font-semibold"
+                              style={{ color: "var(--c-sky)" }}
+                            >
+                              <MessagesSquare className="size-3.5" aria-hidden />
+                              {nbReponses} réponse{nbReponses > 1 ? "s" : ""}
+                            </span>
+                          ) : null}
+                        </p>
+                      </div>
+
+                      <ChevronRight
+                        className="mt-3 size-5 shrink-0 text-muted-foreground/50 transition-transform duration-300 group-hover:translate-x-1 group-hover:text-foreground"
+                        aria-hidden
+                      />
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </>
       )}
     </>
   );

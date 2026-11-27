@@ -33,7 +33,10 @@ export function FilEtapes({
   onChange: (index: number) => void;
 }) {
   return (
-    <nav aria-label="Étapes du CV" className="mb-5">
+    <nav
+      aria-label="Étapes du CV"
+      className="mb-5 rounded-2xl border bg-card px-4 py-3.5 shadow-sm print:hidden sm:px-6"
+    >
       <ol className="flex items-center">
         {etapes.map((etape, index) => {
           const active = index === courante;
@@ -49,7 +52,7 @@ export function FilEtapes({
               >
                 <span
                   className={cn(
-                    "grid size-10 place-items-center rounded-xl border-2 transition-all duration-200",
+                    "grid size-10 place-items-center rounded-xl border-2 transition-all duration-300 group-hover:-translate-y-0.5",
                     active
                       ? "scale-110 text-white shadow-md"
                       : etape.renseignee
@@ -58,9 +61,17 @@ export function FilEtapes({
                   )}
                   style={
                     active
-                      ? { background: etape.couleur, borderColor: etape.couleur }
+                      ? {
+                          background: `linear-gradient(135deg, ${etape.couleur}, color-mix(in oklch, ${etape.couleur} 65%, black))`,
+                          borderColor: "transparent",
+                          boxShadow: `0 8px 18px -8px color-mix(in oklch, ${etape.couleur} 80%, transparent)`,
+                        }
                       : etape.renseignee
-                        ? { borderColor: etape.couleur, color: etape.couleur }
+                        ? {
+                            borderColor: `color-mix(in oklch, ${etape.couleur} 55%, transparent)`,
+                            background: `color-mix(in oklch, ${etape.couleur} 10%, transparent)`,
+                            color: etape.couleur,
+                          }
                         : undefined
                   }
                 >
@@ -87,11 +98,16 @@ export function FilEtapes({
               {index < etapes.length - 1 ? (
                 <span
                   aria-hidden
-                  className={cn(
-                    "mx-1 h-0.5 flex-1 rounded-full transition-colors duration-300 sm:mx-2",
-                    index < courante ? "bg-primary" : "bg-border",
-                  )}
-                />
+                  className="relative mx-1 h-0.5 flex-1 overflow-hidden rounded-full bg-border sm:mx-2"
+                >
+                  <span
+                    className={cn(
+                      "absolute inset-0 origin-left rounded-full transition-transform duration-500",
+                      index < courante ? "scale-x-100" : "scale-x-0",
+                    )}
+                    style={{ background: etape.couleur }}
+                  />
+                </span>
               ) : null}
             </li>
           );

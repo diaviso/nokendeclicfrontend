@@ -3,7 +3,7 @@
 import { use } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Building2, Loader2 } from "lucide-react";
+import { ArrowLeft, Building2, Info, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/shared/page-header";
 import { FormShell } from "@/components/shared/form-shell";
@@ -43,7 +43,7 @@ export default function ModifierOffrePartenairePage(props: {
     return (
       <EmptyState
         icon={Building2}
-        couleur="var(--chart-3)"
+        couleur="var(--c-teal)"
         title="Offre introuvable"
         description="Elle a peut-être été supprimée, ou appartient à une autre structure."
         action={
@@ -75,7 +75,7 @@ export default function ModifierOffrePartenairePage(props: {
         title="Modifier l'offre"
         surtitre="Recrutement"
         icon={Building2}
-        couleur="var(--chart-3)"
+        couleur="var(--c-teal)"
         description={offre.titre}
       />
 
@@ -87,9 +87,18 @@ export default function ModifierOffrePartenairePage(props: {
       {/* Toute modification renvoie l'annonce en relecture : le dire avant la
           saisie évite la surprise de la voir quitter le catalogue. */}
       {offre.statutModeration === "PUBLIEE" ? (
-        <p className="mb-4 rounded-2xl border border-dashed px-4 py-3 text-sm text-muted-foreground">
+        <p
+          className="mb-4 flex items-start gap-2.5 rounded-2xl border px-4 py-3 text-sm"
+          style={{
+            background: "color-mix(in oklch, var(--c-amber) 8%, transparent)",
+            borderColor: "color-mix(in oklch, var(--c-amber) 25%, transparent)",
+          }}
+        >
+          <Info className="mt-0.5 size-4 shrink-0 text-[var(--c-amber)]" aria-hidden />
+          <span>
           Cette annonce est en ligne. L&apos;enregistrer la renverra en
           validation, et elle sera momentanément retirée du catalogue.
+          </span>
         </p>
       ) : null}
 

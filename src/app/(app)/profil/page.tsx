@@ -5,14 +5,26 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { CalendarDays, Camera, Loader2, Save, UserCircle } from "lucide-react";
+import {
+  Accessibility,
+  Briefcase,
+  CalendarDays,
+  Camera,
+  IdCard,
+  Loader2,
+  MapPin,
+  Save,
+  Sparkles,
+  UserCircle,
+  type LucideIcon,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/shared/page-header";
+import { ConsoleInterrupteur } from "@/components/admin/console-kit";
 import { ReglagesPush } from "@/components/notifications/reglages-push";
 import { FormShell } from "@/components/shared/form-shell";
 import { errorMessage, fileUrl, usersApi } from "@/lib/api";
@@ -34,19 +46,45 @@ import { completionProfil } from "@/lib/profil";
 function Section({
   title,
   description,
+  icon: Icone,
+  teinte,
+  index = 0,
   children,
 }: {
   title: string;
   description?: string;
+  icon: LucideIcon;
+  teinte: string;
+  /** Rang d'apparition, pour décaler l'animation d'entrée. */
+  index?: number;
   children: React.ReactNode;
 }) {
   return (
-    <section className="overflow-hidden rounded-2xl border bg-card shadow-sm">
-      <header className="border-b bg-muted/25 px-5 py-4">
-        <h2 className="text-base font-bold">{title}</h2>
-        {description ? (
-          <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>
-        ) : null}
+    <section
+      className="entree overflow-hidden rounded-2xl border bg-card shadow-sm transition-shadow duration-300 focus-within:shadow-md"
+      style={{ "--i": index } as React.CSSProperties}
+    >
+      <header
+        className="flex items-center gap-3 border-b px-5 py-4"
+        style={{
+          background: `linear-gradient(100deg, color-mix(in oklch, ${teinte} 10%, transparent), transparent 70%)`,
+        }}
+      >
+        <span
+          className="grid size-9 shrink-0 place-items-center rounded-xl"
+          style={{
+            background: `color-mix(in oklch, ${teinte} 15%, transparent)`,
+            color: teinte,
+          }}
+        >
+          <Icone className="size-4.5" aria-hidden />
+        </span>
+        <div className="min-w-0">
+          <h2 className="text-base font-bold">{title}</h2>
+          {description ? (
+            <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>
+          ) : null}
+        </div>
       </header>
       <div className="grid gap-4 p-5 sm:grid-cols-2">{children}</div>
     </section>
@@ -80,7 +118,7 @@ function Field({
 }
 
 const selectClass =
-  "h-9 w-full rounded-md border bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:ring-2 focus-visible:ring-ring/50";
+  "h-9 w-full rounded-lg border bg-transparent px-3 text-sm shadow-xs outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/50 disabled:opacity-60";
 
 
 
@@ -197,7 +235,6 @@ export default function ProfilPage() {
         title="Mon profil"
         surtitre="Mon compte"
         icon={UserCircle}
-        couleur="var(--chart-5)"
         description="Ces informations alimentent les recommandations de l'assistant et les statistiques de la plateforme."
       />
 
@@ -210,14 +247,14 @@ export default function ProfilPage() {
             l'ancrage de la page — nom, adresse, rôle et ancienneté réunis. La
             barre d'avancement est en tête, comme sur le tableau de bord, pour
             que le même repère se retrouve aux deux endroits. */}
-        <section className="overflow-hidden rounded-2xl border bg-card shadow-sm">
+        <section className="entree relative overflow-hidden rounded-3xl border bg-card shadow-sm">
           <div className="h-1.5 w-full bg-muted">
             <div
               className="h-full rounded-r-full transition-[width] duration-700"
               style={{
                 width: `${completion}%`,
                 background:
-                  "linear-gradient(90deg, var(--primary), oklch(0.72 0.17 200))",
+                  "linear-gradient(90deg, var(--c-fuchsia), var(--c-violet), var(--c-sky))",
               }}
               role="progressbar"
               aria-valuenow={completion}
@@ -230,13 +267,29 @@ export default function ProfilPage() {
           <div className="relative">
             <span
               aria-hidden
-              className="pointer-events-none absolute -right-16 -top-20 size-56 rounded-full opacity-[0.07] blur-3xl"
-              style={{ background: "var(--chart-5)" }}
+              className="pointer-events-none absolute inset-0"
+              style={{
+                background:
+                  "linear-gradient(115deg, color-mix(in oklch, var(--c-fuchsia) 10%, transparent) 0%, transparent 60%)",
+              }}
+            />
+            <span
+              aria-hidden
+              className="pointer-events-none absolute -right-16 -top-20 size-56 rounded-full opacity-20 blur-3xl"
+              style={{ background: "var(--c-fuchsia)" }}
             />
 
             <div className="relative flex flex-col gap-5 p-6 sm:flex-row sm:items-center">
               <div className="group relative shrink-0">
-                <Avatar className="size-20 ring-4 ring-background">
+                <span
+                  aria-hidden
+                  className="absolute -inset-1.5 rounded-full opacity-70 blur-[2px]"
+                  style={{
+                    background:
+                      "conic-gradient(var(--c-fuchsia), var(--c-violet), var(--c-sky), var(--c-fuchsia))",
+                  }}
+                />
+                <Avatar className="relative size-20 ring-4 ring-card">
                   <AvatarImage src={fileUrl(user?.pictureUrl)} alt="" />
                   <AvatarFallback className="text-2xl font-bold">
                     {initials}
@@ -258,7 +311,7 @@ export default function ProfilPage() {
                   disabled={uploading}
                   onClick={() => fileInput.current?.click()}
                   aria-label="Changer la photo de profil"
-                  className="absolute -bottom-1 -right-1 grid size-9 place-items-center rounded-full border-2 border-background bg-primary text-primary-foreground shadow-md transition-transform hover:scale-110 disabled:opacity-60"
+                  className="absolute -bottom-1 -right-1 grid size-9 place-items-center rounded-full border-2 border-card bg-[var(--c-fuchsia)] text-white shadow-md transition-transform hover:scale-110 disabled:opacity-60"
                 >
                   {uploading ? (
                     <Loader2 className="size-4 animate-spin" />
@@ -269,7 +322,7 @@ export default function ProfilPage() {
               </div>
 
               <div className="min-w-0 flex-1">
-                <h2 className="truncate text-2xl font-bold">
+                <h2 className="truncate text-2xl font-extrabold tracking-tight">
                   {[user?.firstName, user?.lastName].filter(Boolean).join(" ") ||
                     user?.username ||
                     "Votre nom"}
@@ -296,19 +349,35 @@ export default function ProfilPage() {
                 </div>
               </div>
 
-              <div className="shrink-0 text-center sm:text-right">
-                <p className="text-3xl font-extrabold tabular-nums text-primary">
-                  {completion}%
-                </p>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  profil complété
+              {/* Anneau d'avancement : le même chiffre que la barre, lisible
+                  d'un coup d'œil. */}
+              <div className="flex shrink-0 items-center gap-3 sm:flex-col sm:gap-1">
+                <div
+                  className="grid size-16 place-items-center rounded-full"
+                  style={{
+                    background: `conic-gradient(var(--c-fuchsia) ${completion * 3.6}deg, var(--muted) 0)`,
+                  }}
+                >
+                  <span className="grid size-12 place-items-center rounded-full bg-card text-sm font-extrabold tabular-nums">
+                    {completion}%
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {completion >= 100 ? (
+                    <span className="inline-flex items-center gap-1 font-semibold text-[var(--c-emerald)]">
+                      <Sparkles className="size-3.5" aria-hidden />
+                      Profil complet
+                    </span>
+                  ) : (
+                    "profil complété"
+                  )}
                 </p>
               </div>
             </div>
           </div>
         </section>
 
-        <Section title="Identité">
+        <Section title="Identité" icon={IdCard} teinte="var(--c-fuchsia)" index={1}>
           <Field
             label="Prénom"
             htmlFor="firstName"
@@ -361,6 +430,9 @@ export default function ProfilPage() {
         <Section
           title="Localisation"
           description="Le département se met à jour en fonction de la région choisie."
+          icon={MapPin}
+          teinte="var(--c-emerald)"
+          index={2}
         >
           <Field label="Pays" htmlFor="pays">
             <Input id="pays" {...form.register("pays")} />
@@ -407,7 +479,7 @@ export default function ProfilPage() {
           </Field>
         </Section>
 
-        <Section title="Situation">
+        <Section title="Situation" icon={Briefcase} teinte="var(--c-blue)" index={3}>
           <Field
             label="Statut professionnel"
             htmlFor="statutProfessionnel"
@@ -429,22 +501,15 @@ export default function ProfilPage() {
           </Field>
 
           <div className="sm:col-span-2">
-            <div className="flex items-center justify-between gap-4 rounded-md border p-3">
-              <div className="min-w-0">
-                <Label htmlFor="handicap" className="text-sm">
-                  Situation de handicap
-                </Label>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  Information facultative, utilisée uniquement pour adapter
-                  l&apos;accompagnement et produire des statistiques agrégées.
-                </p>
-              </div>
-              <Switch
-                id="handicap"
-                checked={Boolean(handicap)}
-                onCheckedChange={(checked) => form.setValue("handicap", checked)}
-              />
-            </div>
+            <ConsoleInterrupteur
+              libelle="Situation de handicap"
+              description="Information facultative, utilisée uniquement pour adapter l'accompagnement et produire des statistiques agrégées."
+              icone={Accessibility}
+              coche={Boolean(handicap)}
+              onChange={(checked) =>
+                form.setValue("handicap", checked, { shouldDirty: true })
+              }
+            />
 
             {handicap ? (
               <div className="mt-3">
@@ -464,7 +529,10 @@ export default function ProfilPage() {
         <div className="sticky bottom-16 z-10 flex items-center gap-2 rounded-2xl border bg-background/95 p-3 shadow-lg backdrop-blur lg:bottom-4">
           {form.formState.isDirty ? (
             <p className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span className="size-2 rounded-full bg-amber-500" aria-hidden />
+              <span className="relative flex size-2" aria-hidden>
+                <span className="absolute inline-flex size-full animate-ping rounded-full bg-[var(--c-amber)] opacity-60" />
+                <span className="relative inline-flex size-2 rounded-full bg-[var(--c-amber)]" />
+              </span>
               Modifications non enregistrées
             </p>
           ) : null}

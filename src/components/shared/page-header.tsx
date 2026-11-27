@@ -1,15 +1,29 @@
+"use client";
+
+import { usePathname } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
+import { NAV_SECTIONS, navItemActif } from "@/lib/navigation";
+import { formatNumber } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
+export interface MesurePage {
+  label: string;
+  valeur: number | string;
+  /** Teinte de la tuile ; à défaut, la mesure reste neutre. */
+  teinte?: string;
+}
+
+const TOUS_LES_ITEMS = NAV_SECTIONS.flatMap((section) => section.items);
+
 /**
- * En-tête de page de l'espace membre.
+ * En-tête de page de l'espace membre — le même motif que la console.
  *
- * Chaque écran s'ouvre sur le même motif : une pastille colorée, un surtitre,
- * un titre large. La teinte change d'une page à l'autre — c'est ce qui donne à
- * chacune une identité reconnaissable sans multiplier les mises en page.
+ * Un bandeau lavé de la teinte de la rubrique (celle du menu latéral, ce qui
+ * relie le menu à la page qu'il ouvre), une pastille en dégradé, un titre
+ * large et, en option, les mesures de la page en petites tuiles colorées.
  *
- * Le voile coloré est posé derrière le texte plutôt que dessus : il habille le
- * haut de page sans jamais toucher au contraste de lecture.
+ * Le lavis est posé derrière le texte : il habille le haut de page sans
+ * jamais toucher au contraste de lecture.
  */
 export function PageHeader({
   title,
@@ -17,7 +31,8 @@ export function PageHeader({
   actions,
   icon: Icon,
   surtitre,
-  couleur = "var(--primary)",
+  couleur,
+  mesures,
   className,
 }: {
   title: string;
@@ -26,27 +41,54 @@ export function PageHeader({
   icon?: LucideIcon;
   /** Petite ligne en capitales au-dessus du titre. */
   surtitre?: string;
-  /** Teinte de la pastille et du halo. */
+  /** Teinte hors rubrique connue ; celle du menu prime, pour la cohérence. */
   couleur?: string;
+  /** Chiffres clés de la page, en tuiles sous le bandeau. */
+  mesures?: MesurePage[];
   className?: string;
 }) {
+  const pathname = usePathname();
+  const teinte =
+    navItemActif(pathname, TOUS_LES_ITEMS)?.teinte ?? couleur ?? "var(--primary)";
+
   return (
-    <div className={cn("relative mb-7", className)}>
-      {/* Halo d'ambiance, discret et non interactif. */}
+    <header
+      className={cn(
+        "entree relative mb-6 overflow-hidden rounded-3xl border bg-card shadow-sm",
+        className,
+      )}
+    >
       <span
         aria-hidden
-        className="pointer-events-none absolute -left-24 -top-28 -z-10 size-72 rounded-full opacity-[0.07] blur-3xl"
-        style={{ background: couleur }}
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background: `linear-gradient(115deg, color-mix(in oklch, ${teinte} 16%, transparent) 0%, color-mix(in oklch, ${teinte} 5%, transparent) 45%, transparent 75%)`,
+        }}
+      />
+      <span
+        aria-hidden
+        className="pointer-events-none absolute -right-16 -top-24 size-72 rounded-full opacity-20 blur-3xl"
+        style={{ background: teinte }}
+      />
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-y-0 right-0 hidden w-1/2 opacity-50 md:block"
+        style={{
+          backgroundImage: `radial-gradient(color-mix(in oklch, ${teinte} 30%, transparent) 1px, transparent 1px)`,
+          backgroundSize: "18px 18px",
+          maskImage: "linear-gradient(90deg, transparent, black 70%)",
+          WebkitMaskImage: "linear-gradient(90deg, transparent, black 70%)",
+        }}
       />
 
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex min-w-0 items-start gap-4">
+      <div className="relative flex flex-wrap items-center justify-between gap-x-6 gap-y-4 p-5 sm:p-6">
+        <div className="flex min-w-[min(100%,22rem)] flex-1 items-start gap-4">
           {Icon ? (
             <span
-              className="hidden size-12 shrink-0 place-items-center rounded-2xl sm:grid"
+              className="grid size-13 shrink-0 place-items-center rounded-2xl text-white transition-transform duration-300 hover:-rotate-6 hover:scale-105"
               style={{
-                background: `color-mix(in oklch, ${couleur} 13%, transparent)`,
-                color: couleur,
+                background: `linear-gradient(135deg, ${teinte}, color-mix(in oklch, ${teinte} 65%, black))`,
+                boxShadow: `0 10px 24px -8px color-mix(in oklch, ${teinte} 75%, transparent)`,
               }}
             >
               <Icon className="size-6" aria-hidden />
@@ -56,17 +98,22 @@ export function PageHeader({
           <div className="min-w-0">
             {surtitre ? (
               <p
-                className="text-xs font-semibold uppercase tracking-[0.16em]"
-                style={{ color: couleur }}
+                className="text-[11px] font-bold uppercase tracking-[0.18em]"
+                style={{ color: teinte }}
               >
                 {surtitre}
               </p>
             ) : null}
-            <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">
+            <h1
+              className={cn(
+                "text-2xl font-extrabold tracking-tight sm:text-[1.7rem]",
+                surtitre && "mt-0.5",
+              )}
+            >
               {title}
             </h1>
             {description ? (
-              <p className="mt-1.5 text-base text-muted-foreground">
+              <p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted-foreground">
                 {description}
               </p>
             ) : null}
@@ -74,11 +121,42 @@ export function PageHeader({
         </div>
 
         {actions ? (
-          <div className="flex shrink-0 flex-wrap items-center gap-2">
-            {actions}
-          </div>
+          <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>
         ) : null}
       </div>
-    </div>
+
+      {mesures?.length ? (
+        <dl className="relative flex flex-wrap gap-px border-t bg-border/60">
+          {mesures.map((mesure) => {
+            const teinteMesure = mesure.teinte ?? "var(--muted-foreground)";
+            return (
+              <div
+                key={mesure.label}
+                className="flex min-w-0 grow basis-[calc(50%-1px)] items-center gap-3 bg-card/90 px-5 py-3.5 backdrop-blur sm:basis-[calc(33.333%-1px)] lg:basis-0"
+              >
+                <span
+                  aria-hidden
+                  className="h-8 w-1 shrink-0 rounded-full"
+                  style={{ background: teinteMesure }}
+                />
+                <div className="min-w-0">
+                  <dd
+                    className="text-xl font-extrabold leading-none tabular-nums"
+                    style={mesure.teinte ? { color: teinteMesure } : undefined}
+                  >
+                    {typeof mesure.valeur === "number"
+                      ? formatNumber(mesure.valeur)
+                      : mesure.valeur}
+                  </dd>
+                  <dt className="mt-1 truncate text-xs text-muted-foreground">
+                    {mesure.label}
+                  </dt>
+                </div>
+              </div>
+            );
+          })}
+        </dl>
+      ) : null}
+    </header>
   );
 }

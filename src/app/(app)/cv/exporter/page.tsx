@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Download, FileText, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/empty-state";
+import { PageHeader } from "@/components/shared/page-header";
 import { DocumentCV } from "@/components/cv/modeles-cv";
 import { MODELES, type ModeleCV } from "@/lib/modeles-cv";
 import { cvApi } from "@/lib/api";
@@ -79,7 +80,7 @@ function ExporterCvPageInner() {
     return (
       <EmptyState
         icon={FileText}
-        couleur="var(--chart-2)"
+        couleur="var(--c-blue)"
         title="Aucun CV à exporter"
         description="Renseignez d'abord votre parcours : c'est lui qui alimente le document."
         action={
@@ -128,35 +129,33 @@ function ExporterCvPageInner() {
           Mon CV
         </Button>
 
-        <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--chart-2)]">
-              Mes outils
-            </p>
-            <h1 className="mt-1 text-3xl font-bold tracking-tight">
-              Télécharger mon CV
-            </h1>
-            <p className="mt-1.5 text-muted-foreground">
-              Choisissez une mise en page, puis enregistrez le document en PDF.
-            </p>
-          </div>
-
-          <Button
-            size="lg"
-            className="shrink-0 rounded-xl"
-            onClick={() => window.print()}
-          >
-            <Download className="size-4.5" />
-            Enregistrer en PDF
-          </Button>
-        </div>
+        <PageHeader
+          title="Télécharger mon CV"
+          surtitre="Mes outils"
+          icon={Download}
+          description="Choisissez une mise en page, puis enregistrez le document en PDF."
+          actions={
+            <Button
+              size="lg"
+              className="shrink-0 rounded-xl text-white shadow-md transition-transform hover:-translate-y-0.5"
+              style={{
+                background:
+                  "linear-gradient(135deg, var(--c-blue), color-mix(in oklch, var(--c-blue) 65%, black))",
+              }}
+              onClick={() => window.print()}
+            >
+              <Download className="size-4.5" />
+              Enregistrer en PDF
+            </Button>
+          }
+        />
 
         <div
           role="radiogroup"
           aria-label="Modèle de CV"
           className="mb-5 grid gap-3 md:grid-cols-3"
         >
-          {MODELES.map((entree) => {
+          {MODELES.map((entree, index) => {
             const actif = modele === entree.cle;
             return (
               <button
@@ -169,27 +168,38 @@ function ExporterCvPageInner() {
                     scroll: false,
                   })
                 }
+                style={{ animationDelay: `${60 + index * 60}ms` }}
                 className={cn(
-                  "rounded-2xl border bg-card p-4 text-left transition-all duration-200",
+                  "entree relative overflow-hidden rounded-2xl border bg-card p-4 text-left shadow-sm transition-all duration-200",
                   "outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
                   actif
-                    ? "border-primary/50 shadow-md ring-1 ring-primary/20"
-                    : "hover:border-primary/30 hover:shadow-sm",
+                    ? "border-[color-mix(in_oklch,var(--c-blue)_55%,transparent)] shadow-md ring-1 ring-[color-mix(in_oklch,var(--c-blue)_25%,transparent)]"
+                    : "hover:-translate-y-0.5 hover:shadow-md",
                 )}
               >
-                <div className="flex items-center justify-between gap-2">
+                {actif ? (
+                  <span
+                    aria-hidden
+                    className="pointer-events-none absolute inset-0"
+                    style={{
+                      background:
+                        "linear-gradient(120deg, color-mix(in oklch, var(--c-blue) 10%, transparent), transparent 60%)",
+                    }}
+                  />
+                ) : null}
+                <div className="relative flex items-center justify-between gap-2">
                   <span className="font-bold">{entree.nom}</span>
                   <span
                     aria-hidden
                     className={cn(
                       "size-4 rounded-full border-2 transition-colors",
                       actif
-                        ? "border-primary bg-primary"
+                        ? "border-[var(--c-blue)] bg-[var(--c-blue)] shadow-[0_0_0_3px_color-mix(in_oklch,var(--c-blue)_20%,transparent)]"
                         : "border-muted-foreground/40",
                     )}
                   />
                 </div>
-                <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+                <p className="relative mt-1.5 text-sm leading-relaxed text-muted-foreground">
                   {entree.description}
                 </p>
               </button>
@@ -197,7 +207,7 @@ function ExporterCvPageInner() {
           })}
         </div>
 
-        <p className="mb-3 rounded-2xl border border-dashed px-4 py-3 text-sm text-muted-foreground">
+        <p className="mb-4 rounded-2xl border border-dashed bg-card/60 px-4 py-3 text-sm text-muted-foreground">
           « Enregistrer en PDF » ouvre la fenêtre d&apos;impression de votre
           navigateur : choisissez-y <strong>Enregistrer au format PDF</strong>{" "}
           comme destination. Le texte reste sélectionnable dans le fichier

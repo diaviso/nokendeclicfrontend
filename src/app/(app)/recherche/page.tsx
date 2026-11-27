@@ -33,6 +33,7 @@ import { formatNumber } from "@/lib/format";
 import type { NiveauExperience, OffresFilters, Secteur } from "@/lib/types";
 
 const PAGE_SIZE = 18;
+const TEINTE = "var(--c-emerald)";
 
 /** Retarde la recherche par mot-clé le temps que la frappe se stabilise. */
 function useDebounced<T>(value: T, delay = 350): T {
@@ -233,13 +234,27 @@ function RechercheInner() {
         title="Rechercher"
         surtitre="Catalogue"
         icon={Search}
-        couleur="var(--chart-2)"
+        couleur={TEINTE}
         description={
           vueCentres
             ? "Les centres où suivre une formation, près de chez vous"
             : isLoading
             ? "Chargement…"
             : `${formatNumber(total)} opportunité${total > 1 ? "s" : ""} correspond${total > 1 ? "ent" : ""} à vos critères`
+        }
+        mesures={
+          vueCentres || isLoading
+            ? undefined
+            : [
+                { label: "Résultats", valeur: total, teinte: TEINTE },
+                { label: "Affichés", valeur: offres.length },
+                { label: "Dans mes favoris", valeur: favoriteIds.size, teinte: "var(--c-rose)" },
+                {
+                  label: "Filtres actifs",
+                  valeur: activeFilters.length + (echeance ? 1 : 0) + (debouncedKeyword ? 1 : 0),
+                  teinte: "var(--c-violet)",
+                },
+              ]
         }
       />
 
@@ -323,7 +338,7 @@ function RechercheInner() {
         <PanneauCentres />
       ) : (
         <>
-          <div className="mb-6 rounded-2xl border bg-card p-3 shadow-sm">
+          <div className="entree mb-6 rounded-2xl border bg-card p-3 shadow-sm">
             <FiltresRepliables
               libelle="Filtres"
               hauteur="h-11"
@@ -461,7 +476,7 @@ function RechercheInner() {
                   <Badge
                     key={f.label}
                     variant="secondary"
-                    className="h-7 gap-1 rounded-full pl-3 pr-1 text-sm"
+                    className="h-7 gap-1 rounded-full bg-[color-mix(in_oklch,var(--c-emerald)_12%,transparent)] pl-3 pr-1 text-sm text-foreground"
                   >
                     {f.label}
                     <button
@@ -488,7 +503,7 @@ function RechercheInner() {
           ) : offres.length === 0 ? (
             <EmptyState
               icon={Search}
-              couleur="var(--chart-2)"
+              couleur={TEINTE}
               title="Aucun résultat"
               description="Aucune offre ne correspond à ces critères. Élargissez la recherche, ou retirez un filtre pour voir davantage de résultats."
               action={
@@ -581,7 +596,7 @@ function PanneauCentres() {
 
   return (
     <>
-      <div className="mb-6 flex flex-col gap-2 rounded-2xl border bg-card p-3 shadow-sm sm:flex-row">
+      <div className="entree mb-6 flex flex-col gap-2 rounded-2xl border bg-card p-3 shadow-sm sm:flex-row">
         <div className="relative flex-1">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -614,7 +629,7 @@ function PanneauCentres() {
       ) : centres.length === 0 ? (
         <EmptyState
           icon={School}
-          couleur="var(--chart-2)"
+          couleur={TEINTE}
           title="Aucun centre de formation"
           description={
             recherche || region

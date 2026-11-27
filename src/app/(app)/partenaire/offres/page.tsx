@@ -6,6 +6,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   Building2,
+  Clock,
   Eye,
   Loader2,
   MessageSquare,
@@ -25,6 +26,7 @@ import {
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ConsoleFiltre } from "@/components/admin/console-ui";
 import {
   PastilleModeration,
   etatModeration,
@@ -32,7 +34,6 @@ import {
 import { errorMessage, offresApi } from "@/lib/api";
 import { styleOffre } from "@/lib/type-offre";
 import { formatDateShort, formatNumber } from "@/lib/format";
-import { cn } from "@/lib/utils";
 import type { Offre, StatutModeration } from "@/lib/types";
 
 type Filtre = StatutModeration | "";
@@ -186,6 +187,7 @@ export default function MesOffresPartenairePage() {
     : offres;
 
   const enAttente = comptes.EN_ATTENTE ?? 0;
+  const vues = offres.reduce((total, offre) => total + (offre.viewCount ?? 0), 0);
 
   return (
     <>
@@ -193,8 +195,26 @@ export default function MesOffresPartenairePage() {
         title="Mes offres"
         surtitre="Recrutement"
         icon={Building2}
-        couleur="var(--chart-3)"
+        couleur="var(--c-teal)"
         description="Publiez vos opportunités et suivez leur mise en ligne."
+        mesures={
+          offres.length > 0
+            ? [
+                { label: "Offres publiées", valeur: offres.length, teinte: "var(--c-teal)" },
+                {
+                  label: "En ligne",
+                  valeur: comptes.PUBLIEE ?? 0,
+                  teinte: etatModeration("PUBLIEE").teinte,
+                },
+                {
+                  label: "En validation",
+                  valeur: enAttente,
+                  teinte: etatModeration("EN_ATTENTE").teinte,
+                },
+                { label: "Consultations", valeur: vues, teinte: "var(--c-sky)" },
+              ]
+            : undefined
+        }
         actions={
           <Button
             className="rounded-xl"
@@ -207,56 +227,36 @@ export default function MesOffresPartenairePage() {
       />
 
       {enAttente > 0 ? (
-        <p className="mb-4 rounded-2xl border border-dashed px-4 py-3 text-sm text-muted-foreground">
+        <p
+          className="entree mb-4 flex items-start gap-2.5 rounded-2xl border px-4 py-3 text-sm"
+          style={{
+            background: "color-mix(in oklch, var(--c-amber) 8%, transparent)",
+            borderColor: "color-mix(in oklch, var(--c-amber) 25%, transparent)",
+          }}
+        >
+          <Clock className="mt-0.5 size-4 shrink-0 text-[var(--c-amber)]" aria-hidden />
+          <span>
           {enAttente} annonce{enAttente > 1 ? "s" : ""} en cours de relecture par
           l&apos;équipe Noken. {enAttente > 1 ? "Elles seront" : "Elle sera"} mise
           {enAttente > 1 ? "s" : ""} en ligne dès validation — vous serez
           prévenu.
+          </span>
         </p>
       ) : null}
 
       {offres.length > 0 ? (
-        <div
-          role="group"
-          aria-label="Filtrer par état"
-          className="no-scrollbar mb-4 flex gap-1 overflow-x-auto rounded-xl bg-muted/60 p-1"
-        >
-          {FILTRES.map((option) => {
-            const actif = option.valeur === filtre;
-            const compte = comptes[option.valeur] ?? 0;
-            const teinte = option.valeur
-              ? etatModeration(option.valeur).teinte
-              : undefined;
-
-            return (
-              <button
-                key={option.valeur || "toutes"}
-                type="button"
-                aria-pressed={actif}
-                onClick={() => setFiltre(option.valeur)}
-                className={cn(
-                  "flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-sm transition-all duration-200",
-                  "outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
-                  actif
-                    ? "bg-card font-semibold text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                {teinte ? (
-                  <span
-                    aria-hidden
-                    className="size-2 shrink-0 rounded-full"
-                    style={{ background: teinte }}
-                  />
-                ) : null}
-                {option.libelle}
-                <span className="text-[11px] font-bold tabular-nums text-muted-foreground/70">
-                  {compte}
-                </span>
-              </button>
-            );
-          })}
-        </div>
+        <ConsoleFiltre
+          label="Filtrer par état"
+          className="mb-4"
+          valeur={filtre}
+          onChange={setFiltre}
+          options={FILTRES.map((option) => ({
+            valeur: option.valeur,
+            libelle: option.libelle,
+            compte: comptes[option.valeur] ?? 0,
+            teinte: option.valeur ? etatModeration(option.valeur).teinte : undefined,
+          }))}
+        />
       ) : null}
 
       {isLoading ? (
@@ -272,7 +272,7 @@ export default function MesOffresPartenairePage() {
       ) : affichees.length === 0 ? (
         <EmptyState
           icon={Building2}
-          couleur="var(--chart-3)"
+          couleur="var(--c-teal)"
           title={filtre ? "Aucune offre dans cet état" : "Aucune offre publiée"}
           description={
             filtre
